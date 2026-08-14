@@ -92,10 +92,10 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight font-heading flex items-center gap-2">
-            <Users className="w-6 h-6 text-sky-500" /> Full-Funnel Leads CRM
+          <h1 className="text-xl lg:text-2xl font-semibold text-slate-900 tracking-normal flex items-center gap-2">
+            <Users className="w-5 h-5 text-[#3B8CFF]" /> Full-Funnel Leads CRM
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Capture enquiries, track activity timelines, and convert hot negotiations into confirmed bookings.
           </p>
         </div>

@@ -52,8 +52,8 @@ export function AdminDashboardView({ data }: Props) {
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#B9D5FF]">
               <ShieldCheck className="w-4 h-4" /> Executive Overview
             </div>
-            <h1 className="text-2xl lg:text-3xl font-extrabold mt-1 tracking-tight font-heading">
-              Welcome, {userName}
+            <h1 className="text-xl lg:text-2xl font-semibold mt-1 tracking-normal font-sans">
+              Welcome, <span className="font-normal text-slate-100">{userName}</span>
             </h1>
             <p className="text-sm text-slate-100 mt-1 max-w-xl">
               Track multi-project sales performance, live inventory absorption, milestone collections, and funnel velocity in real-time.

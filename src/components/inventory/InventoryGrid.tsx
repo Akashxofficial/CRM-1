@@ -109,10 +109,10 @@ export function InventoryGrid({ projects, initialUnits, userRole, leads }: Props
       {/* Header & Controls */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight font-heading flex items-center gap-2">
-            <Building2 className="w-6 h-6 text-sky-500" /> Interactive Inventory Matrix
+          <h1 className="text-xl lg:text-2xl font-semibold text-slate-900 tracking-normal flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-[#3B8CFF]" /> Interactive Inventory Matrix
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Real-time tower & floor layout with 48h lead hold timers and 1-click booking integration.
           </p>
         </div>
