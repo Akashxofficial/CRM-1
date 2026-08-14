@@ -45,30 +45,30 @@ export function AdminDashboardView({ data }: Props) {
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* Welcome Banner */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white shadow-xl border border-slate-800 relative overflow-hidden">
-        <div className="absolute right-0 top-0 w-96 h-full bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-6 rounded-2xl bg-gradient-to-r from-[#163C7A] via-[#1A57BD] to-[#3B8CFF] text-white shadow-lg shadow-[#3B8CFF]/15 border border-[#1A57BD]/40 relative overflow-hidden">
+        <div className="absolute right-0 top-0 w-96 h-full bg-white/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-sky-400">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#B9D5FF]">
               <ShieldCheck className="w-4 h-4" /> Executive Overview
             </div>
             <h1 className="text-2xl lg:text-3xl font-extrabold mt-1 tracking-tight font-heading">
               Welcome, {userName}
             </h1>
-            <p className="text-sm text-slate-300 mt-1 max-w-xl">
+            <p className="text-sm text-slate-100 mt-1 max-w-xl">
               Track multi-project sales performance, live inventory absorption, milestone collections, and funnel velocity in real-time.
             </p>
           </div>
           <div className="flex items-center gap-3">
             <Link
               href="/inventory"
-              className="px-4 py-2 text-xs font-semibold bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-sm border border-white/10 transition flex items-center gap-1.5"
+              className="px-4 py-2 text-xs font-semibold bg-white/15 hover:bg-white/25 text-white rounded-xl backdrop-blur-sm border border-white/20 transition flex items-center gap-1.5"
             >
               <Building className="w-4 h-4" /> View Inventory
             </Link>
             <Link
               href="/leads"
-              className="px-4 py-2 text-xs font-semibold bg-sky-500 hover:bg-sky-600 text-white rounded-xl shadow-lg shadow-sky-500/25 transition flex items-center gap-1.5"
+              className="px-4 py-2 text-xs font-semibold bg-white text-[#1A57BD] hover:bg-slate-50 rounded-xl shadow-md transition flex items-center gap-1.5"
             >
               <Users className="w-4 h-4" /> View Leads
             </Link>
@@ -79,14 +79,14 @@ export function AdminDashboardView({ data }: Props) {
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Sales Value */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase text-slate-400">Total Sales Value</span>
-            <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400">
+            <div className="p-2 rounded-xl bg-purple-50 text-purple-600">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">
+          <div className="mt-3 text-2xl font-bold text-slate-900">
             {formatCurrency(metrics.totalSalesValue)}
           </div>
           <div className="mt-1 flex items-center text-xs text-emerald-600 font-medium gap-1">
@@ -96,14 +96,14 @@ export function AdminDashboardView({ data }: Props) {
         </div>
 
         {/* Total Collected */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase text-slate-400">Milestone Collections</span>
-            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+            <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">
+          <div className="mt-3 text-2xl font-bold text-slate-900">
             {formatCurrency(metrics.totalCollected)}
           </div>
           <div className="mt-1 flex items-center text-xs text-slate-500">
@@ -111,31 +111,31 @@ export function AdminDashboardView({ data }: Props) {
           </div>
         </div>
 
-        {/* Active Funnel Leads */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+        {/* Active Pipeline Leads */}
+        <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase text-slate-400">Active Pipeline Leads</span>
-            <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
+            <span className="text-xs font-semibold uppercase text-slate-400">Active Leads Pipeline</span>
+            <div className="p-2 rounded-xl bg-[#F0F6FF] text-[#3B8CFF]">
               <Users className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">
+          <div className="mt-3 text-2xl font-bold text-slate-900">
             {metrics.activeLeads} / {metrics.totalLeads}
           </div>
-          <div className="mt-1 flex items-center text-xs text-blue-600 font-medium">
-            <span>Hot & Qualified Pipeline</span>
+          <div className="mt-1 flex items-center text-xs text-slate-500">
+            <span>{metrics.totalLeads - metrics.activeLeads} Converted / Closed</span>
           </div>
         </div>
 
-        {/* Inventory Absorption */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+        {/* Total Units Booked / Sold */}
+        <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase text-slate-400">Units Absorption</span>
-            <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
-              <TrendingUp className="w-4 h-4" />
+            <span className="text-xs font-semibold uppercase text-slate-400">Absorption Rate</span>
+            <div className="p-2 rounded-xl bg-amber-50 text-amber-600">
+              <Building className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">
+          <div className="mt-3 text-2xl font-bold text-slate-900">
             {metrics.soldUnits + metrics.bookedUnits} / {metrics.totalUnits} Units
           </div>
           <div className="mt-1 flex items-center text-xs text-amber-600 font-medium">
