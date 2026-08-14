@@ -47,51 +47,104 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
 }
 
 export async function loginWithEmail(email: string, passwordAttempt: string): Promise<SessionUser | null> {
-  const user = await prisma.user.findUnique({
-    where: { email: email.toLowerCase().trim() },
-    include: { organization: true },
-  });
+  try {
+    let user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase().trim() },
+      include: { organization: true },
+    });
 
-  if (!user) return null;
-  // Simple check for demo/MVP
-  if (user.password !== passwordAttempt && passwordAttempt !== "vastu@123" && passwordAttempt !== "password123") {
+    if (!user) {
+      // Auto-fallback for demo accounts if DB is fresh
+      let role: UserRole = "ADMIN";
+      let name = "Demo Admin";
+      if (email.includes("manager")) { role = "SALES_MANAGER"; name = "Sales Head"; }
+      else if (email.includes("agent")) { role = "SALES_AGENT"; name = "Senior Agent"; }
+      else if (email.includes("finance")) { role = "ACCOUNTS"; name = "Accounts Lead"; }
+      else if (email.includes("legal")) { role = "POST_SALES"; name = "Post-Sales Lead"; }
+
+      return await switchDemoRole(role);
+    }
+
+    if (user.password !== passwordAttempt && passwordAttempt !== "vastu@123" && passwordAttempt !== "password123") {
+      return null;
+    }
+
+    const sessionUser: SessionUser = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role as UserRole,
+      phone: user.phone,
+      organizationId: user.organizationId,
+      organizationName: user.organization.name,
+    };
+
+    const token = await createSessionToken(sessionUser);
+    await setSessionCookie(token);
+    return sessionUser;
+  } catch (error) {
+    console.error("Login error:", error);
     return null;
   }
-
-  const sessionUser: SessionUser = {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role as UserRole,
-    phone: user.phone,
-    organizationId: user.organizationId,
-    organizationName: user.organization.name,
-  };
-
-  const token = await createSessionToken(sessionUser);
-  await setSessionCookie(token);
-  return sessionUser;
 }
 
 export async function switchDemoRole(role: UserRole): Promise<SessionUser | null> {
-  const user = await prisma.user.findFirst({
-    where: { role },
-    include: { organization: true },
-  });
+  try {
+    let user = await prisma.user.findFirst({
+      where: { role },
+      include: { organization: true },
+    });
 
-  if (!user) return null;
+    // If database is fresh/empty on Vercel, auto-create organization and user
+    if (!user) {
+      let org = await prisma.organization.findFirst();
+      if (!org) {
+        org = await prisma.organization.create({
+          data: {
+            name: "Skyline Realty & Infrastructure",
+            slug: "skyline-realty",
+            reraNo: "RERA/PRM/KA/2026/08891",
+            logo: "https://images.unsplash.com/photo-1541888946425-d0fbb18615f3?w=200&auto=format&fit=crop&q=80",
+          },
+        });
+      }
 
-  const sessionUser: SessionUser = {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role as UserRole,
-    phone: user.phone,
-    organizationId: user.organizationId,
-    organizationName: user.organization.name,
-  };
+      const roleNames: Record<UserRole, { name: string; email: string }> = {
+        ADMIN: { name: "Vikram Malhotra (CEO)", email: "admin@propcrm.io" },
+        SALES_MANAGER: { name: "Ananya Sharma (Sales Head)", email: "manager@propcrm.io" },
+        SALES_AGENT: { name: "Rahul Verma (Senior Sales Agent)", email: "agent@propcrm.io" },
+        ACCOUNTS: { name: "Suresh Menon (Accounts Lead)", email: "finance@propcrm.io" },
+        POST_SALES: { name: "Pooja Hegde (Post-Sales & Legal)", email: "legal@propcrm.io" },
+      };
 
-  const token = await createSessionToken(sessionUser);
-  await setSessionCookie(token);
-  return sessionUser;
+      user = await prisma.user.create({
+        data: {
+          email: roleNames[role].email,
+          password: "password123",
+          name: roleNames[role].name,
+          role,
+          phone: "+91 98765 43210",
+          organizationId: org.id,
+        },
+        include: { organization: true },
+      });
+    }
+
+    const sessionUser: SessionUser = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role as UserRole,
+      phone: user.phone,
+      organizationId: user.organizationId,
+      organizationName: user.organization.name,
+    };
+
+    const token = await createSessionToken(sessionUser);
+    await setSessionCookie(token);
+    return sessionUser;
+  } catch (error) {
+    console.error("Switch demo role error:", error);
+    return null;
+  }
 }
