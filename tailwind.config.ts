@@ -12,34 +12,31 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        // Exact brand swatch from C:77 M:45 Y:0 K:0
         brand: {
-          50: "#f0f7ff",
-          100: "#e0effe",
-          200: "#bae0fd",
-          300: "#7cc8fb",
-          400: "#36aaf5",
-          500: "#0c8ee9",
-          600: "#026fc7",
-          700: "#0358a1",
-          800: "#074b84",
-          900: "#0b3f6e",
-          950: "#072849",
-        },
-        gold: {
-          500: "#eab308",
-          600: "#ca8a04",
+          50: "#F0F6FF",
+          100: "#E0ECFF",
+          200: "#B9D5FF",
+          300: "#86B8FF",
+          400: "#579BFF",
+          500: "#3B8CFF", // Exact CMYK C:77 M:45 Y:0 K:0 Primary Blue
+          600: "#2570E8",
+          700: "#1A57BD",
+          800: "#164799",
+          900: "#163C7A",
+          950: "#0E254E",
         },
         estate: {
           available: "#10b981", // Emerald Green
           held: "#f59e0b",      // Amber
-          booked: "#3b82f6",    // Blue
+          booked: "#3B8CFF",    // Brand Blue
           sold: "#ef4444",      // Red
           blocked: "#64748b",   // Slate
         }
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "sans-serif"],
-        heading: ["var(--font-outfit)", "sans-serif"],
+        sans: ["'Acumin Pro'", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "Roboto", "'Helvetica Neue'", "Arial", "sans-serif"],
+        heading: ["'Acumin Pro'", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "Roboto", "sans-serif"],
       },
     },
   },

@@ -53,14 +53,14 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row bg-slate-950 text-white font-sans">
       {/* Left Column: Hero & Branding */}
-      <div className="lg:w-1/2 p-8 lg:p-16 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-sky-950">
+      <div className="lg:w-1/2 p-8 lg:p-16 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-[#0E254E]">
         {/* Background Glows */}
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-sky-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#3B8CFF]/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#1A57BD]/20 rounded-full blur-3xl pointer-events-none" />
 
         <div>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-400 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/30">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#3B8CFF] to-[#1A57BD] flex items-center justify-center text-white shadow-lg shadow-[#3B8CFF]/30">
               <Building className="w-6 h-6" />
             </div>
             <span className="font-bold text-2xl tracking-tight text-white font-heading">
@@ -69,7 +69,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-16 max-w-lg">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold uppercase tracking-wider mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#3B8CFF]/10 border border-[#3B8CFF]/20 text-[#3B8CFF] text-xs font-semibold uppercase tracking-wider mb-6">
               <Sparkles className="w-3.5 h-3.5" /> Full Real Estate Lifecycle CRM
             </div>
             <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
@@ -135,7 +135,7 @@ export default function LoginPage() {
                       <Icon className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="text-sm font-semibold text-white group-hover:text-sky-400 transition">
+                      <div className="text-sm font-semibold text-white group-hover:text-[#3B8CFF] transition">
                         {account.name}
                       </div>
                       <div className="text-xs text-slate-400">{account.email}</div>
@@ -169,7 +169,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="demo@vastucrm.com"
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] text-sm"
               />
             </div>
 
@@ -183,14 +183,14 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] text-sm"
               />
             </div>
 
             <button
               type="submit"
               disabled={isPending}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 font-semibold text-white shadow-lg shadow-sky-500/25 flex items-center justify-center gap-2 transition disabled:opacity-50 text-sm"
+              className="w-full py-3 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] font-semibold text-white shadow-lg shadow-[#3B8CFF]/25 flex items-center justify-center gap-2 transition disabled:opacity-50 text-sm"
             >
               {isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
