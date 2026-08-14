@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Titillium_Web } from "next/font/google";
 import "./globals.css";
 
@@ -9,9 +9,22 @@ const titilliumWeb = Titillium_Web({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: "#3B8CFF",
+};
+
 export const metadata: Metadata = {
   title: "PropCRM — Real Estate CRM (Lead to Possession)",
   description: "Next-generation real estate developer CRM for managing leads, visual unit inventory, bookings, payment milestones, post-sales paperwork and possession.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "PropCRM",
+  },
 };
 
 export default function RootLayout({
@@ -29,7 +42,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${titilliumWeb.className} antialiased bg-[#F8FAFC] text-slate-900 min-h-screen`}>
+      <body className={`${titilliumWeb.className} antialiased bg-[#F8FAFC] text-slate-900 min-h-screen selection:bg-[#3B8CFF]/20 selection:text-[#1A57BD]`}>
         {children}
       </body>
     </html>

@@ -205,24 +205,24 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
 
       {/* Kanban Board View */}
       {viewMode === "kanban" && (
-        <div className="flex gap-4 overflow-x-auto pb-6">
+        <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-6 touch-pan-x snap-x scroll-pl-3 sm:scroll-pl-0 -mx-3.5 sm:mx-0 px-3.5 sm:px-0">
           {STAGES.map((stage) => {
             const stageLeads = filteredLeads.filter((l) => l.status === stage.key);
 
             return (
               <div
                 key={stage.key}
-                className="w-72 flex-shrink-0 bg-slate-100/70 dark:bg-slate-900/60 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 flex flex-col max-h-[70vh]"
+                className="w-[80vw] sm:w-72 md:w-80 flex-shrink-0 snap-start bg-slate-100/70 rounded-2xl p-3 border border-slate-200/80 flex flex-col max-h-[75vh]"
               >
                 {/* Stage Header */}
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-200">
                   <div className="flex items-center gap-2">
                     <span className={`w-2.5 h-2.5 rounded-full ${stage.color}`} />
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-800">
                       {stage.label}
                     </h2>
                   </div>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white text-slate-600 border border-slate-200">
                     {stageLeads.length}
                   </span>
                 </div>

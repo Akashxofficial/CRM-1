@@ -21,8 +21,20 @@ export function AppLayoutClient({ user, projects, children }: Props) {
     setMobileMenuOpen(false);
   }, [pathname]);
 
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [mobileMenuOpen]);
+
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#F8FAFC] text-slate-900 font-sans">
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-[#F8FAFC] text-slate-900 font-sans">
       {/* Desktop Sidebar (hidden on < lg screens) */}
       <div className="hidden lg:flex flex-shrink-0 h-full">
         <Sidebar user={user} />
@@ -33,12 +45,12 @@ export function AppLayoutClient({ user, projects, children }: Props) {
         <div className="fixed inset-0 z-50 lg:hidden flex">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs transition-opacity animate-in fade-in"
+            className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs transition-opacity animate-in fade-in"
             onClick={() => setMobileMenuOpen(false)}
           />
 
           {/* Drawer Sidebar */}
-          <div className="relative z-50 w-72 max-w-[80vw] h-full shadow-2xl animate-in slide-in-from-left duration-200">
+          <div className="relative z-50 w-72 max-w-[85vw] h-[100dvh] shadow-2xl animate-in slide-in-from-left duration-200">
             <Sidebar user={user} onCloseMobile={() => setMobileMenuOpen(false)} />
           </div>
         </div>
@@ -51,8 +63,8 @@ export function AppLayoutClient({ user, projects, children }: Props) {
           projects={projects}
           onToggleMobileMenu={() => setMobileMenuOpen((prev) => !prev)}
         />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[#F8FAFC]">
-          <div className="max-w-7xl mx-auto w-full">{children}</div>
+        <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 lg:p-8 bg-[#F8FAFC] overscroll-y-contain">
+          <div className="max-w-7xl mx-auto w-full pb-10">{children}</div>
         </main>
       </div>
     </div>

@@ -306,18 +306,19 @@ export function InventoryGrid({ projects, initialUnits, userRole, leads }: Props
               </div>
 
               {/* Floor Rows */}
-              <div className="space-y-3">
-                {sortedFloors.map((floorNum) => {
-                  const unitsOnFloor = floorsMap[floorNum] || [];
+              <div className="overflow-x-auto pb-3 touch-pan-x -mx-2 px-2">
+                <div className="space-y-3 min-w-[480px] sm:min-w-0">
+                  {sortedFloors.map((floorNum) => {
+                    const unitsOnFloor = floorsMap[floorNum] || [];
 
-                  return (
-                    <div key={floorNum} className="flex items-center gap-4">
-                      {/* Floor Indicator */}
-                      <div className="w-16 flex-shrink-0 text-right pr-2">
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
-                          Floor {floorNum}
-                        </span>
-                      </div>
+                    return (
+                      <div key={floorNum} className="flex items-center gap-3 sm:gap-4">
+                        {/* Floor Indicator */}
+                        <div className="w-14 sm:w-16 flex-shrink-0 text-right pr-2">
+                          <span className="text-xs font-semibold text-slate-500 uppercase">
+                            Floor {floorNum}
+                          </span>
+                        </div>
 
                       {/* Units Row */}
                       <div className="flex-1 flex flex-wrap items-center gap-3">
@@ -377,6 +378,7 @@ export function InventoryGrid({ projects, initialUnits, userRole, leads }: Props
                     </div>
                   );
                 })}
+                </div>
               </div>
             </div>
           );
