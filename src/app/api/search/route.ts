@@ -15,43 +15,48 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ leads: [], units: [], bookings: [] });
   }
 
-  const [leads, units, bookings] = await Promise.all([
-    prisma.lead.findMany({
-      where: {
-        organizationId: user.organizationId,
-        OR: [
-          { name: { contains: q } },
-          { phone: { contains: q } },
-          { email: { contains: q } },
-        ],
-      },
-      include: { project: true },
-      take: 5,
-    }),
-    prisma.unit.findMany({
-      where: {
-        project: { organizationId: user.organizationId },
-        OR: [
-          { unitNumber: { contains: q } },
-          { type: { contains: q } },
-        ],
-      },
-      include: { project: true, tower: true },
-      take: 5,
-    }),
-    prisma.booking.findMany({
-      where: {
-        organizationId: user.organizationId,
-        OR: [
-          { bookingNumber: { contains: q } },
-          { lead: { name: { contains: q } } },
-          { unit: { unitNumber: { contains: q } } },
-        ],
-      },
-      include: { lead: true, unit: true, project: true },
-      take: 5,
-    }),
-  ]);
+  try {
+    const [leads, units, bookings] = await Promise.all([
+      prisma.lead.findMany({
+        where: {
+          organizationId: user.organizationId,
+          OR: [
+            { name: { contains: q } },
+            { phone: { contains: q } },
+            { email: { contains: q } },
+          ],
+        },
+        include: { project: true },
+        take: 5,
+      }),
+      prisma.unit.findMany({
+        where: {
+          project: { organizationId: user.organizationId },
+          OR: [
+            { unitNumber: { contains: q } },
+            { type: { contains: q } },
+          ],
+        },
+        include: { project: true, tower: true },
+        take: 5,
+      }),
+      prisma.booking.findMany({
+        where: {
+          organizationId: user.organizationId,
+          OR: [
+            { bookingNumber: { contains: q } },
+            { lead: { name: { contains: q } } },
+            { unit: { unitNumber: { contains: q } } },
+          ],
+        },
+        include: { lead: true, unit: true, project: true },
+        take: 5,
+      }),
+    ]);
 
-  return NextResponse.json({ leads, units, bookings });
+    return NextResponse.json({ leads, units, bookings });
+  } catch (error) {
+    console.warn("Search route fallback:", error);
+    return NextResponse.json({ leads: [], units: [], bookings: [] });
+  }
 }

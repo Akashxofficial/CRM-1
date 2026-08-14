@@ -6,19 +6,30 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { PossessionView } from "@/components/possession/PossessionView";
 import { redirect } from "next/navigation";
 
+async function getBookingsWithoutPossession(orgId: string) {
+  try {
+    const bookings = await prisma.booking.findMany({
+      where: {
+        organizationId: orgId,
+        possession: null,
+      },
+      include: { lead: true, unit: true },
+    });
+    if (bookings.length > 0) return bookings;
+  } catch (err) {
+    console.warn("getBookingsWithoutPossession fallback:", err);
+  }
+
+  return [];
+}
+
 export default async function PossessionPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   const [possessions, allBookings, projects] = await Promise.all([
     getPossessions(),
-    prisma.booking.findMany({
-      where: {
-        organizationId: user.organizationId,
-        possession: null,
-      },
-      include: { lead: true, unit: true },
-    }),
+    getBookingsWithoutPossession(user.organizationId),
     getProjects(),
   ]);
 

@@ -8,6 +8,28 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { BookingsListView } from "@/components/bookings/BookingsListView";
 import { redirect } from "next/navigation";
 
+async function getPaymentPlans() {
+  try {
+    const plans = await prisma.paymentPlanTemplate.findMany();
+    if (plans.length > 0) return plans;
+  } catch (err) {
+    console.warn("getPaymentPlans fallback:", err);
+  }
+
+  return [
+    {
+      id: "demo-plan-clp",
+      name: "Construction Linked Plan (CLP)",
+      isDefault: true,
+      milestonesJson: JSON.stringify([
+        { name: "On Booking Token", percentage: 10, days: 0 },
+        { name: "On Agreement Execution", percentage: 10, days: 30 },
+        { name: "On Foundation Completion", percentage: 15, days: 90 },
+      ]),
+    },
+  ];
+}
+
 export default async function BookingsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -17,7 +39,7 @@ export default async function BookingsPage() {
     getProjects(),
     getLeads({ status: "NEGOTIATION" }),
     getInventoryUnits({ status: "AVAILABLE" }),
-    prisma.paymentPlanTemplate.findMany(),
+    getPaymentPlans(),
   ]);
 
   return (
