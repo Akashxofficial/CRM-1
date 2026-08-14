@@ -80,25 +80,25 @@ export function BookingConversionWizard({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-sky-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between">
+        <div className="p-4 sm:p-6 border-b border-slate-100 bg-gradient-to-r from-[#163C7A] via-[#1A57BD] to-[#3B8CFF] text-white flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-sky-400">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#B9D5FF]">
               <Sparkles className="w-4 h-4" /> 1-Click Conversion Wizard
             </div>
-            <h2 className="text-xl font-bold mt-1">Convert Lead to Confirmed Booking</h2>
-            <p className="text-xs text-slate-300 mt-1">
+            <h2 className="text-lg sm:text-xl font-semibold mt-0.5">Convert Lead to Confirmed Booking</h2>
+            <p className="text-xs text-slate-100 mt-1">
               Auto-locks unit inventory, binds customer agreement value, and generates payment milestones.
             </p>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white">
+          <button onClick={onClose} className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleConvert} className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+        <form onSubmit={handleConvert} className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto">
           {errorMessage && (
             <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs">
               {errorMessage}

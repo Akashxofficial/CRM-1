@@ -77,31 +77,31 @@ export function RoleSwitcherModal({ currentRole, currentName, isOpen, onClose }:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white">
+        <div className="p-4 sm:p-6 border-b border-slate-100 bg-gradient-to-r from-[#163C7A] via-[#1A57BD] to-[#3B8CFF] text-white">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs uppercase tracking-wider font-semibold text-sky-400">
+              <span className="text-xs uppercase tracking-wider font-semibold text-[#B9D5FF]">
                 Multi-Role Demo Switcher
               </span>
-              <h2 className="text-xl font-bold mt-1">Switch User Persona & RBAC View</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mt-0.5">Switch User Persona & RBAC View</h2>
             </div>
             <button
               onClick={onClose}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition text-sm"
             >
               ✕
             </button>
           </div>
-          <p className="text-xs text-slate-300 mt-2">
-            Experience PropCRM from any stakeholder's perspective with 1-click role swapping.
+          <p className="text-xs text-slate-100 mt-1.5">
+            Experience PropCRM from any stakeholder&apos;s perspective with 1-click role swapping.
           </p>
         </div>
 
         {/* Roles List */}
-        <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
+        <div className="p-4 sm:p-6 space-y-2.5 overflow-y-auto">
           {ROLES_CONFIG.map((item) => {
             const Icon = item.icon;
             const isCurrent = currentRole === item.role;

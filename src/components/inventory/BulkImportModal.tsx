@@ -85,25 +85,25 @@ A-802,8,3BHK,1650,1320,North,9000,200000,300000,AVAILABLE`
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div className="p-4 sm:p-6 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <span className="text-xs uppercase tracking-wider font-bold text-sky-500">
+            <span className="text-xs uppercase tracking-wider font-bold text-[#3B8CFF]">
               Bulk Unit Inventory Upload
             </span>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-900 mt-0.5">
               Import Units via CSV / Excel
             </h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-sm">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-sm">
             ✕
           </button>
         </div>
 
         {/* Content */}
-        <form onSubmit={handleImport} className="p-6 space-y-4">
+        <form onSubmit={handleImport} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
           {resultMessage && (
             <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
               <Check className="w-4 h-4" />

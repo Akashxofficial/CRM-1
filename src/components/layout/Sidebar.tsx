@@ -15,6 +15,7 @@ import {
   LogOut,
   Sparkles,
   Building,
+  X,
 } from "lucide-react";
 import { SessionUser, ROLE_LABELS, hasPermission } from "@/lib/rbac";
 import { logoutAction } from "@/actions/auth-actions";
@@ -22,9 +23,10 @@ import { RoleSwitcherModal } from "./RoleSwitcherModal";
 
 interface Props {
   user: SessionUser;
+  onCloseMobile?: () => void;
 }
 
-export function Sidebar({ user }: Props) {
+export function Sidebar({ user, onCloseMobile }: Props) {
   const pathname = usePathname();
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const roleBadge = ROLE_LABELS[user.role] || ROLE_LABELS.ADMIN;
@@ -82,9 +84,9 @@ export function Sidebar({ user }: Props) {
 
   return (
     <>
-      <aside className="w-64 bg-white text-slate-700 flex flex-col flex-shrink-0 border-r border-slate-200/90 select-none shadow-sm">
+      <aside className="w-64 h-full bg-white text-slate-700 flex flex-col flex-shrink-0 border-r border-slate-200/90 select-none shadow-sm">
         {/* Brand Header */}
-        <div className="p-5 flex items-center justify-between border-b border-slate-100">
+        <div className="p-4 sm:p-5 flex items-center justify-between border-b border-slate-100">
           <Link href="/dashboard" className="flex items-center gap-3 group">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#3B8CFF] to-[#1A57BD] flex items-center justify-center text-white shadow-md shadow-[#3B8CFF]/20 group-hover:scale-105 transition">
               <Building className="w-5 h-5" />
@@ -96,11 +98,22 @@ export function Sidebar({ user }: Props) {
                   PRO
                 </span>
               </span>
-              <p className="text-[11px] text-slate-500 truncate max-w-[130px]">
+              <p className="text-[11px] text-slate-500 truncate max-w-[120px]">
                 {user.organizationName}
               </p>
             </div>
           </Link>
+
+          {/* Close button for Mobile Drawer */}
+          {onCloseMobile && (
+            <button
+              onClick={onCloseMobile}
+              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg lg:hidden transition"
+              aria-label="Close sidebar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Role Persona Card */}
@@ -155,7 +168,7 @@ export function Sidebar({ user }: Props) {
         <div className="p-3 border-t border-slate-100 bg-[#F8FAFC]">
           <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3B8CFF] to-[#1A57BD] flex items-center justify-center text-white font-bold text-xs shadow-2xs">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3B8CFF] to-[#1A57BD] flex items-center justify-center text-white font-bold text-xs shadow-2xs flex-shrink-0">
                 {user.name.slice(0, 2).toUpperCase()}
               </div>
               <div className="min-w-0">
@@ -168,7 +181,7 @@ export function Sidebar({ user }: Props) {
               <button
                 type="submit"
                 title="Logout"
-                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition flex-shrink-0"
               >
                 <LogOut className="w-4 h-4" />
               </button>

@@ -60,18 +60,18 @@ export function GlobalSearchModal({ isOpen, onClose }: Props) {
   const totalResults = results.leads.length + results.units.length + results.bookings.length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-6 sm:pt-20 px-3 sm:px-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
         {/* Search Input Bar */}
-        <div className="flex items-center px-4 py-3 border-b border-slate-200 dark:border-slate-800 gap-3">
-          <Search className="w-5 h-5 text-slate-400" />
+        <div className="flex items-center px-3 sm:px-4 py-3 border-b border-slate-200 gap-2 sm:gap-3">
+          <Search className="w-4 sm:w-5 h-4 sm:h-5 text-slate-400 flex-shrink-0" />
           <input
             type="text"
-            placeholder="Search leads, phone numbers, unit numbers, bookings... (e.g. 'Amitabh', 'A-102', '98450')"
+            placeholder="Search leads, phone, unit #, bookings..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoFocus
-            className="w-full bg-transparent text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none text-base"
+            className="w-full bg-transparent text-slate-900 placeholder-slate-400 focus:outline-none text-sm sm:text-base"
           />
           {loading && <Loader2 className="w-4 h-4 animate-spin text-sky-500" />}
           <button
