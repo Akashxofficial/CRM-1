@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { formatCurrency } from "@/lib/utils";
 import {
   DollarSign,
@@ -28,6 +29,11 @@ interface Props {
 }
 
 export function AdminDashboardView({ data }: Props) {
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const { metrics, funnelData, topAgents, recentActivities, monthlySales, userName } = data;
 
   const totalInventory = metrics.totalUnits || 1;
@@ -154,30 +160,36 @@ export function AdminDashboardView({ data }: Props) {
           </div>
 
           <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlySales}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#33415520" />
-                <XAxis dataKey="month" stroke="#64748b" fontSize={11} />
-                <YAxis
-                  stroke="#64748b"
-                  fontSize={11}
-                  tickFormatter={(val) => `₹${(val / 10000000).toFixed(1)}Cr`}
-                />
-                <Tooltip
-                  formatter={(val: any) => [formatCurrency(Number(val)), ""]}
-                  contentStyle={{
-                    backgroundColor: "#0f172a",
-                    border: "1px solid #1e293b",
-                    borderRadius: "12px",
-                    color: "#ffffff",
-                    fontSize: "12px",
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
-                <Bar dataKey="sales" name="Booking Value" fill="#0284c7" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="collections" name="Collections" fill="#10b981" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {isMounted ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlySales}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#33415520" />
+                  <XAxis dataKey="month" stroke="#64748b" fontSize={11} />
+                  <YAxis
+                    stroke="#64748b"
+                    fontSize={11}
+                    tickFormatter={(val) => `₹${(val / 10000000).toFixed(1)}Cr`}
+                  />
+                  <Tooltip
+                    formatter={(val: any) => [formatCurrency(Number(val)), ""]}
+                    contentStyle={{
+                      backgroundColor: "#0f172a",
+                      border: "1px solid #1e293b",
+                      borderRadius: "12px",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
+                  <Bar dataKey="sales" name="Booking Value" fill="#0284c7" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="collections" name="Collections" fill="#10b981" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-xs text-slate-500">
+                Loading Sales Chart...
+              </div>
+            )}
           </div>
         </div>
 

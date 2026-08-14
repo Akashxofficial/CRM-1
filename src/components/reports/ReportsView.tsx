@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BarChart3, Download, TrendingUp, Building, Users, CreditCard } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -26,6 +26,11 @@ interface Props {
 const COLORS = ["#10b981", "#f59e0b", "#3b82f6", "#ef4444", "#64748b"];
 
 export function ReportsView({ projects, bookings, leads }: Props) {
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const [selectedReport, setSelectedReport] = useState<"sales" | "inventory" | "leads">("sales");
 
   // Project Sales Aggregates
@@ -96,28 +101,34 @@ export function ReportsView({ projects, bookings, leads }: Props) {
           <p className="text-xs text-slate-400 mb-6">Total contract value locked per development</p>
 
           <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={projectSalesData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#33415520" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                <YAxis
-                  stroke="#64748b"
-                  fontSize={11}
-                  tickFormatter={(val) => `₹${(val / 10000000).toFixed(1)}Cr`}
-                />
-                <Tooltip
-                  formatter={(val: any) => [formatCurrency(Number(val)), "Sales Value"]}
-                  contentStyle={{
-                    backgroundColor: "#0f172a",
-                    border: "1px solid #1e293b",
-                    borderRadius: "12px",
-                    color: "#ffffff",
-                    fontSize: "12px",
-                  }}
-                />
-                <Bar dataKey="salesValue" fill="#0284c7" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {isMounted ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={projectSalesData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#33415520" />
+                  <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
+                  <YAxis
+                    stroke="#64748b"
+                    fontSize={11}
+                    tickFormatter={(val) => `₹${(val / 10000000).toFixed(1)}Cr`}
+                  />
+                  <Tooltip
+                    formatter={(val: any) => [formatCurrency(Number(val)), "Sales Value"]}
+                    contentStyle={{
+                      backgroundColor: "#0f172a",
+                      border: "1px solid #1e293b",
+                      borderRadius: "12px",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <Bar dataKey="salesValue" fill="#0284c7" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-xs text-slate-500">
+                Loading Sales Breakdown...
+              </div>
+            )}
           </div>
         </div>
 
@@ -129,32 +140,38 @@ export function ReportsView({ projects, bookings, leads }: Props) {
           <p className="text-xs text-slate-400 mb-4">Acquisition channels distribution</p>
 
           <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={sourceData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                >
-                  {sourceData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#0f172a",
-                    border: "1px solid #1e293b",
-                    borderRadius: "12px",
-                    color: "#ffffff",
-                    fontSize: "12px",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {isMounted ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={sourceData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  >
+                    {sourceData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#0f172a",
+                      border: "1px solid #1e293b",
+                      borderRadius: "12px",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-xs text-slate-500">
+                Loading Channel Distribution...
+              </div>
+            )}
           </div>
         </div>
       </div>
