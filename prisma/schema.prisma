@@ -1,0 +1,330 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  reraNo    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]
+  projects  Project[]
+  leads     Lead[]
+  bookings  Booking[]
+  auditLogs AuditLog[]
+}
+
+model User {
+  id             String       @id @default(cuid())
+  email          String       @unique
+  password       String
+  name           String
+  role           String       // ADMIN, SALES_MANAGER, SALES_AGENT, ACCOUNTS, POST_SALES
+  phone          String?
+  avatarUrl      String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  assignedLeads     Lead[]            @relation("AssignedLeads")
+  assignedTasks     LeadTask[]        @relation("AssignedTasks")
+  salesBookings     Booking[]         @relation("AgentBookings")
+  approvedBookings  Booking[]         @relation("ApprovedBookings")
+  activities        LeadActivity[]    @relation("UserActivities")
+  uploadedDocs      Document[]        @relation("UploadedDocs")
+  verifiedDocs      Document[]        @relation("VerifiedDocs")
+  auditLogs         AuditLog[]
+  heldUnits         Unit[]            @relation("HeldByUser")
+}
+
+model Project {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  code           String
+  location       String
+  city           String
+  reraNumber     String
+  totalUnits     Int          @default(0)
+  status         String       @default("Under Construction") // Planning, Under Construction, Ready to Move, Completed
+  startDate      DateTime?
+  completionDate DateTime?
+  description    String?
+  imageUrl       String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  towers               Tower[]
+  units                Unit[]
+  leads                Lead[]
+  bookings             Booking[]
+  paymentPlanTemplates PaymentPlanTemplate[]
+}
+
+model Tower {
+  id            String   @id @default(cuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name          String
+  totalFloors   Int      @default(10)
+  unitsPerFloor Int      @default(4)
+  createdAt     DateTime @default(now())
+
+  units Unit[]
+}
+
+model Unit {
+  id             String   @id @default(cuid())
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  towerId        String
+  tower          Tower    @relation(fields: [towerId], references: [id], onDelete: Cascade)
+  unitNumber     String
+  floor          Int
+  type           String   // 1BHK, 2BHK, 3BHK, 4BHK, PENTHOUSE, VILLA, PLOT
+  areaSqft       Float
+  carpetAreaSqft Float?
+  facing         String   @default("East") // North, South, East, West, North-East, etc.
+  baseRate       Float    // Rate per sqft
+  plcCharges     Float    @default(0) // Preferential Location Charge
+  parkingCharges Float    @default(0)
+  totalCost      Float
+  status         String   @default("AVAILABLE") // AVAILABLE, HELD, BOOKED, SOLD, BLOCKED
+  
+  currentLeadId  String?
+  heldUntil      DateTime?
+  heldById       String?
+  heldBy         User?    @relation("HeldByUser", fields: [heldById], references: [id])
+  notes          String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  booking        Booking?
+  leads          Lead[]   @relation("InterestedUnit")
+}
+
+model Lead {
+  id               String       @id @default(cuid())
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId        String
+  project          Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name             String
+  phone            String
+  email            String
+  source           String       @default("Website") // Website, Referral, Walk-in, Portal, Ads, Channel Partner
+  status           String       @default("NEW") // NEW, CONTACTED, SITE_VISIT_SCHEDULED, SITE_VISIT_DONE, NEGOTIATION, BOOKED, LOST
+  interestedType   String?      // 1BHK, 2BHK, 3BHK, Villa
+  budgetMin        Float?
+  budgetMax        Float?
+  priority         String       @default("MEDIUM") // LOW, MEDIUM, HIGH, HOT
+  lostReason       String?
+  
+  assignedToId     String?
+  assignedTo       User?        @relation("AssignedLeads", fields: [assignedToId], references: [id])
+
+  interestedUnitId String?
+  interestedUnit   Unit?        @relation("InterestedUnit", fields: [interestedUnitId], references: [id])
+
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  activities       LeadActivity[]
+  tasks            LeadTask[]
+  booking          Booking?
+}
+
+model LeadActivity {
+  id            String    @id @default(cuid())
+  leadId        String
+  lead          Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type          String    // CALL, MEETING, SITE_VISIT, NOTE, WHATSAPP, EMAIL, STATUS_CHANGE
+  title         String
+  notes         String?
+  siteVisitDate DateTime?
+  performedById String?
+  performedBy   User?     @relation("UserActivities", fields: [performedById], references: [id])
+  createdAt     DateTime  @default(now())
+}
+
+model LeadTask {
+  id           String    @id @default(cuid())
+  leadId       String
+  lead         Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  dueDate      DateTime
+  priority     String    @default("MEDIUM") // LOW, MEDIUM, HIGH
+  status       String    @default("PENDING") // PENDING, COMPLETED, OVERDUE
+  assignedToId String?
+  assignedTo   User?     @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model PaymentPlanTemplate {
+  id             String   @id @default(cuid())
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name           String   // e.g. "Construction Linked Plan (CLP)", "20:80 Subvention", "Down Payment Plan"
+  description    String?
+  isDefault      Boolean  @default(false)
+  milestonesJson String   // JSON array of [{ name: "Booking Amount", percentage: 10, daysFromBooking: 0 }, ...]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  bookings       Booking[]
+}
+
+model Booking {
+  id                    String       @id @default(cuid())
+  organizationId        String
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId             String
+  project               Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  unitId                String       @unique
+  unit                  Unit         @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  leadId                String       @unique
+  lead                  Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  bookingNumber         String       @unique
+  agreementValue        Float
+  bookingAmountReceived Float        @default(0)
+  
+  paymentPlanId         String?
+  paymentPlan           PaymentPlanTemplate? @relation(fields: [paymentPlanId], references: [id])
+  
+  salesAgentId          String?
+  salesAgent            User?        @relation("AgentBookings", fields: [salesAgentId], references: [id])
+  
+  approvedById          String?
+  approvedBy            User?        @relation("ApprovedBookings", fields: [approvedById], references: [id])
+  
+  status                String       @default("PROVISIONAL") // PROVISIONAL, CONFIRMED, CANCELLED
+  bookingDate           DateTime     @default(now())
+  notes                 String?
+  
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  schedules             PaymentSchedule[]
+  documents             Document[]
+  possession            Possession?
+  transactions          PaymentTransaction[]
+}
+
+model PaymentSchedule {
+  id                  String   @id @default(cuid())
+  bookingId           String
+  booking             Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  milestoneName       String   // e.g., "On Booking", "On 1st Slab Completion", "On Possession"
+  milestoneCode       String   // e.g., "MS_01"
+  percentage          Float
+  dueAmount           Float
+  dueDate             DateTime
+  status              String   @default("PENDING") // PENDING, OVERDUE, PAID, PARTIAL
+  demandLetterSent    Boolean  @default(false)
+  demandLetterSentAt  DateTime?
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  transactions        PaymentTransaction[]
+}
+
+model PaymentTransaction {
+  id            String          @id @default(cuid())
+  scheduleId    String?
+  schedule      PaymentSchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  bookingId     String
+  booking       Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  amountPaid    Float
+  paymentDate   DateTime        @default(now())
+  mode          String          // CHEQUE, NEFT, RTGS, UPI, CARD, CASH
+  referenceNo   String
+  receiptNumber String          @unique
+  bankName      String?
+  receiptUrl    String?
+  verifiedById  String?
+  notes         String?
+  
+  createdAt     DateTime        @default(now())
+}
+
+model Document {
+  id           String    @id @default(cuid())
+  bookingId    String
+  booking      Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  type         String    // ALLOTMENT_LETTER, SALE_AGREEMENT, KYC_VERIFICATION, DEMAND_LETTER, OC_CC_CERTIFICATE, SALE_DEED, POSSESSION_CERTIFICATE
+  title        String
+  status       String    @default("PENDING") // PENDING, GENERATED, UPLOADED, VERIFIED, REGISTERED
+  fileUrl      String?
+  uploadedById String?
+  uploadedBy   User?     @relation("UploadedDocs", fields: [uploadedById], references: [id])
+  verifiedById String?
+  verifiedBy   User?     @relation("VerifiedDocs", fields: [verifiedById], references: [id])
+  uploadedAt   DateTime?
+  verifiedAt   DateTime?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Possession {
+  id                   String     @id @default(cuid())
+  bookingId            String     @unique
+  booking              Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  scheduledDate        DateTime?
+  actualDate           DateTime?
+  status               String     @default("SCHEDULED") // SCHEDULED, INSPECTION_COMPLETED, SNAGS_PENDING, READY_FOR_HANDOVER, HANDED_OVER
+  electricityMeterNo   String?
+  waterMeterNo         String?
+  gasMeterNo           String?
+  handoverChecklistJson String?    // JSON array of checked items
+  notes                String?
+  handoverById         String?
+  
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  snags                SnagItem[]
+}
+
+model SnagItem {
+  id           String     @id @default(cuid())
+  possessionId String
+  possession   Possession @relation(fields: [possessionId], references: [id], onDelete: Cascade)
+  category     String     // ELECTRICAL, PLUMBING, PAINTING, CARPENTRY, CIVIL, OTHER
+  description  String
+  location     String?    // e.g. "Master Bedroom", "Kitchen Balcony"
+  status       String     @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, VERIFIED
+  photoUrl     String?
+  reportedAt   DateTime   @default(now())
+  resolvedAt   DateTime?
+}
+
+model AuditLog {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  entityType     String       // LEAD, UNIT, BOOKING, PAYMENT, DOCUMENT, POSSESSION
+  entityId       String
+  action         String       // CREATED, STATUS_CHANGED, HELD, RELEASED, APPROVED, PAID, VERIFIED, HANDED_OVER
+  details        String?
+  performedById  String?
+  performedBy    User?        @relation(fields: [performedById], references: [id])
+  createdAt      DateTime     @default(now())
+}
