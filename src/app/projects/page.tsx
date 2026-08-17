@@ -83,7 +83,7 @@ export default async function ProjectsPage() {
 
               <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                 <span className="text-[11px] text-slate-400">
-                  Developer: <strong>UrbanGaon Realty</strong>
+                  Developer: <strong>UrbanGaon</strong>
                 </span>
                 <Link
                   href={`/listings?project=${proj.id}`}

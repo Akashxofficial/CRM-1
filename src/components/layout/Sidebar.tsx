@@ -116,7 +116,7 @@ export function Sidebar({ user, onCloseMobile }: Props) {
           />
           <div className="min-w-0">
             <span className="font-bold text-slate-900 text-sm tracking-tight truncate block font-heading">
-              UrbanGaon Realty
+              UrbanGaon
             </span>
             <span className="text-[11px] text-slate-500 font-medium block truncate">
               {roleBadge.label}
