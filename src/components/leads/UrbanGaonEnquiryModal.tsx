@@ -89,6 +89,60 @@ const DESIGNATIONS_LIST = [
   "Other / Not Applicable",
 ];
 
+const INDUSTRY_TYPES_LIST = [
+  "-None-",
+  "Banking & Finance",
+  "Consulting",
+  "Insurance",
+  "Legal",
+  "Accounting",
+  "Investment Management",
+  "Healthcare",
+  "Pharmaceuticals",
+  "Wellness",
+  "Medical Devices",
+  "Information Technology",
+  "Software Development",
+  "Telecommunications",
+  "Technology",
+  "Cloud Computing",
+  "Arts & Culture",
+  "Entertainment",
+  "Fashion & Apparel",
+  "Media & Publishing",
+  "Advertising",
+  "Agriculture",
+  "Automotive",
+  "Aviation",
+  "Construction",
+  "Energy & Utilities",
+  "Manufacturing",
+  "Mining & Metals",
+  "Chemicals",
+  "Education",
+  "Government & Public Sector",
+  "Hospitality & Tourism",
+  "Non-Profit",
+  "Real Estate",
+  "Retail",
+  "Sports & Recreation",
+  "Transportation & Logistics",
+  "Primary & Secondary Education",
+  "Higher Education",
+  "Vocational Training",
+  "Online Learning",
+  "Defense & Security",
+  "E-Commerce",
+  "Environmental Services",
+  "Food & Beverage",
+  "Gaming",
+  "Marine",
+  "Research & Development",
+  "Supply Chain Management",
+  "Startups",
+  "Other",
+];
+
 export function UrbanGaonEnquiryModal({
   isOpen,
   onClose,
@@ -139,7 +193,7 @@ export function UrbanGaonEnquiryModal({
 
   // Customer Profile & Employment
   const [customerProfile, setCustomerProfile] = useState<string>("-None-");
-  const [industryType, setIndustryType] = useState("");
+  const [industryType, setIndustryType] = useState("-None-");
   const [companyName, setCompanyName] = useState("");
   const [designation, setDesignation] = useState("-None-");
   const [department, setDepartment] = useState("");
@@ -953,16 +1007,20 @@ export function UrbanGaonEnquiryModal({
                   />
                 </div>
 
-                {/* 2. Industry Type */}
+                {/* 2. Industry Type Dropdown */}
                 <div>
                   <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Industry Type</label>
-                  <input
-                    type="text"
+                  <select
                     value={industryType}
                     onChange={(e) => setIndustryType(e.target.value)}
-                    placeholder="e.g. IT / Real Estate / Finance"
-                    className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
-                  />
+                    className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer"
+                  >
+                    {INDUSTRY_TYPES_LIST.map((ind) => (
+                      <option key={ind} value={ind}>
+                        {ind}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* 3. Designation Dropdown (45 options) */}
