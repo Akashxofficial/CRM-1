@@ -184,9 +184,7 @@ export function UrbanGaonEnquiryModal({
   const [dob, setDob] = useState("");
   const [maritalStatus, setMaritalStatus] = useState<"Single" | "Married">("Single");
   const [childrenCount, setChildrenCount] = useState("");
-  const [residentialStatus, setResidentialStatus] = useState<
-    "Resident" | "Non-Resident" | "Foreign National of Indian Origin"
-  >("Resident");
+  const [residentialStatus, setResidentialStatus] = useState<string>("-None-");
   const [purposeOfPurchase, setPurposeOfPurchase] = useState<"Investment" | "End Use">(
     "End Use"
   );
@@ -207,13 +205,11 @@ export function UrbanGaonEnquiryModal({
   const [otherSource, setOtherSource] = useState("");
 
   // Housing Preference, Timelines & Budget
-  const [livingStatus, setLivingStatus] = useState<"Own" | "Rent">("Own");
+  const [livingStatus, setLivingStatus] = useState<string>("-None-");
   const [housingStyle, setHousingStyle] = useState<"Plot" | "2/3 BHK" | "Serviced Apartment">(
     "2/3 BHK"
   );
-  const [purchaseTimeline, setPurchaseTimeline] = useState<
-    "With in 1 Month" | "1-3 Months" | "6-12 Months"
-  >("1-3 Months");
+  const [purchaseTimeline, setPurchaseTimeline] = useState<string>("-None-");
   const [budgetRange, setBudgetRange] = useState<
     "<₹50 Lakhs" | "₹50 Lakhs-₹1 Crore" | ">₹1 Crore" | "Prefer not to disclose"
   >("₹50 Lakhs-₹1 Crore");
@@ -936,23 +932,19 @@ export function UrbanGaonEnquiryModal({
                 )}
               </div>
 
-              {/* Residential Status */}
-              <div className="p-3.5 rounded-2xl border border-slate-200 bg-[#F8FAFC] space-y-1">
+              {/* Residential Status Dropdown */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-[#F8FAFC] space-y-1.5">
                 <label className="block text-[11px] font-bold text-slate-700">Residential Status</label>
-                <div className="space-y-1 text-[11px]">
-                  {["Resident", "Non-Resident", "Foreign National of Indian Origin"].map((r) => (
-                    <label key={r} className="flex items-center gap-1 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="residential"
-                        checked={residentialStatus === r}
-                        onChange={() => setResidentialStatus(r as any)}
-                        className="text-[#3B8CFF]"
-                      />
-                      <span className="truncate">{r}</span>
-                    </label>
-                  ))}
-                </div>
+                <select
+                  value={residentialStatus}
+                  onChange={(e) => setResidentialStatus(e.target.value)}
+                  className="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer"
+                >
+                  <option value="-None-">-None-</option>
+                  <option value="Resident">Resident</option>
+                  <option value="Non-Resident">Non-Resident</option>
+                  <option value="Foreign National of Indian Origin">Foreign National of Indian Origin</option>
+                </select>
               </div>
 
               {/* Purpose of Purchase */}
@@ -1153,23 +1145,19 @@ export function UrbanGaonEnquiryModal({
 
             {/* 5. HOUSING STYLE, LIVING STATUS, TIMELINES & BUDGET (4 Box Cards matching PDF) */}
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3.5">
-              {/* Current living Status */}
-              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1">
+              {/* Current living Status Dropdown */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1.5">
                 <label className="block text-[11px] font-bold text-slate-700">Current living Status:</label>
-                <div className="space-y-1.5 text-[11px] pt-1">
-                  {["Own", "Rent"].map((s) => (
-                    <label key={s} className="flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="livingStatus"
-                        checked={livingStatus === s}
-                        onChange={() => setLivingStatus(s as any)}
-                        className="text-[#3B8CFF]"
-                      />
-                      <span>{s}</span>
-                    </label>
-                  ))}
-                </div>
+                <select
+                  value={livingStatus}
+                  onChange={(e) => setLivingStatus(e.target.value)}
+                  className="w-full px-2.5 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer"
+                >
+                  <option value="-None-">-None-</option>
+                  <option value="Own">Own</option>
+                  <option value="Rent">Rent</option>
+                  <option value="Rented">Rented</option>
+                </select>
               </div>
 
               {/* Desired Housing Style */}
@@ -1191,23 +1179,19 @@ export function UrbanGaonEnquiryModal({
                 </div>
               </div>
 
-              {/* Purchase Timelines */}
-              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1">
+              {/* Purchase Timelines Dropdown */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1.5">
                 <label className="block text-[11px] font-bold text-slate-700">Purchase Timelines:</label>
-                <div className="space-y-1.5 text-[11px] pt-1">
-                  {["With in 1 Month", "1-3 Months", "6-12 Months"].map((t) => (
-                    <label key={t} className="flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="timeline"
-                        checked={purchaseTimeline === t}
-                        onChange={() => setPurchaseTimeline(t as any)}
-                        className="text-[#3B8CFF]"
-                      />
-                      <span>{t}</span>
-                    </label>
-                  ))}
-                </div>
+                <select
+                  value={purchaseTimeline}
+                  onChange={(e) => setPurchaseTimeline(e.target.value)}
+                  className="w-full px-2.5 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer"
+                >
+                  <option value="-None-">-None-</option>
+                  <option value="With in 1 Month">With in 1 Month</option>
+                  <option value="1-3 Months">1-3 Months</option>
+                  <option value="6-12 Months">6-12 Months</option>
+                </select>
               </div>
 
               {/* Budget Range */}
