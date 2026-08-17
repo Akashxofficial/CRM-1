@@ -205,10 +205,16 @@ export function UrbanGaonEnquiryModal({
   const [otherSource, setOtherSource] = useState("");
 
   // Housing Preference, Timelines & Budget
-  const [livingStatus, setLivingStatus] = useState<string>("-None-");
-  const [housingStyle, setHousingStyle] = useState<string>("-None-");
-  const [purchaseTimeline, setPurchaseTimeline] = useState<string>("-None-");
-  const [budgetRange, setBudgetRange] = useState<string>("-None-");
+  const [livingStatus, setLivingStatus] = useState<"Own" | "Rent">("Own");
+  const [housingStyle, setHousingStyle] = useState<"Plot" | "2/3 BHK" | "Serviced Apartment">(
+    "2/3 BHK"
+  );
+  const [purchaseTimeline, setPurchaseTimeline] = useState<
+    "With in 1 Month" | "1-3 Months" | "6-12 Months"
+  >("1-3 Months");
+  const [budgetRange, setBudgetRange] = useState<
+    "<₹50 Lakhs" | "₹50 Lakhs-₹1 Crore" | ">₹1 Crore" | "Prefer not to disclose"
+  >("₹50 Lakhs-₹1 Crore");
 
   // CRM Project & Sales Assignment
   const defaultProjId = projects[0]?.id || "demo-proj-1";
@@ -982,7 +988,7 @@ export function UrbanGaonEnquiryModal({
                 </select>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-2">
                 {/* 1. Company Name */}
                 <div>
                   <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Company Name</label>
@@ -1001,7 +1007,7 @@ export function UrbanGaonEnquiryModal({
                   <select
                     value={industryType}
                     onChange={(e) => setIndustryType(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer"
+                    className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer truncate"
                   >
                     {INDUSTRY_TYPES_LIST.map((ind) => (
                       <option key={ind} value={ind}>
@@ -1017,7 +1023,7 @@ export function UrbanGaonEnquiryModal({
                   <select
                     value={designation}
                     onChange={(e) => setDesignation(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer"
+                    className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer truncate"
                   >
                     {DESIGNATIONS_LIST.map((des) => (
                       <option key={des} value={des}>
@@ -1039,12 +1045,13 @@ export function UrbanGaonEnquiryModal({
                   />
                 </div>
 
-                <div className="sm:col-span-2 lg:col-span-4">
+                {/* 5. Annual Income Dropdown (Equally sized compact column) */}
+                <div>
                   <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Annual Income</label>
                   <select
                     value={annualIncome}
                     onChange={(e) => setAnnualIncome(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] text-xs cursor-pointer"
+                    className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] text-xs cursor-pointer truncate"
                   >
                     <option value="-None-">-None-</option>
                     <option value="Upto 10 Lakhs">Upto 10 Lakhs</option>
@@ -1141,65 +1148,80 @@ export function UrbanGaonEnquiryModal({
 
             {/* 5. HOUSING STYLE, LIVING STATUS, TIMELINES & BUDGET (4 Box Cards matching PDF) */}
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3.5">
-              {/* Current living Status Dropdown */}
-              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1.5">
+              {/* Current living Status */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1">
                 <label className="block text-[11px] font-bold text-slate-700">Current living Status:</label>
-                <select
-                  value={livingStatus}
-                  onChange={(e) => setLivingStatus(e.target.value)}
-                  className="w-full px-2.5 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer"
-                >
-                  <option value="-None-">-None-</option>
-                  <option value="Own">Own</option>
-                  <option value="Rent">Rent</option>
-                  <option value="Rented">Rented</option>
-                </select>
+                <div className="space-y-1.5 text-[11px] pt-1">
+                  {["Own", "Rent"].map((s) => (
+                    <label key={s} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="livingStatus"
+                        checked={livingStatus === s}
+                        onChange={() => setLivingStatus(s as any)}
+                        className="text-[#3B8CFF]"
+                      />
+                      <span>{s}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
-              {/* Desired Housing Style Dropdown */}
-              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1.5">
+              {/* Desired Housing Style */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1">
                 <label className="block text-[11px] font-bold text-slate-700">Desired Housing Style:</label>
-                <select
-                  value={housingStyle}
-                  onChange={(e) => setHousingStyle(e.target.value)}
-                  className="w-full px-2.5 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer"
-                >
-                  <option value="-None-">-None-</option>
-                  <option value="Plot">Plot</option>
-                  <option value="2/3 BHK">2/3 BHK</option>
-                  <option value="Serviced Apartment">Serviced Apartment</option>
-                </select>
+                <div className="space-y-1.5 text-[11px] pt-1">
+                  {["Plot", "2/3 BHK", "Serviced Apartment"].map((h) => (
+                    <label key={h} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="housingStyle"
+                        checked={housingStyle === h}
+                        onChange={() => setHousingStyle(h as any)}
+                        className="text-[#3B8CFF]"
+                      />
+                      <span>{h}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
-              {/* Purchase Timelines Dropdown */}
-              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1.5">
+              {/* Purchase Timelines */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1">
                 <label className="block text-[11px] font-bold text-slate-700">Purchase Timelines:</label>
-                <select
-                  value={purchaseTimeline}
-                  onChange={(e) => setPurchaseTimeline(e.target.value)}
-                  className="w-full px-2.5 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer"
-                >
-                  <option value="-None-">-None-</option>
-                  <option value="With in 1 Month">With in 1 Month</option>
-                  <option value="1-3 Months">1-3 Months</option>
-                  <option value="6-12 Months">6-12 Months</option>
-                </select>
+                <div className="space-y-1.5 text-[11px] pt-1">
+                  {["With in 1 Month", "1-3 Months", "6-12 Months"].map((t) => (
+                    <label key={t} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="timeline"
+                        checked={purchaseTimeline === t}
+                        onChange={() => setPurchaseTimeline(t as any)}
+                        className="text-[#3B8CFF]"
+                      />
+                      <span>{t}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
-              {/* What is your overall budget range Dropdown */}
-              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1.5">
-                <label className="block text-[11px] font-bold text-slate-700">What is your overall budget range:</label>
-                <select
-                  value={budgetRange}
-                  onChange={(e) => setBudgetRange(e.target.value)}
-                  className="w-full px-2.5 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer"
-                >
-                  <option value="-None-">-None-</option>
-                  <option value="<₹50 Lakhs">&lt;₹50 Lakhs</option>
-                  <option value="₹50 Lakhs-₹1 Crore">₹50 Lakhs-₹1 Crore</option>
-                  <option value=">₹1 Crore">&gt;₹1 Crore</option>
-                  <option value="Prefer not to disclose">Prefer not to disclose</option>
-                </select>
+              {/* Budget Range */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1">
+                <label className="block text-[11px] font-bold text-slate-700">Overall Budget Range:</label>
+                <div className="space-y-1 text-[11px] pt-1">
+                  {["<₹50 Lakhs", "₹50 Lakhs-₹1 Crore", ">₹1 Crore", "Prefer not to disclose"].map((b) => (
+                    <label key={b} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="budget"
+                        checked={budgetRange === b}
+                        onChange={() => setBudgetRange(b as any)}
+                        className="text-[#3B8CFF]"
+                      />
+                      <span className="truncate">{b}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
 
