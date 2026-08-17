@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import { createLeadAction } from "@/actions/leads-actions";
 import { generateCustomerWelcomeEmail, generateInternalCompanyNotificationEmail } from "@/lib/email-templates";
 import {
@@ -16,6 +16,8 @@ import {
   Check,
   Phone,
   AtSign,
+  ChevronDown,
+  Globe,
 } from "lucide-react";
 
 interface Props {
@@ -33,6 +35,41 @@ const COMMON_EMAIL_DOMAINS = [
   "hotmail.com",
   "icloud.com",
   "urbangaon.com",
+];
+
+interface CountryInfo {
+  name: string;
+  code: string;
+  flag: string;
+  digitLength: number;
+}
+
+const COUNTRIES_REGISTRY: CountryInfo[] = [
+  { name: "India", code: "+91", flag: "🇮🇳", digitLength: 10 },
+  { name: "United Arab Emirates", code: "+971", flag: "🇦🇪", digitLength: 9 },
+  { name: "United States", code: "+1", flag: "🇺🇸", digitLength: 10 },
+  { name: "United Kingdom", code: "+44", flag: "🇬🇧", digitLength: 10 },
+  { name: "Canada", code: "+1", flag: "🇨🇦", digitLength: 10 },
+  { name: "Australia", code: "+61", flag: "🇦🇺", digitLength: 9 },
+  { name: "Singapore", code: "+65", flag: "🇸🇬", digitLength: 8 },
+  { name: "Saudi Arabia", code: "+966", flag: "🇸🇦", digitLength: 9 },
+  { name: "Qatar", code: "+974", flag: "🇶🇦", digitLength: 8 },
+  { name: "Kuwait", code: "+965", flag: "🇰🇼", digitLength: 8 },
+  { name: "Oman", code: "+968", flag: "🇴🇲", digitLength: 8 },
+  { name: "Germany", code: "+49", flag: "🇩🇪", digitLength: 10 },
+  { name: "France", code: "+33", flag: "🇫🇷", digitLength: 9 },
+  { name: "New Zealand", code: "+64", flag: "🇳🇿", digitLength: 9 },
+  { name: "South Africa", code: "+27", flag: "🇿🇦", digitLength: 9 },
+  { name: "Japan", code: "+81", flag: "🇯🇵", digitLength: 10 },
+  { name: "Malaysia", code: "+60", flag: "🇲🇾", digitLength: 9 },
+  { name: "Bahrain", code: "+973", flag: "🇧🇭", digitLength: 8 },
+  { name: "Hong Kong", code: "+852", flag: "🇭🇰", digitLength: 8 },
+  { name: "Ireland", code: "+353", flag: "🇮🇪", digitLength: 9 },
+  { name: "Netherlands", code: "+31", flag: "🇳🇱", digitLength: 9 },
+  { name: "Switzerland", code: "+41", flag: "🇨🇭", digitLength: 9 },
+  { name: "Italy", code: "+39", flag: "🇮🇹", digitLength: 10 },
+  { name: "Spain", code: "+34", flag: "🇪🇸", digitLength: 9 },
+  { name: "Sweden", code: "+46", flag: "🇸🇪", digitLength: 9 },
 ];
 
 export function UrbanGaonEnquiryModal({
@@ -59,6 +96,12 @@ export function UrbanGaonEnquiryModal({
   const [state, setState] = useState("Rajasthan");
   const [country, setCountry] = useState("India");
   const [pinCode, setPinCode] = useState("302006");
+
+  // Country Code & Flag State
+  const [countryDialCode, setCountryDialCode] = useState("+91");
+  const [countryFlag, setCountryFlag] = useState("🇮🇳");
+  const [targetDigitLength, setTargetDigitLength] = useState(10);
+  const [isCountryPickerOpen, setIsCountryPickerOpen] = useState(false);
   
   // Mobile & Real-time Email Suggestions
   const [mobile, setMobile] = useState("");
@@ -111,16 +154,47 @@ export function UrbanGaonEnquiryModal({
   const [assignedToId, setAssignedToId] = useState("");
   const [initialNote, setInitialNote] = useState("");
 
+  // Real-time Country & Dial Code Auto-Sync Function
+  const syncCountryAndDialCode = (countryName: string) => {
+    setCountry(countryName);
+    const query = countryName.trim().toLowerCase();
+
+    // Match exact or common aliases
+    const matched = COUNTRIES_REGISTRY.find((c) => {
+      const cName = c.name.toLowerCase();
+      if (cName === query || cName.includes(query) || query.includes(cName)) return true;
+      if (query === "uae" || query === "dubai") return c.name === "United Arab Emirates";
+      if (query === "us" || query === "usa" || query === "america") return c.name === "United States";
+      if (query === "uk" || query === "england" || query === "london") return c.name === "United Kingdom";
+      if (query === "saudi") return c.name === "Saudi Arabia";
+      return false;
+    });
+
+    if (matched) {
+      setCountryDialCode(matched.code);
+      setCountryFlag(matched.flag);
+      setTargetDigitLength(matched.digitLength);
+    }
+  };
+
+  const selectCountryItem = (item: CountryInfo) => {
+    setCountry(item.name);
+    setCountryDialCode(item.code);
+    setCountryFlag(item.flag);
+    setTargetDigitLength(item.digitLength);
+    setIsCountryPickerOpen(false);
+  };
+
   if (!isOpen) return null;
 
   const handlePrint = () => {
     window.print();
   };
 
-  // Mobile Real-Time Validation Handler (Strictly 10 digits numeric)
+  // Mobile Real-Time Validation Handler (Strict numeric)
   const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawVal = e.target.value;
-    const digitsOnly = rawVal.replace(/\D/g, "").slice(0, 10);
+    const digitsOnly = rawVal.replace(/\D/g, "").slice(0, targetDigitLength);
     setMobile(digitsOnly);
     if (error) setError("");
   };
@@ -147,7 +221,7 @@ export function UrbanGaonEnquiryModal({
     middleName,
     lastName: lastName || "",
     email: email || `${firstName.toLowerCase() || "lead"}.${lastName.toLowerCase() || "user"}@customer.in`,
-    mobile: mobile || "9876543210",
+    mobile: `${countryDialCode} ${mobile || "9876543210"}`,
     address,
     city,
     state,
@@ -190,13 +264,14 @@ export function UrbanGaonEnquiryModal({
       return;
     }
 
-    // Strict 10-Digit Indian Mobile Number Check
+    // Strict Mobile Number Check
     const cleanMobile = mobile.replace(/\D/g, "");
-    if (cleanMobile.length !== 10) {
-      setError(`Mobile number must be exactly 10 digits. (Currently entered ${cleanMobile.length} digits)`);
+    if (cleanMobile.length !== targetDigitLength) {
+      setError(`Mobile number for ${country} must be exactly ${targetDigitLength} digits. (Currently entered ${cleanMobile.length} digits)`);
       return;
     }
-    if (!/^[6-9]\d{9}$/.test(cleanMobile)) {
+
+    if (countryDialCode === "+91" && !/^[6-9]\d{9}$/.test(cleanMobile)) {
       setError("Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.");
       return;
     }
@@ -241,7 +316,7 @@ export function UrbanGaonEnquiryModal({
       const res = await createLeadAction({
         projectId: projectId || defaultProjId,
         name: fullName,
-        phone: cleanMobile,
+        phone: `${countryDialCode} ${cleanMobile}`,
         email: email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@customer.in`,
         source: sourceLabel,
         interestedType: housingStyle,
@@ -287,7 +362,7 @@ export function UrbanGaonEnquiryModal({
                 UrbanGaon Customer Enquiry Form
               </h2>
               <p className="text-xs text-slate-500">
-                Official real estate application with real-time email suggestions & strict validation
+                Official real estate application with real-time country code & email suggestions
               </p>
             </div>
           </div>
@@ -494,7 +569,7 @@ export function UrbanGaonEnquiryModal({
                 />
               </div>
 
-              {/* City, State, Country, Pin */}
+              {/* City, State, Country (with Real-Time Dial Code Auto-Sync), Pin */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-[10px] text-slate-400 mb-1">City</label>
@@ -514,15 +589,32 @@ export function UrbanGaonEnquiryModal({
                     className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
                   />
                 </div>
-                <div>
-                  <label className="block text-[10px] text-slate-400 mb-1">Country</label>
-                  <input
-                    type="text"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
-                  />
+
+                {/* Real-Time Synced Country Field */}
+                <div className="relative">
+                  <label className="block text-[10px] text-slate-400 mb-1 flex items-center justify-between">
+                    <span>Country *</span>
+                    <span className="text-[10px] text-[#3B8CFF] font-semibold">{countryFlag} {countryDialCode}</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      list="countries-datalist"
+                      value={country}
+                      onChange={(e) => syncCountryAndDialCode(e.target.value)}
+                      placeholder="e.g. India, UAE, USA"
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+                    />
+                    <datalist id="countries-datalist">
+                      {COUNTRIES_REGISTRY.map((c) => (
+                        <option key={c.name} value={c.name}>
+                          {c.flag} {c.name} ({c.code})
+                        </option>
+                      ))}
+                    </datalist>
+                  </div>
                 </div>
+
                 <div>
                   <label className="block text-[10px] text-slate-400 mb-1">Pin</label>
                   <input
@@ -534,46 +626,78 @@ export function UrbanGaonEnquiryModal({
                 </div>
               </div>
 
-              {/* Mobile (Strict 10-digit validation) & Email (Auto-suggestions) */}
+              {/* Mobile (Real-Time Synced Country Code + Strict Validation) & Email */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {/* 1. STRICT 10-DIGIT MOBILE INPUT */}
+                {/* 1. AUTO-ASSIGNED COUNTRY CODE & STRICT DIGIT VALIDATION */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-[11px] font-bold text-slate-700">
-                      Mobile Number * (Exactly 10 Digits)
+                      Mobile Number * (Exactly {targetDigitLength} Digits)
                     </label>
                     <span
                       className={`text-[10px] font-semibold px-2 py-0.5 rounded-full transition ${
-                        mobile.length === 10
+                        mobile.length === targetDigitLength
                           ? "bg-emerald-100 text-emerald-700"
                           : mobile.length > 0
                           ? "bg-amber-100 text-amber-800"
                           : "text-slate-400"
                       }`}
                     >
-                      {mobile.length === 10
-                        ? "✓ 10/10 Digits Complete"
+                      {mobile.length === targetDigitLength
+                        ? `✓ ${targetDigitLength}/${targetDigitLength} Digits Complete`
                         : mobile.length > 0
-                        ? `${mobile.length}/10 Digits (Need ${10 - mobile.length} more)`
-                        : "0/10 Digits"}
+                        ? `${mobile.length}/${targetDigitLength} Digits (Need ${targetDigitLength - mobile.length} more)`
+                        : `0/${targetDigitLength} Digits`}
                     </span>
                   </div>
 
                   <div className="relative flex items-center">
-                    <span className="px-3 py-2 rounded-l-xl bg-[#F8FAFC] border border-r-0 border-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1">
-                      <span>🇮🇳</span>
-                      <span>+91</span>
-                    </span>
+                    {/* Interactive Country Code Pill with Dropdown */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setIsCountryPickerOpen(!isCountryPickerOpen)}
+                        className="px-3 py-2 rounded-l-xl bg-[#F8FAFC] hover:bg-slate-100 border border-r-0 border-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition select-none"
+                      >
+                        <span className="text-sm">{countryFlag}</span>
+                        <span>{countryDialCode}</span>
+                        <ChevronDown className="w-3 h-3 text-slate-400" />
+                      </button>
+
+                      {/* Dropdown for quick country selection */}
+                      {isCountryPickerOpen && (
+                        <div className="absolute left-0 top-full mt-1 z-50 bg-white rounded-2xl shadow-xl border border-slate-200/90 w-56 max-h-60 overflow-y-auto p-1.5 space-y-0.5 animate-in fade-in">
+                          <div className="text-[10px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">
+                            Select Country Code:
+                          </div>
+                          {COUNTRIES_REGISTRY.map((item) => (
+                            <button
+                              key={item.name}
+                              type="button"
+                              onClick={() => selectCountryItem(item)}
+                              className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs hover:bg-[#F0F6FF] hover:text-[#3B8CFF] flex items-center justify-between transition"
+                            >
+                              <span className="flex items-center gap-2 truncate">
+                                <span>{item.flag}</span>
+                                <span className="font-medium text-slate-800 truncate">{item.name}</span>
+                              </span>
+                              <strong className="text-slate-600 font-mono text-[11px] ml-1">{item.code}</strong>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <input
                       type="tel"
                       required
                       inputMode="numeric"
                       value={mobile}
                       onChange={handleMobileChange}
-                      placeholder="9876543210"
-                      maxLength={10}
+                      placeholder={targetDigitLength === 10 ? "9876543210" : "501234567"}
+                      maxLength={targetDigitLength}
                       className={`flex-1 px-3 py-2 rounded-r-xl bg-white border font-bold text-xs tracking-widest focus:outline-none focus:ring-2 transition ${
-                        mobile.length === 10
+                        mobile.length === targetDigitLength
                           ? "border-emerald-400 text-emerald-950 focus:ring-emerald-400"
                           : mobile.length > 0
                           ? "border-amber-300 text-slate-900 focus:ring-amber-400"
@@ -582,7 +706,7 @@ export function UrbanGaonEnquiryModal({
                     />
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1">
-                    Accepts only 10-digit Indian phone numbers (6000000000 - 9999999999).
+                    Auto-synced with <strong>{country}</strong> ({countryDialCode}). Enter exactly {targetDigitLength} digits.
                   </p>
                 </div>
 
@@ -604,7 +728,6 @@ export function UrbanGaonEnquiryModal({
                       onChange={(e) => setEmail(e.target.value)}
                       onFocus={() => setIsEmailFocused(true)}
                       onBlur={() => {
-                        // Delay closing slightly so clicking suggestion works
                         setTimeout(() => setIsEmailFocused(false), 200);
                       }}
                       placeholder="rajesh.sharma@gmail.com"
@@ -1043,7 +1166,7 @@ export function UrbanGaonEnquiryModal({
 
                 <button
                   type="submit"
-                  disabled={isPending || mobile.length !== 10}
+                  disabled={isPending || mobile.length !== targetDigitLength}
                   className="px-6 py-2.5 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-bold shadow-md shadow-[#3B8CFF]/25 flex items-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isPending ? (
