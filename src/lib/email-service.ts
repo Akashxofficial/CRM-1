@@ -63,15 +63,15 @@ export async function sendLeadEnquiryEmails(data: LeadEnquiryEmailPayload) {
         }
       }
 
-      // 2. Send Company Notification Email to dasaakash84@gmail.com
+      // 2. Send Company Notification Email to yudhister.tiwari@urbangaon.com
       try {
         const compRes = await transporter.sendMail({
           from: fromAddress,
-          to: "dasaakash84@gmail.com",
+          to: "yudhister.tiwari@urbangaon.com",
           subject: companyEmail.subject,
           html: companyEmail.html,
         });
-        console.log("✅ [REAL-TIME] Company Notification Email sent to dasaakash84@gmail.com ID:", compRes.messageId);
+        console.log("✅ [REAL-TIME] Company Notification Email sent to yudhister.tiwari@urbangaon.com ID:", compRes.messageId);
         companySent = true;
       } catch (err: any) {
         console.error("❌ Failed to send Company Notification Email:", err?.message || err);
@@ -88,7 +88,7 @@ export async function sendLeadEnquiryEmails(data: LeadEnquiryEmailPayload) {
         error: customerError,
       },
       companyEmail: {
-        to: "dasaakash84@gmail.com",
+        to: "yudhister.tiwari@urbangaon.com",
         subject: companyEmail.subject,
         delivered: companySent,
         error: companyError,

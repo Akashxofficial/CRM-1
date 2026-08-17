@@ -52,8 +52,8 @@ export function Sidebar({ user, onCloseMobile }: Props) {
       icon: Calendar,
     },
     {
-      name: "Builders",
-      href: "/builders",
+      name: "Projects",
+      href: "/projects",
       icon: Building2,
     },
     {

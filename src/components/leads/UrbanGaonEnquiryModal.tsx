@@ -297,7 +297,7 @@ export function UrbanGaonEnquiryModal({
         setDispatchedEmails({
           customerTo: email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@customer.in`,
           customerSubject: customerPreview.subject,
-          companyTo: "dasaakash84@gmail.com",
+          companyTo: "yudhister.tiwari@urbangaon.com",
           companySubject: companyPreview.subject,
         });
 
@@ -394,7 +394,7 @@ export function UrbanGaonEnquiryModal({
                   }`}
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>2. Company Notification Email (dasaakash84@gmail.com)</span>
+                  <span>2. Company Notification Email (yudhister.tiwari@urbangaon.com)</span>
                 </button>
               </div>
 
