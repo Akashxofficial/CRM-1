@@ -5,7 +5,7 @@ import { Search, Plus, Sparkles, Building, Bell, Menu } from "lucide-react";
 import { SessionUser, ROLE_LABELS } from "@/lib/rbac";
 import { RoleSwitcherModal } from "./RoleSwitcherModal";
 import { GlobalSearchModal } from "./GlobalSearchModal";
-import Link from "next/link";
+import { UrbanGaonEnquiryModal } from "../leads/UrbanGaonEnquiryModal";
 
 interface Props {
   user: SessionUser;
@@ -16,6 +16,7 @@ interface Props {
 export function Navbar({ user, projects, onToggleMobileMenu }: Props) {
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [newLeadModalOpen, setNewLeadModalOpen] = useState(false);
   const roleBadge = ROLE_LABELS[user.role] || ROLE_LABELS.ADMIN;
 
   return (
@@ -56,14 +57,14 @@ export function Navbar({ user, projects, onToggleMobileMenu }: Props) {
 
         {/* Right: Quick Actions, Role Badge & Notifications */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Quick Action Button */}
-          <Link
-            href="/leads?action=new"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-[#3B8CFF] hover:bg-[#2570E8] text-white rounded-xl shadow-sm transition"
+          {/* Quick Action Button: Opens Official UrbanGaon Customer Enquiry Form */}
+          <button
+            onClick={() => setNewLeadModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold bg-[#3B8CFF] hover:bg-[#2570E8] text-white rounded-xl shadow-sm transition"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">New Lead</span>
-          </Link>
+          </button>
 
           {/* Role Persona Switcher Pill */}
           <button
@@ -102,6 +103,13 @@ export function Navbar({ user, projects, onToggleMobileMenu }: Props) {
       <GlobalSearchModal
         isOpen={searchModalOpen}
         onClose={() => setSearchModalOpen(false)}
+      />
+
+      {/* UrbanGaon Customer Enquiry Form Modal */}
+      <UrbanGaonEnquiryModal
+        isOpen={newLeadModalOpen}
+        onClose={() => setNewLeadModalOpen(false)}
+        projects={projects}
       />
     </>
   );

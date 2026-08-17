@@ -14,10 +14,9 @@ import {
   User,
   Clock,
   ArrowRight,
-  Sparkles,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { AddLeadModal } from "./AddLeadModal";
+import { UrbanGaonEnquiryModal } from "./UrbanGaonEnquiryModal";
 import { LeadDrawer } from "./LeadDrawer";
 
 interface Props {
@@ -351,12 +350,12 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
         />
       )}
 
-      {/* Capture Lead Modal */}
-      <AddLeadModal
+      {/* UrbanGaon Customer Enquiry Form Modal */}
+      <UrbanGaonEnquiryModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         projects={projects}
-        users={users}
+        agents={users}
       />
     </div>
   );
