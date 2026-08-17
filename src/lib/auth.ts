@@ -1,7 +1,6 @@
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import { SessionUser, UserRole } from "./rbac";
-import { prisma } from "./prisma";
 
 const SECRET_KEY = new TextEncoder().encode(
   process.env.JWT_SECRET || "super-secret-urbangaon-jwt-key-2026-secure-token"
@@ -72,52 +71,96 @@ export async function verifySessionToken(token: string): Promise<SessionUser | n
   }
 }
 
-export async function getCurrentUser(): Promise<SessionUser | null> {
+export async function getCurrentUser(): Promise<SessionUser> {
+  const fallbackUser: SessionUser = {
+    id: DEMO_USERS_MAP.ADMIN.id,
+    email: DEMO_USERS_MAP.ADMIN.email,
+    name: DEMO_USERS_MAP.ADMIN.name,
+    role: "ADMIN",
+    organizationId: DEMO_USERS_MAP.ADMIN.orgId,
+    organizationName: DEMO_USERS_MAP.ADMIN.orgName,
+  };
+
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get(COOKIE_NAME)?.value;
+    const token =
+      cookieStore.get("urbangaon_session")?.value ||
+      cookieStore.get("propcrm_session")?.value;
 
     if (token) {
       const user = await verifySessionToken(token);
-      if (user) return user;
+      if (user && user.id && user.role) return user;
     }
 
-    // Default fallback to ADMIN for instant demo
-    const defaultUser: SessionUser = {
-      id: DEMO_USERS_MAP.ADMIN.id,
-      email: DEMO_USERS_MAP.ADMIN.email,
-      name: DEMO_USERS_MAP.ADMIN.name,
-      role: "ADMIN",
-      organizationId: DEMO_USERS_MAP.ADMIN.orgId,
-      organizationName: DEMO_USERS_MAP.ADMIN.orgName,
-    };
-    return defaultUser;
+    return fallbackUser;
   } catch (error) {
-    console.warn("Error resolving current user, returning demo admin:", error);
-    return {
-      id: DEMO_USERS_MAP.ADMIN.id,
-      email: DEMO_USERS_MAP.ADMIN.email,
-      name: DEMO_USERS_MAP.ADMIN.name,
-      role: "ADMIN",
-      organizationId: DEMO_USERS_MAP.ADMIN.orgId,
-      organizationName: DEMO_USERS_MAP.ADMIN.orgName,
-    };
+    console.warn("Cookie store unavailable, returning fallback demo admin:", error);
+    return fallbackUser;
   }
 }
 
 export async function setSessionUser(user: SessionUser): Promise<void> {
-  const token = await createSessionToken(user);
-  const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  });
+  try {
+    const token = await createSessionToken(user);
+    const cookieStore = await cookies();
+    cookieStore.set(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+  } catch (error) {
+    console.warn("Failed to set session cookie:", error);
+  }
 }
 
 export async function clearSession(): Promise<void> {
-  const cookieStore = await cookies();
-  cookieStore.delete(COOKIE_NAME);
+  try {
+    const cookieStore = await cookies();
+    cookieStore.delete(COOKIE_NAME);
+    cookieStore.delete("propcrm_session");
+  } catch (error) {
+    console.warn("Failed to clear session cookie:", error);
+  }
+}
+
+export const clearSessionCookie = clearSession;
+
+export async function loginWithEmail(email: string, _password?: string): Promise<SessionUser | null> {
+  const normalizedEmail = email.toLowerCase();
+  let selectedRole: UserRole = "ADMIN";
+
+  if (normalizedEmail.includes("manager")) selectedRole = "SALES_MANAGER";
+  else if (normalizedEmail.includes("agent")) selectedRole = "SALES_AGENT";
+  else if (normalizedEmail.includes("finance") || normalizedEmail.includes("account")) selectedRole = "ACCOUNTS";
+  else if (normalizedEmail.includes("legal") || normalizedEmail.includes("post")) selectedRole = "POST_SALES";
+
+  const template = DEMO_USERS_MAP[selectedRole];
+  const user: SessionUser = {
+    id: template.id,
+    email: normalizedEmail,
+    name: template.name,
+    role: selectedRole,
+    organizationId: template.orgId,
+    organizationName: template.orgName,
+  };
+
+  await setSessionUser(user);
+  return user;
+}
+
+export async function switchDemoRole(role: UserRole): Promise<SessionUser | null> {
+  const template = DEMO_USERS_MAP[role] || DEMO_USERS_MAP.ADMIN;
+  const user: SessionUser = {
+    id: template.id,
+    email: template.email,
+    name: template.name,
+    role: role,
+    organizationId: template.orgId,
+    organizationName: template.orgName,
+  };
+
+  await setSessionUser(user);
+  return user;
 }
