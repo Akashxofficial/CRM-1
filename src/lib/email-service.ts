@@ -17,20 +17,18 @@ export {
 };
 
 function createSmtpTransporter() {
-  const host = process.env.SMTP_HOST || "smtp.gmail.com";
-  const port = parseInt(process.env.SMTP_PORT || "465", 10);
-  const user = process.env.SMTP_USER || process.env.GMAIL_USER || "dasaakash84@gmail.com";
-  const pass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "";
+  const user = process.env.SMTP_USER || "akashxofficial.in@gmail.com";
+  const rawPass = process.env.SMTP_PASS || "smekukksvdivzbjb";
+  const pass = rawPass ? rawPass.replace(/\s+/g, "") : "";
 
   if (!pass) {
     console.log("[SMTP CONFIG] SMTP_PASS not set. Emails logged to server console.");
     return null;
   }
 
+  // Use Gmail service with SSL
   return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
+    service: "gmail",
     auth: {
       user,
       pass,
@@ -43,36 +41,45 @@ export async function sendLeadEnquiryEmails(data: LeadEnquiryEmailPayload) {
     const customerEmail = generateCustomerWelcomeEmail(data);
     const companyEmail = generateInternalCompanyNotificationEmail(data);
 
-    const fromAddress = process.env.SMTP_FROM || `"UrbanGaon Customer Delight" <${process.env.SMTP_USER || "dasaakash84@gmail.com"}>`;
-
+    const fromAddress = process.env.SMTP_FROM || `"UrbanGaon Customer Delight" <akashxofficial.in@gmail.com>`;
     const transporter = createSmtpTransporter();
 
     let customerSent = false;
     let companySent = false;
+    let customerError = null;
+    let companyError = null;
 
     if (transporter) {
-      try {
-        if (customerEmail.to && customerEmail.to.includes("@")) {
+      // 1. Send Customer Welcome Email
+      if (customerEmail.to && customerEmail.to.includes("@")) {
+        try {
           const custRes = await transporter.sendMail({
             from: fromAddress,
             to: customerEmail.to,
             subject: customerEmail.subject,
             html: customerEmail.html,
           });
-          console.log("✅ Customer Welcome Email sent:", custRes.messageId);
+          console.log("✅ [REAL-TIME] Customer Welcome Email sent successfully:", custRes.messageId);
           customerSent = true;
+        } catch (err: any) {
+          console.error("❌ Failed to send Customer Welcome Email:", err?.message || err);
+          customerError = err?.message || String(err);
         }
+      }
 
+      // 2. Send Company Notification Email to dasaakash84@gmail.com
+      try {
         const compRes = await transporter.sendMail({
           from: fromAddress,
           to: companyEmail.to,
           subject: companyEmail.subject,
           html: companyEmail.html,
         });
-        console.log("✅ Company Notification Email sent:", compRes.messageId);
+        console.log("✅ [REAL-TIME] Company Notification Email sent to dasaakash84@gmail.com:", compRes.messageId);
         companySent = true;
-      } catch (smtpErr) {
-        console.warn("⚠️ SMTP real-time delivery attempt error:", smtpErr);
+      } catch (err: any) {
+        console.error("❌ Failed to send Company Notification Email:", err?.message || err);
+        companyError = err?.message || String(err);
       }
     }
 
@@ -82,15 +89,17 @@ export async function sendLeadEnquiryEmails(data: LeadEnquiryEmailPayload) {
         to: customerEmail.to,
         subject: customerEmail.subject,
         delivered: customerSent,
+        error: customerError,
       },
       companyEmail: {
         to: companyEmail.to,
         subject: companyEmail.subject,
         delivered: companySent,
+        error: companyError,
       },
     };
   } catch (error) {
-    console.warn("Email dispatch error:", error);
+    console.warn("Email dispatch execution error:", error);
     return { success: false, error: String(error) };
   }
 }
