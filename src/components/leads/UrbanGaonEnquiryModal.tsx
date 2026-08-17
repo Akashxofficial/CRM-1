@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { createLeadAction } from "@/actions/leads-actions";
-import { generateCustomerWelcomeEmail, generateInternalCompanyNotificationEmail } from "@/lib/email-service";
+import { generateCustomerWelcomeEmail, generateInternalCompanyNotificationEmail } from "@/lib/email-templates";
 import {
   X,
   Printer,
