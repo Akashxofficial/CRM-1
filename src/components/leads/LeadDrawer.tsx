@@ -18,7 +18,7 @@ import {
   AlertCircle,
   Sparkles,
 } from "lucide-react";
-import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 import {
   updateLeadStatusAction,
   addLeadActivityAction,
@@ -411,8 +411,8 @@ export function LeadDrawer({ lead, onClose, availableUnits }: Props) {
                           <span className={`font-bold ${isDone ? "line-through text-slate-400" : "text-slate-900 dark:text-white"}`}>
                             {t.title}
                           </span>
-                          <span className="text-[10px] text-amber-600 block mt-0.5">
-                            Due: {new Date(t.dueDate).toLocaleDateString()} • {t.priority}
+                          <span className="text-[10px] text-amber-600 block mt-0.5" suppressHydrationWarning>
+                            Due: {formatDate(t.dueDate)} • {t.priority}
                           </span>
                         </div>
                       </div>

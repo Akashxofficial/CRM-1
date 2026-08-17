@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatTime } from "@/lib/utils";
 import {
   DollarSign,
   TrendingUp,
@@ -389,8 +389,8 @@ export function AdminDashboardView({ data }: Props) {
                   <span className="font-semibold text-slate-900 dark:text-white text-xs">
                     {act.lead?.name} — {act.title}
                   </span>
-                  <span className="text-[11px] text-slate-400">
-                    {new Date(act.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <span className="text-[11px] text-slate-400" suppressHydrationWarning>
+                    {formatTime(act.createdAt)}
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">

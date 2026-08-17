@@ -24,6 +24,16 @@ export function formatDate(date: Date | string | null | undefined): string {
   }).format(d);
 }
 
+export function formatTime(date: Date | string | null | undefined): string {
+  if (!date) return "-";
+  const d = typeof date === "string" ? new Date(date) : date;
+  return new Intl.DateTimeFormat("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(d);
+}
+
 export function formatDateTime(date: Date | string | null | undefined): string {
   if (!date) return "-";
   const d = typeof date === "string" ? new Date(date) : date;
@@ -31,7 +41,8 @@ export function formatDateTime(date: Date | string | null | undefined): string {
     day: "numeric",
     month: "short",
     year: "numeric",
-    hour: "2-digit",
+    hour: "numeric",
     minute: "2-digit",
+    hour12: true,
   }).format(d);
 }
