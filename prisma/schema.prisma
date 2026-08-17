@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model Organization {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
   slug      String   @unique
   logo      String?
@@ -24,14 +24,14 @@ model Organization {
 }
 
 model User {
-  id             String       @id @default(cuid())
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
   email          String       @unique
   password       String
   name           String
   role           String       // ADMIN, SALES_MANAGER, SALES_AGENT, ACCOUNTS, POST_SALES
   phone          String?
   avatarUrl      String?
-  organizationId String
+  organizationId String       @db.ObjectId
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -48,8 +48,8 @@ model User {
 }
 
 model Project {
-  id             String       @id @default(cuid())
-  organizationId String
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String       @db.ObjectId
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   name           String
   code           String
@@ -73,8 +73,8 @@ model Project {
 }
 
 model Tower {
-  id            String   @id @default(cuid())
-  projectId     String
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId     String   @db.ObjectId
   project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   name          String
   totalFloors   Int      @default(10)
@@ -85,10 +85,10 @@ model Tower {
 }
 
 model Unit {
-  id             String   @id @default(cuid())
-  projectId      String
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId      String   @db.ObjectId
   project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  towerId        String
+  towerId        String   @db.ObjectId
   tower          Tower    @relation(fields: [towerId], references: [id], onDelete: Cascade)
   unitNumber     String
   floor          Int
@@ -104,7 +104,7 @@ model Unit {
   
   currentLeadId  String?
   heldUntil      DateTime?
-  heldById       String?
+  heldById       String?  @db.ObjectId
   heldBy         User?    @relation("HeldByUser", fields: [heldById], references: [id])
   notes          String?
 
@@ -116,10 +116,10 @@ model Unit {
 }
 
 model Lead {
-  id               String       @id @default(cuid())
-  organizationId   String
+  id               String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId   String       @db.ObjectId
   organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  projectId        String
+  projectId        String       @db.ObjectId
   project          Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
   name             String
   phone            String
@@ -132,10 +132,10 @@ model Lead {
   priority         String       @default("MEDIUM") // LOW, MEDIUM, HIGH, HOT
   lostReason       String?
   
-  assignedToId     String?
+  assignedToId     String?      @db.ObjectId
   assignedTo       User?        @relation("AssignedLeads", fields: [assignedToId], references: [id])
 
-  interestedUnitId String?
+  interestedUnitId String?      @db.ObjectId
   interestedUnit   Unit?        @relation("InterestedUnit", fields: [interestedUnitId], references: [id])
 
   createdAt        DateTime     @default(now())
@@ -147,36 +147,36 @@ model Lead {
 }
 
 model LeadActivity {
-  id            String    @id @default(cuid())
-  leadId        String
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  leadId        String    @db.ObjectId
   lead          Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
   type          String    // CALL, MEETING, SITE_VISIT, NOTE, WHATSAPP, EMAIL, STATUS_CHANGE
   title         String
   notes         String?
   siteVisitDate DateTime?
-  performedById String?
+  performedById String?   @db.ObjectId
   performedBy   User?     @relation("UserActivities", fields: [performedById], references: [id])
   createdAt     DateTime  @default(now())
 }
 
 model LeadTask {
-  id           String    @id @default(cuid())
-  leadId       String
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  leadId       String    @db.ObjectId
   lead         Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
   title        String
   description  String?
   dueDate      DateTime
   priority     String    @default("MEDIUM") // LOW, MEDIUM, HIGH
   status       String    @default("PENDING") // PENDING, COMPLETED, OVERDUE
-  assignedToId String?
+  assignedToId String?   @db.ObjectId
   assignedTo   User?     @relation("AssignedTasks", fields: [assignedToId], references: [id])
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
 
 model PaymentPlanTemplate {
-  id             String   @id @default(cuid())
-  projectId      String
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId      String   @db.ObjectId
   project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   name           String   // e.g. "Construction Linked Plan (CLP)", "20:80 Subvention", "Down Payment Plan"
   description    String?
@@ -189,27 +189,27 @@ model PaymentPlanTemplate {
 }
 
 model Booking {
-  id                    String       @id @default(cuid())
-  organizationId        String
+  id                    String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId        String       @db.ObjectId
   organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  projectId             String
+  projectId             String       @db.ObjectId
   project               Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  unitId                String       @unique
+  unitId                String       @unique @db.ObjectId
   unit                  Unit         @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  leadId                String       @unique
+  leadId                String       @unique @db.ObjectId
   lead                  Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
   
   bookingNumber         String       @unique
   agreementValue        Float
   bookingAmountReceived Float        @default(0)
   
-  paymentPlanId         String?
+  paymentPlanId         String?      @db.ObjectId
   paymentPlan           PaymentPlanTemplate? @relation(fields: [paymentPlanId], references: [id])
   
-  salesAgentId          String?
+  salesAgentId          String?      @db.ObjectId
   salesAgent            User?        @relation("AgentBookings", fields: [salesAgentId], references: [id])
   
-  approvedById          String?
+  approvedById          String?      @db.ObjectId
   approvedBy            User?        @relation("ApprovedBookings", fields: [approvedById], references: [id])
   
   status                String       @default("PROVISIONAL") // PROVISIONAL, CONFIRMED, CANCELLED
@@ -226,8 +226,8 @@ model Booking {
 }
 
 model PaymentSchedule {
-  id                  String   @id @default(cuid())
-  bookingId           String
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  bookingId           String   @db.ObjectId
   booking             Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   milestoneName       String   // e.g., "On Booking", "On 1st Slab Completion", "On Possession"
   milestoneCode       String   // e.g., "MS_01"
@@ -245,10 +245,10 @@ model PaymentSchedule {
 }
 
 model PaymentTransaction {
-  id            String          @id @default(cuid())
-  scheduleId    String?
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  scheduleId    String?         @db.ObjectId
   schedule      PaymentSchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
-  bookingId     String
+  bookingId     String          @db.ObjectId
   booking       Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   
   amountPaid    Float
@@ -258,23 +258,23 @@ model PaymentTransaction {
   receiptNumber String          @unique
   bankName      String?
   receiptUrl    String?
-  verifiedById  String?
+  verifiedById  String?         @db.ObjectId
   notes         String?
   
   createdAt     DateTime        @default(now())
 }
 
 model Document {
-  id           String    @id @default(cuid())
-  bookingId    String
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  bookingId    String    @db.ObjectId
   booking      Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   type         String    // ALLOTMENT_LETTER, SALE_AGREEMENT, KYC_VERIFICATION, DEMAND_LETTER, OC_CC_CERTIFICATE, SALE_DEED, POSSESSION_CERTIFICATE
   title        String
   status       String    @default("PENDING") // PENDING, GENERATED, UPLOADED, VERIFIED, REGISTERED
   fileUrl      String?
-  uploadedById String?
+  uploadedById String?   @db.ObjectId
   uploadedBy   User?     @relation("UploadedDocs", fields: [uploadedById], references: [id])
-  verifiedById String?
+  verifiedById String?   @db.ObjectId
   verifiedBy   User?     @relation("VerifiedDocs", fields: [verifiedById], references: [id])
   uploadedAt   DateTime?
   verifiedAt   DateTime?
@@ -284,8 +284,8 @@ model Document {
 }
 
 model Possession {
-  id                   String     @id @default(cuid())
-  bookingId            String     @unique
+  id                   String     @id @default(auto()) @map("_id") @db.ObjectId
+  bookingId            String     @unique @db.ObjectId
   booking              Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   scheduledDate        DateTime?
   actualDate           DateTime?
@@ -295,7 +295,7 @@ model Possession {
   gasMeterNo           String?
   handoverChecklistJson String?    // JSON array of checked items
   notes                String?
-  handoverById         String?
+  handoverById         String?    @db.ObjectId
   
   createdAt            DateTime   @default(now())
   updatedAt            DateTime   @updatedAt
@@ -304,8 +304,8 @@ model Possession {
 }
 
 model SnagItem {
-  id           String     @id @default(cuid())
-  possessionId String
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  possessionId String     @db.ObjectId
   possession   Possession @relation(fields: [possessionId], references: [id], onDelete: Cascade)
   category     String     // ELECTRICAL, PLUMBING, PAINTING, CARPENTRY, CIVIL, OTHER
   description  String
@@ -317,14 +317,14 @@ model SnagItem {
 }
 
 model AuditLog {
-  id             String       @id @default(cuid())
-  organizationId String
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String       @db.ObjectId
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   entityType     String       // LEAD, UNIT, BOOKING, PAYMENT, DOCUMENT, POSSESSION
   entityId       String
   action         String       // CREATED, STATUS_CHANGED, HELD, RELEASED, APPROVED, PAID, VERIFIED, HANDED_OVER
   details        String?
-  performedById  String?
+  performedById  String?      @db.ObjectId
   performedBy    User?        @relation(fields: [performedById], references: [id])
   createdAt      DateTime     @default(now())
 }
