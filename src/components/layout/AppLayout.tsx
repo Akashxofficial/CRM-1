@@ -12,8 +12,11 @@ export async function AppLayout({ children }: { children: React.ReactNode }) {
 
   const projects = await getProjects();
 
+  const serializedUser = JSON.parse(JSON.stringify(user));
+  const serializedProjects = JSON.parse(JSON.stringify(projects));
+
   return (
-    <AppLayoutClient user={user} projects={projects}>
+    <AppLayoutClient user={serializedUser} projects={serializedProjects}>
       {children}
     </AppLayoutClient>
   );
