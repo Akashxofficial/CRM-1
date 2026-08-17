@@ -89,9 +89,7 @@ export function UrbanGaonEnquiryModal({
   );
 
   // Customer Profile & Employment
-  const [customerProfile, setCustomerProfile] = useState<
-    "Self Employed" | "Private Service" | "Govt. Service" | "Retired" | "NRI" | "Housewife"
-  >("Private Service");
+  const [customerProfile, setCustomerProfile] = useState<string>("-None-");
   const [industryType, setIndustryType] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [designation, setDesignation] = useState("");
@@ -877,21 +875,20 @@ export function UrbanGaonEnquiryModal({
             {/* 3. CUSTOMER PROFILE & EMPLOYMENT DETAILS */}
             <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-white space-y-3.5">
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-2">Customer Profile:</label>
-                <div className="flex flex-wrap items-center gap-4 text-[11px]">
-                  {["Self Employed", "Private Service", "Govt. Service", "Retired", "NRI", "Housewife"].map((cp) => (
-                    <label key={cp} className="flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="custProfile"
-                        checked={customerProfile === cp}
-                        onChange={() => setCustomerProfile(cp as any)}
-                        className="text-[#3B8CFF]"
-                      />
-                      <span>{cp}</span>
-                    </label>
-                  ))}
-                </div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1.5">Customer Profile:</label>
+                <select
+                  value={customerProfile}
+                  onChange={(e) => setCustomerProfile(e.target.value)}
+                  className="w-full sm:max-w-md px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] text-xs cursor-pointer"
+                >
+                  <option value="-None-">-None-</option>
+                  <option value="Self Employed">Self Employed</option>
+                  <option value="Private Service">Private Service</option>
+                  <option value="Govt. Service">Govt. Service</option>
+                  <option value="Retired">Retired</option>
+                  <option value="NRI">NRI</option>
+                  <option value="Housewife">Housewife</option>
+                </select>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
