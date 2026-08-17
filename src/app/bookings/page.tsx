@@ -8,6 +8,8 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { BookingsListView } from "@/components/bookings/BookingsListView";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 async function getPaymentPlans() {
   try {
     const plans = await prisma.paymentPlanTemplate.findMany();

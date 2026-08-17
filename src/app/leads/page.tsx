@@ -7,6 +7,8 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { LeadsView } from "@/components/leads/LeadsView";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 async function getOrgUsers(orgId: string) {
   try {
     const users = await prisma.user.findMany({ where: { organizationId: orgId } });

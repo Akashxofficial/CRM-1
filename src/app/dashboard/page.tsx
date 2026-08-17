@@ -4,6 +4,8 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AdminDashboardView } from "@/components/dashboard/AdminDashboardView";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) {

@@ -217,20 +217,25 @@ export async function getDuesAgeingReport(projectId?: string) {
     where.booking.projectId = projectId;
   }
 
-  const overdueSchedules = await prisma.paymentSchedule.findMany({
-    where,
-    include: {
-      booking: {
-        include: {
-          lead: true,
-          unit: true,
-          project: true,
-          salesAgent: true,
+  let overdueSchedules: any[] = [];
+  try {
+    overdueSchedules = await prisma.paymentSchedule.findMany({
+      where,
+      include: {
+        booking: {
+          include: {
+            lead: true,
+            unit: true,
+            project: true,
+            salesAgent: true,
+          },
         },
+        transactions: true,
       },
-      transactions: true,
-    },
-  });
+    });
+  } catch (error) {
+    console.warn("Database getDuesAgeingReport fallback:", error);
+  }
 
   const ageing = {
     bracket_0_30: { count: 0, totalAmount: 0, items: [] as any[] },

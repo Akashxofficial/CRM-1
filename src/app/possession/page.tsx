@@ -6,6 +6,8 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { PossessionView } from "@/components/possession/PossessionView";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 async function getBookingsWithoutPossession(orgId: string) {
   try {
     const bookings = await prisma.booking.findMany({

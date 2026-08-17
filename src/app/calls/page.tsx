@@ -3,6 +3,8 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { PhoneCall, Plus, Phone, CheckCircle, Clock } from "lucide-react";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function CallsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

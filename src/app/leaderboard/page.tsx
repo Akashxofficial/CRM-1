@@ -5,6 +5,8 @@ import { formatCurrency } from "@/lib/utils";
 import { Trophy } from "lucide-react";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function LeaderboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
