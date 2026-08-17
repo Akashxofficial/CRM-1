@@ -277,9 +277,11 @@ export function UrbanGaonEnquiryModal({
         {/* Modal Top Action Bar */}
         <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-[#F8FAFC]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#3B8CFF] to-[#1A57BD] text-white flex items-center justify-center font-bold text-sm shadow-md shadow-[#3B8CFF]/20">
-              UG
-            </div>
+            <img
+              src="/urbangaon-icon.png"
+              alt="UrbanGaon"
+              className="w-10 h-10 rounded-full object-contain shadow-xs flex-shrink-0"
+            />
             <div>
               <h2 className="text-base font-bold text-slate-900 font-heading leading-tight">
                 UrbanGaon Customer Enquiry Form
@@ -380,17 +382,17 @@ export function UrbanGaonEnquiryModal({
         ) : (
           /* Scrollable Form Body */
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 text-slate-800 text-xs">
-            {/* Header Banner matching PDF */}
-            <div className="text-center pb-4 border-b border-slate-200">
-              <div className="inline-flex items-center gap-2 text-[#3B8CFF] font-bold text-xl font-heading">
-                <span className="w-7 h-7 rounded-lg bg-[#3B8CFF] text-white flex items-center justify-center text-sm shadow-sm">✦</span>
-                <span>UrbanGaon</span>
-              </div>
-              <span className="text-[11px] text-slate-400 block tracking-widest uppercase mt-0.5">a perfect balance</span>
-              <h1 className="text-2xl font-bold text-slate-900 mt-2 font-heading tracking-tight">
+            {/* Header Banner matching PDF with Official UrbanGaon Logo */}
+            <div className="text-center pb-4 border-b border-slate-200 flex flex-col items-center">
+              <img
+                src="/urbangaon-logo.png"
+                alt="UrbanGaon — a perfect balance"
+                className="h-12 sm:h-14 w-auto object-contain mx-auto mb-1"
+              />
+              <h1 className="text-2xl font-bold text-slate-900 mt-1 font-heading tracking-tight">
                 Customer Enquiry Form
               </h1>
-              <p className="text-[11px] text-slate-500 italic">
+              <p className="text-[11px] text-slate-500 italic mt-0.5">
                 (Please complete this application thoroughly so we can process it as quickly as possible)
               </p>
             </div>

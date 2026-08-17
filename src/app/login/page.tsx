@@ -46,13 +46,20 @@ export default function LoginPage() {
       <div className="lg:w-1/2 p-8 lg:p-14 flex flex-col justify-between relative bg-[#131633] text-white">
         <div>
           {/* Logo */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#4F46E5] flex items-center justify-center text-white font-bold text-sm shadow-md">
-              <span className="text-white text-base">✦</span>
+          <div className="flex items-center gap-3">
+            <img
+              src="/urbangaon-icon.png"
+              alt="UrbanGaon"
+              className="w-10 h-10 rounded-full object-contain shadow-md"
+            />
+            <div className="leading-tight">
+              <span className="font-bold text-xl tracking-tight text-white font-heading block">
+                UrbanGaon
+              </span>
+              <span className="text-[10px] text-slate-400 tracking-widest uppercase">
+                a perfect balance
+              </span>
             </div>
-            <span className="font-bold text-xl tracking-tight text-white font-heading">
-              UrbanGaon
-            </span>
           </div>
 
           {/* Headline & Description */}
@@ -68,7 +75,7 @@ export default function LoginPage() {
         </div>
 
         {/* Feature Cards Grid (2x3) */}
-        <div className="mt-12 grid grid-cols-2 gap-3 max-w-md">
+        <div className="mt-12 grid grid-cols-2 sm:grid-cols-3 gap-3">
           {featureCards.map((feat) => (
             <div
               key={feat.title}
@@ -85,11 +92,16 @@ export default function LoginPage() {
       <div className="lg:w-1/2 p-8 lg:p-16 flex flex-col justify-center bg-white">
         <div className="max-w-md w-full mx-auto space-y-6">
           <div>
+            <img
+              src="/urbangaon-logo.png"
+              alt="UrbanGaon"
+              className="h-10 w-auto object-contain mb-3"
+            />
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight font-heading">
               Welcome back
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Sign in to your account
+              Sign in to UrbanGaon Real Estate CRM
             </p>
           </div>
 

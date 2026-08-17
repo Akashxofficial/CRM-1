@@ -107,16 +107,18 @@ export function Sidebar({ user, onCloseMobile }: Props) {
     <aside className="w-64 h-full bg-white text-slate-700 flex flex-col flex-shrink-0 select-none shadow-sm border-r border-slate-200/90 font-sans">
       {/* Top Header: Organization & Role */}
       <div className="p-4 sm:p-5 flex items-center justify-between border-b border-slate-100">
-        <div className="flex items-center gap-3 min-w-0">
-          {/* Circle Avatar Badge */}
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#3B8CFF] to-[#1A57BD] flex items-center justify-center text-white font-bold text-sm shadow-md shadow-[#3B8CFF]/20 flex-shrink-0 font-heading">
-            {initials}
-          </div>
+        <div className="flex items-center gap-2.5 min-w-0">
+          {/* Official UrbanGaon Logo Icon */}
+          <img
+            src="/urbangaon-icon.png"
+            alt="UrbanGaon"
+            className="w-9 h-9 rounded-full object-contain flex-shrink-0 shadow-xs"
+          />
           <div className="min-w-0">
             <span className="font-bold text-slate-900 text-sm tracking-tight truncate block font-heading">
-              {user.organizationName || "UrbanGaon Realty & Infrastructure"}
+              UrbanGaon Realty
             </span>
-            <span className="text-xs text-slate-500 font-medium block truncate capitalize">
+            <span className="text-[11px] text-slate-500 font-medium block truncate">
               {roleBadge.label}
             </span>
           </div>
