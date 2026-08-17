@@ -96,7 +96,7 @@ export function UrbanGaonEnquiryModal({
   const [companyName, setCompanyName] = useState("");
   const [designation, setDesignation] = useState("");
   const [department, setDepartment] = useState("");
-  const [annualIncome, setAnnualIncome] = useState("");
+  const [annualIncome, setAnnualIncome] = useState("-None-");
 
   // Source of Enquiry
   const [sourceOption, setSourceOption] = useState("Company website / social media / online search");
@@ -940,14 +940,18 @@ export function UrbanGaonEnquiryModal({
                 </div>
 
                 <div className="sm:col-span-2 lg:col-span-4">
-                  <label className="block text-[10px] text-slate-400 mb-1">Annual Income</label>
-                  <input
-                    type="text"
+                  <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Annual Income</label>
+                  <select
                     value={annualIncome}
                     onChange={(e) => setAnnualIncome(e.target.value)}
-                    placeholder="e.g. ₹25,00,000 / Year"
-                    className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
-                  />
+                    className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] text-xs cursor-pointer"
+                  >
+                    <option value="-None-">-None-</option>
+                    <option value="Upto 10 Lakhs">Upto 10 Lakhs</option>
+                    <option value="10-50 Lakhs">10-50 Lakhs</option>
+                    <option value="More than 50 Lakhs">More than 50 Lakhs</option>
+                    <option value="Prefer not to disclose">Prefer not to disclose</option>
+                  </select>
                 </div>
               </div>
             </div>
