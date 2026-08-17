@@ -16,7 +16,7 @@ async function getOrgUsers(orgId: string) {
   }
 
   return [
-    { id: "user-admin-1", name: "Vikram Malhotra (CEO)", email: "admin@propcrm.io", role: "ADMIN" },
+    { id: "user-admin-1", name: "Yudhister Tiwari", email: "yudhister.tiwari@urbangaon.com", role: "ADMIN" },
     { id: "user-manager-1", name: "Ananya Sharma (Sales Head)", email: "manager@propcrm.io", role: "SALES_MANAGER" },
     { id: "user-agent-1", name: "Rahul Verma (Senior Sales Agent)", email: "agent@propcrm.io", role: "SALES_AGENT" },
   ];

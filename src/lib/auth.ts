@@ -14,11 +14,11 @@ export const DEMO_USERS_MAP: Record<
 > = {
   ADMIN: {
     id: "user-admin-1",
-    name: "Vikram Malhotra (CEO)",
-    email: "admin@urbangaon.com",
+    name: "Yudhister Tiwari",
+    email: "yudhister.tiwari@urbangaon.com",
     phone: "+91 98765 43210",
     orgId: "org-urbangaon-1",
-    orgName: "UrbanGaon Realty & Infrastructure",
+    orgName: "UrbanGaon",
   },
   SALES_MANAGER: {
     id: "user-manager-1",

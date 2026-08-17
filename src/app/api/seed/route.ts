@@ -27,7 +27,7 @@ export async function GET() {
       data: {
         email: "admin@propcrm.io",
         password: "password123",
-        name: "Vikram Malhotra (CEO)",
+        name: "Yudhister Tiwari",
         role: "ADMIN",
         phone: "+91 98765 43210",
         organizationId: org.id,
