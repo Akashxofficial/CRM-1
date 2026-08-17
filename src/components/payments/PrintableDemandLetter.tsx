@@ -139,7 +139,7 @@ export function PrintableDemandLetter({ schedule, booking, isOpen, onClose }: Pr
             </div>
             <div className="border-t border-slate-400 pt-2 text-right">
               <p className="font-bold">Accounts & Collections Department</p>
-              <p className="text-[11px] text-slate-500">{booking.project?.organization?.name || "PropCRM Infrastructure"}</p>
+              <p className="text-[11px] text-slate-500">{booking.project?.organization?.name || "UrbanGaon Infrastructure"}</p>
             </div>
           </div>
         </div>

@@ -38,7 +38,7 @@ export function Sidebar({ user, onCloseMobile }: Props) {
         .join("")
         .slice(0, 2)
         .toUpperCase()
-    : "DB";
+    : "UG";
 
   const navItems = [
     {
@@ -114,7 +114,7 @@ export function Sidebar({ user, onCloseMobile }: Props) {
           </div>
           <div className="min-w-0">
             <span className="font-bold text-slate-900 text-sm tracking-tight truncate block font-heading">
-              {user.organizationName || "Skyline Realty & Infrastructure"}
+              {user.organizationName || "UrbanGaon Realty & Infrastructure"}
             </span>
             <span className="text-xs text-slate-500 font-medium block truncate capitalize">
               {roleBadge.label}

@@ -1,9 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { UserRole, ROLE_LABELS } from "@/lib/rbac";
+import { UserRole } from "@/lib/rbac";
 import { switchDemoRoleAction } from "@/actions/auth-actions";
-import { ShieldCheck, User, Users, Landmark, FileText, Check, Loader2 } from "lucide-react";
+import {
+  ShieldCheck,
+  Users,
+  User,
+  Landmark,
+  FileText,
+  CheckCircle2,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 
 interface Props {
   currentRole: UserRole;
@@ -26,7 +35,7 @@ const ROLES_CONFIG: Array<{
     subtitle: "Full control — all projects, financials, users & executive reports",
     icon: ShieldCheck,
     color: "from-purple-600 to-indigo-600",
-    email: "admin@propcrm.io",
+    email: "admin@urbangaon.com",
   },
   {
     role: "SALES_MANAGER",
@@ -34,7 +43,7 @@ const ROLES_CONFIG: Array<{
     subtitle: "Team leads, pipeline velocity, hold & booking approvals",
     icon: Users,
     color: "from-blue-600 to-cyan-600",
-    email: "manager@propcrm.io",
+    email: "manager@urbangaon.com",
   },
   {
     role: "SALES_AGENT",
@@ -42,7 +51,7 @@ const ROLES_CONFIG: Array<{
     subtitle: "Personal leads, daily follow-ups, unit holds & customer conversion",
     icon: User,
     color: "from-emerald-600 to-teal-600",
-    email: "agent@propcrm.io",
+    email: "agent@urbangaon.com",
   },
   {
     role: "ACCOUNTS",
@@ -50,7 +59,7 @@ const ROLES_CONFIG: Array<{
     subtitle: "Milestones, payment receipts, demand letters & overdue ageing",
     icon: Landmark,
     color: "from-amber-500 to-orange-600",
-    email: "finance@propcrm.io",
+    email: "finance@urbangaon.com",
   },
   {
     role: "POST_SALES",
@@ -58,7 +67,7 @@ const ROLES_CONFIG: Array<{
     subtitle: "Allotment, agreement, KYC, OC/CC, snags & possession handover",
     icon: FileText,
     color: "from-rose-500 to-pink-600",
-    email: "legal@propcrm.io",
+    email: "legal@urbangaon.com",
   },
 ];
 
@@ -68,25 +77,26 @@ export function RoleSwitcherModal({ currentRole, currentName, isOpen, onClose }:
 
   if (!isOpen) return null;
 
-  const handleSwitch = (role: UserRole) => {
+  const handleSelectRole = (role: UserRole) => {
     setSelectedRole(role);
     startTransition(async () => {
       await switchDemoRoleAction(role);
+      onClose();
       window.location.reload();
     });
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-slate-100 bg-gradient-to-r from-[#163C7A] via-[#1A57BD] to-[#3B8CFF] text-white">
+        <div className="p-6 bg-gradient-to-r from-[#1A57BD] to-[#3B8CFF] text-white">
           <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs uppercase tracking-wider font-semibold text-[#B9D5FF]">
-                Multi-Role Demo Switcher
-              </span>
-              <h2 className="text-lg sm:text-xl font-semibold mt-0.5">Switch User Persona & RBAC View</h2>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-300" />
+              <h2 className="text-lg font-bold font-heading">
+                Switch Persona / Stakeholder Role
+              </h2>
             </div>
             <button
               onClick={onClose}
@@ -96,12 +106,12 @@ export function RoleSwitcherModal({ currentRole, currentName, isOpen, onClose }:
             </button>
           </div>
           <p className="text-xs text-slate-100 mt-1.5">
-            Experience PropCRM from any stakeholder&apos;s perspective with 1-click role swapping.
+            Experience UrbanGaon CRM from any stakeholder&apos;s perspective with 1-click role swapping.
           </p>
         </div>
 
         {/* Roles List */}
-        <div className="p-4 sm:p-6 space-y-2.5 overflow-y-auto">
+        <div className="p-4 sm:p-6 space-y-2.5 overflow-y-auto max-h-[60vh]">
           {ROLES_CONFIG.map((item) => {
             const Icon = item.icon;
             const isCurrent = currentRole === item.role;
@@ -110,49 +120,46 @@ export function RoleSwitcherModal({ currentRole, currentName, isOpen, onClose }:
             return (
               <button
                 key={item.role}
-                onClick={() => handleSwitch(item.role)}
+                onClick={() => handleSelectRole(item.role)}
                 disabled={isPending}
-                className={`w-full flex items-center justify-between p-4 rounded-xl border text-left transition-all duration-200 ${
+                className={`w-full p-3.5 rounded-2xl border text-left transition flex items-center justify-between group ${
                   isCurrent
-                    ? "border-sky-500 bg-sky-50/50 dark:bg-sky-950/20 ring-2 ring-sky-500/20"
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    ? "bg-[#F0F6FF] border-[#3B8CFF] ring-2 ring-[#3B8CFF]/20"
+                    : "bg-[#F8FAFC] border-slate-200 hover:border-[#3B8CFF]/60 hover:bg-slate-50"
                 }`}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3.5 min-w-0">
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-white bg-gradient-to-br ${item.color} shadow-sm`}
+                    className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${item.color} text-white flex items-center justify-center shadow-md flex-shrink-0`}
                   >
                     <Icon className="w-5 h-5" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-slate-900 dark:text-white">
+                      <span className="font-bold text-slate-900 text-sm font-heading">
                         {item.title}
                       </span>
                       {isCurrent && (
-                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300">
-                          Active Role
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#3B8CFF] text-white">
+                          Current
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-500 truncate mt-0.5 max-w-xs">
                       {item.subtitle}
                     </p>
-                    <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
-                      {item.email}
-                    </span>
                   </div>
                 </div>
 
-                <div>
+                <div className="flex-shrink-0 ml-2">
                   {isSelected ? (
-                    <Loader2 className="w-5 h-5 animate-spin text-sky-600" />
+                    <Loader2 className="w-5 h-5 text-[#3B8CFF] animate-spin" />
                   ) : isCurrent ? (
-                    <div className="w-6 h-6 rounded-full bg-sky-600 text-white flex items-center justify-center">
-                      <Check className="w-3.5 h-3.5" />
-                    </div>
+                    <CheckCircle2 className="w-5 h-5 text-[#3B8CFF]" />
                   ) : (
-                    <span className="text-xs text-slate-400 group-hover:text-slate-600">Switch →</span>
+                    <span className="text-xs font-semibold text-slate-400 group-hover:text-[#3B8CFF] transition">
+                      Select →
+                    </span>
                   )}
                 </div>
               </button>
@@ -161,10 +168,11 @@ export function RoleSwitcherModal({ currentRole, currentName, isOpen, onClose }:
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+        <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>Active user: <strong className="text-slate-700">{currentName}</strong></span>
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition"
+            className="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-white transition"
           >
             Close
           </button>

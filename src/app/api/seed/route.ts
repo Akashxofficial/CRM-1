@@ -80,9 +80,9 @@ export async function GET() {
 
     await prisma.user.create({
       data: {
-        email: "demo@vastucrm.com",
+        email: "demo@urbangaon.com",
         password: "password123",
-        name: "Vastu Demo Admin",
+        name: "UrbanGaon Demo Admin",
         role: "ADMIN",
         phone: "+91 98000 00000",
         organizationId: org.id,

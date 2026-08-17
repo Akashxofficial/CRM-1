@@ -64,7 +64,7 @@ export function ReportsView({ projects, bookings, leads }: Props) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `propcrm_executive_report_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute("download", `urbangaon_executive_report_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

@@ -81,7 +81,7 @@ export async function getDashboardData() {
     const conversionRate = totalLeads > 0 ? Math.round((totalBookings / totalLeads) * 100) : 0;
     const avgTicketSize = totalBookings > 0 ? Math.round(totalSalesValue / totalBookings) : 0;
 
-    // Pipeline funnel stats matching exact Vastu CRM stages
+    // Pipeline funnel stats matching exact UrbanGaon CRM stages
     const funnelStages = [
       { key: "NEW", label: "New", count: 0 },
       { key: "CONTACTED", label: "Contacted", count: 0 },

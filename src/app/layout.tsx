@@ -18,12 +18,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "PropCRM — Real Estate CRM (Lead to Possession)",
+  title: "UrbanGaon — Real Estate CRM (Lead to Possession)",
   description: "Next-generation real estate developer CRM for managing leads, visual unit inventory, bookings, payment milestones, post-sales paperwork and possession.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "PropCRM",
+    title: "UrbanGaon",
   },
 };
 

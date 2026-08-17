@@ -98,7 +98,7 @@ export function PrintableReceipt({ transaction, booking, isOpen, onClose }: Prop
             </div>
             <div className="border-t border-slate-300 pt-2 text-right">
               <p className="font-bold text-slate-900">Authorized Accounts Signatory</p>
-              <p className="text-[10px] text-slate-500">{booking.project?.organization?.name || "PropCRM Developers"}</p>
+              <p className="text-[10px] text-slate-500">{booking.project?.organization?.name || "UrbanGaon Developers"}</p>
             </div>
           </div>
         </div>

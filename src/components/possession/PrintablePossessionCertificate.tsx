@@ -100,7 +100,7 @@ export function PrintablePossessionCertificate({ possession, isOpen, onClose }: 
             </div>
             <div className="border-t border-slate-400 pt-2 text-right">
               <p className="font-bold">Authorized Project Engineer / Handover Lead</p>
-              <p className="text-[11px] text-slate-500">For {booking?.project?.organization?.name || "PropCRM Developers"}</p>
+              <p className="text-[11px] text-slate-500">For {booking?.project?.organization?.name || "UrbanGaon Developers"}</p>
             </div>
           </div>
         </div>

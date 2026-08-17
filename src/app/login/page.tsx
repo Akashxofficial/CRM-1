@@ -5,8 +5,8 @@ import { switchDemoRoleAction } from "@/actions/auth-actions";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("demo@vastucrm.com");
-  const [password, setPassword] = useState("vastu@123");
+  const [email, setEmail] = useState("demo@urbangaon.com");
+  const [password, setPassword] = useState("urbangaon@123");
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -42,7 +42,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row font-sans">
-      {/* Left Column: Hero & Product Pillars (Matching Vastu CRM) */}
+      {/* Left Column: Hero & Product Pillars */}
       <div className="lg:w-1/2 p-8 lg:p-14 flex flex-col justify-between relative bg-[#131633] text-white">
         <div>
           {/* Logo */}
@@ -51,7 +51,7 @@ export default function LoginPage() {
               <span className="text-white text-base">✦</span>
             </div>
             <span className="font-bold text-xl tracking-tight text-white font-heading">
-              Vastu CRM
+              UrbanGaon
             </span>
           </div>
 
@@ -81,7 +81,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Column: Clean White Form (Matching Vastu CRM) */}
+      {/* Right Column: Clean White Form */}
       <div className="lg:w-1/2 p-8 lg:p-16 flex flex-col justify-center bg-white">
         <div className="max-w-md w-full mx-auto space-y-6">
           <div>
@@ -110,7 +110,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="demo@vastucrm.com"
+                placeholder="demo@urbangaon.com"
                 className="w-full px-4 py-3 rounded-xl bg-[#F0F6FF] border border-blue-100 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-sm font-medium"
               />
             </div>
@@ -160,11 +160,11 @@ export default function LoginPage() {
             <span className="font-bold text-slate-900 block">Default Demo Credentials:</span>
             <div className="flex justify-between">
               <span>Email:</span>
-              <code className="font-bold text-[#4F46E5]">demo@vastucrm.com</code>
+              <code className="font-bold text-[#4F46E5]">demo@urbangaon.com</code>
             </div>
             <div className="flex justify-between">
               <span>Password:</span>
-              <code className="font-bold text-slate-800">vastu@123</code>
+              <code className="font-bold text-slate-800">urbangaon@123</code>
             </div>
           </div>
         </div>
