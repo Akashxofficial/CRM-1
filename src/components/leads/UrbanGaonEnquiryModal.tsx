@@ -3,6 +3,8 @@
 import { useState, useTransition, useRef, useEffect } from "react";
 import { createLeadAction } from "@/actions/leads-actions";
 import { generateCustomerWelcomeEmail, generateInternalCompanyNotificationEmail } from "@/lib/email-templates";
+import { ALL_COUNTRIES, findCountry, CountryData } from "@/lib/countries-data";
+import { CountryFlag } from "../common/CountryFlag";
 import {
   X,
   Printer,
@@ -18,6 +20,7 @@ import {
   AtSign,
   ChevronDown,
   Globe,
+  Search,
 } from "lucide-react";
 
 interface Props {
@@ -35,41 +38,6 @@ const COMMON_EMAIL_DOMAINS = [
   "hotmail.com",
   "icloud.com",
   "urbangaon.com",
-];
-
-interface CountryInfo {
-  name: string;
-  code: string;
-  flag: string;
-  digitLength: number;
-}
-
-const COUNTRIES_REGISTRY: CountryInfo[] = [
-  { name: "India", code: "+91", flag: "🇮🇳", digitLength: 10 },
-  { name: "United Arab Emirates", code: "+971", flag: "🇦🇪", digitLength: 9 },
-  { name: "United States", code: "+1", flag: "🇺🇸", digitLength: 10 },
-  { name: "United Kingdom", code: "+44", flag: "🇬🇧", digitLength: 10 },
-  { name: "Canada", code: "+1", flag: "🇨🇦", digitLength: 10 },
-  { name: "Australia", code: "+61", flag: "🇦🇺", digitLength: 9 },
-  { name: "Singapore", code: "+65", flag: "🇸🇬", digitLength: 8 },
-  { name: "Saudi Arabia", code: "+966", flag: "🇸🇦", digitLength: 9 },
-  { name: "Qatar", code: "+974", flag: "🇶🇦", digitLength: 8 },
-  { name: "Kuwait", code: "+965", flag: "🇰🇼", digitLength: 8 },
-  { name: "Oman", code: "+968", flag: "🇴🇲", digitLength: 8 },
-  { name: "Germany", code: "+49", flag: "🇩🇪", digitLength: 10 },
-  { name: "France", code: "+33", flag: "🇫🇷", digitLength: 9 },
-  { name: "New Zealand", code: "+64", flag: "🇳🇿", digitLength: 9 },
-  { name: "South Africa", code: "+27", flag: "🇿🇦", digitLength: 9 },
-  { name: "Japan", code: "+81", flag: "🇯🇵", digitLength: 10 },
-  { name: "Malaysia", code: "+60", flag: "🇲🇾", digitLength: 9 },
-  { name: "Bahrain", code: "+973", flag: "🇧🇭", digitLength: 8 },
-  { name: "Hong Kong", code: "+852", flag: "🇭🇰", digitLength: 8 },
-  { name: "Ireland", code: "+353", flag: "🇮🇪", digitLength: 9 },
-  { name: "Netherlands", code: "+31", flag: "🇳🇱", digitLength: 9 },
-  { name: "Switzerland", code: "+41", flag: "🇨🇭", digitLength: 9 },
-  { name: "Italy", code: "+39", flag: "🇮🇹", digitLength: 10 },
-  { name: "Spain", code: "+34", flag: "🇪🇸", digitLength: 9 },
-  { name: "Sweden", code: "+46", flag: "🇸🇪", digitLength: 9 },
 ];
 
 export function UrbanGaonEnquiryModal({
@@ -98,10 +66,11 @@ export function UrbanGaonEnquiryModal({
   const [pinCode, setPinCode] = useState("302006");
 
   // Country Code & Flag State
+  const [countryIso, setCountryIso] = useState("in");
   const [countryDialCode, setCountryDialCode] = useState("+91");
-  const [countryFlag, setCountryFlag] = useState("🇮🇳");
   const [targetDigitLength, setTargetDigitLength] = useState(10);
   const [isCountryPickerOpen, setIsCountryPickerOpen] = useState(false);
+  const [countrySearchQuery, setCountrySearchQuery] = useState("");
   
   // Mobile & Real-time Email Suggestions
   const [mobile, setMobile] = useState("");
@@ -157,33 +126,29 @@ export function UrbanGaonEnquiryModal({
   // Real-time Country & Dial Code Auto-Sync Function
   const syncCountryAndDialCode = (countryName: string) => {
     setCountry(countryName);
-    const query = countryName.trim().toLowerCase();
-
-    // Match exact or common aliases
-    const matched = COUNTRIES_REGISTRY.find((c) => {
-      const cName = c.name.toLowerCase();
-      if (cName === query || cName.includes(query) || query.includes(cName)) return true;
-      if (query === "uae" || query === "dubai") return c.name === "United Arab Emirates";
-      if (query === "us" || query === "usa" || query === "america") return c.name === "United States";
-      if (query === "uk" || query === "england" || query === "london") return c.name === "United Kingdom";
-      if (query === "saudi") return c.name === "Saudi Arabia";
-      return false;
-    });
+    const matched = findCountry(countryName);
 
     if (matched) {
+      setCountryIso(matched.iso);
       setCountryDialCode(matched.code);
-      setCountryFlag(matched.flag);
       setTargetDigitLength(matched.digitLength);
     }
   };
 
-  const selectCountryItem = (item: CountryInfo) => {
+  const selectCountryItem = (item: CountryData) => {
     setCountry(item.name);
+    setCountryIso(item.iso);
     setCountryDialCode(item.code);
-    setCountryFlag(item.flag);
     setTargetDigitLength(item.digitLength);
     setIsCountryPickerOpen(false);
+    setCountrySearchQuery("");
   };
+
+  const filteredCountries = ALL_COUNTRIES.filter((c) => {
+    if (!countrySearchQuery) return true;
+    const q = countrySearchQuery.toLowerCase();
+    return c.name.toLowerCase().includes(q) || c.code.includes(q) || c.iso.includes(q);
+  });
 
   if (!isOpen) return null;
 
@@ -362,7 +327,7 @@ export function UrbanGaonEnquiryModal({
                 UrbanGaon Customer Enquiry Form
               </h2>
               <p className="text-xs text-slate-500">
-                Official real estate application with real-time country code & email suggestions
+                Official real estate application with real-time international flag & dial code auto-sync
               </p>
             </div>
           </div>
@@ -569,7 +534,7 @@ export function UrbanGaonEnquiryModal({
                 />
               </div>
 
-              {/* City, State, Country (with Real-Time Dial Code Auto-Sync), Pin */}
+              {/* City, State, Country (with Real-Time Flag & Dial Code Auto-Sync), Pin */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-[10px] text-slate-400 mb-1">City</label>
@@ -590,25 +555,31 @@ export function UrbanGaonEnquiryModal({
                   />
                 </div>
 
-                {/* Real-Time Synced Country Field */}
+                {/* Real-Time Synced Country Field with Flag Preview */}
                 <div className="relative">
                   <label className="block text-[10px] text-slate-400 mb-1 flex items-center justify-between">
                     <span>Country *</span>
-                    <span className="text-[10px] text-[#3B8CFF] font-semibold">{countryFlag} {countryDialCode}</span>
+                    <span className="text-[10px] text-[#3B8CFF] font-semibold flex items-center gap-1">
+                      <CountryFlag iso={countryIso} size="xs" />
+                      <span>{countryDialCode}</span>
+                    </span>
                   </label>
-                  <div className="relative">
+                  <div className="relative flex items-center">
+                    <div className="absolute left-3 pointer-events-none">
+                      <CountryFlag iso={countryIso} size="sm" />
+                    </div>
                     <input
                       type="text"
                       list="countries-datalist"
                       value={country}
                       onChange={(e) => syncCountryAndDialCode(e.target.value)}
                       placeholder="e.g. India, UAE, USA"
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+                      className="w-full pl-10 pr-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
                     />
                     <datalist id="countries-datalist">
-                      {COUNTRIES_REGISTRY.map((c) => (
-                        <option key={c.name} value={c.name}>
-                          {c.flag} {c.name} ({c.code})
+                      {ALL_COUNTRIES.map((c) => (
+                        <option key={c.iso} value={c.name}>
+                          {c.name} ({c.code})
                         </option>
                       ))}
                     </datalist>
@@ -626,9 +597,9 @@ export function UrbanGaonEnquiryModal({
                 </div>
               </div>
 
-              {/* Mobile (Real-Time Synced Country Code + Strict Validation) & Email */}
+              {/* Mobile (Real-Time Synced Flag + Strict Validation) & Email */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {/* 1. AUTO-ASSIGNED COUNTRY CODE & STRICT DIGIT VALIDATION */}
+                {/* 1. AUTO-ASSIGNED COUNTRY FLAG & STRICT DIGIT VALIDATION */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-[11px] font-bold text-slate-700">
@@ -652,38 +623,52 @@ export function UrbanGaonEnquiryModal({
                   </div>
 
                   <div className="relative flex items-center">
-                    {/* Interactive Country Code Pill with Dropdown */}
+                    {/* Interactive Country Code Pill with Flag Image */}
                     <div className="relative">
                       <button
                         type="button"
                         onClick={() => setIsCountryPickerOpen(!isCountryPickerOpen)}
                         className="px-3 py-2 rounded-l-xl bg-[#F8FAFC] hover:bg-slate-100 border border-r-0 border-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition select-none"
                       >
-                        <span className="text-sm">{countryFlag}</span>
+                        <CountryFlag iso={countryIso} size="sm" />
                         <span>{countryDialCode}</span>
                         <ChevronDown className="w-3 h-3 text-slate-400" />
                       </button>
 
-                      {/* Dropdown for quick country selection */}
+                      {/* Dropdown for quick country selection with search */}
                       {isCountryPickerOpen && (
-                        <div className="absolute left-0 top-full mt-1 z-50 bg-white rounded-2xl shadow-xl border border-slate-200/90 w-56 max-h-60 overflow-y-auto p-1.5 space-y-0.5 animate-in fade-in">
-                          <div className="text-[10px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">
-                            Select Country Code:
+                        <div className="absolute left-0 top-full mt-1 z-50 bg-white rounded-2xl shadow-xl border border-slate-200/90 w-64 max-h-64 overflow-hidden flex flex-col p-1.5 animate-in fade-in">
+                          <div className="p-1.5 border-b border-slate-100">
+                            <div className="relative flex items-center">
+                              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5" />
+                              <input
+                                type="text"
+                                autoFocus
+                                value={countrySearchQuery}
+                                onChange={(e) => setCountrySearchQuery(e.target.value)}
+                                placeholder="Search country or code..."
+                                className="w-full pl-8 pr-2 py-1 text-xs rounded-lg bg-slate-50 border border-slate-200 focus:outline-none"
+                              />
+                            </div>
                           </div>
-                          {COUNTRIES_REGISTRY.map((item) => (
-                            <button
-                              key={item.name}
-                              type="button"
-                              onClick={() => selectCountryItem(item)}
-                              className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs hover:bg-[#F0F6FF] hover:text-[#3B8CFF] flex items-center justify-between transition"
-                            >
-                              <span className="flex items-center gap-2 truncate">
-                                <span>{item.flag}</span>
-                                <span className="font-medium text-slate-800 truncate">{item.name}</span>
-                              </span>
-                              <strong className="text-slate-600 font-mono text-[11px] ml-1">{item.code}</strong>
-                            </button>
-                          ))}
+                          <div className="overflow-y-auto flex-1 p-1 space-y-0.5">
+                            {filteredCountries.map((item) => (
+                              <button
+                                key={item.iso}
+                                type="button"
+                                onClick={() => selectCountryItem(item)}
+                                className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs hover:bg-[#F0F6FF] hover:text-[#3B8CFF] flex items-center justify-between transition group"
+                              >
+                                <span className="flex items-center gap-2 truncate">
+                                  <CountryFlag iso={item.iso} size="sm" />
+                                  <span className="font-medium text-slate-800 group-hover:text-[#3B8CFF] truncate">
+                                    {item.name}
+                                  </span>
+                                </span>
+                                <strong className="text-slate-500 font-mono text-[11px] ml-1">{item.code}</strong>
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
