@@ -7,12 +7,15 @@ import {
   X,
   Printer,
   CheckCircle2,
+  AlertCircle,
   Loader2,
   Mail,
   Send,
   Sparkles,
   Eye,
   Check,
+  Phone,
+  AtSign,
 } from "lucide-react";
 
 interface Props {
@@ -22,6 +25,15 @@ interface Props {
   agents?: any[];
   onSuccess?: () => void;
 }
+
+const COMMON_EMAIL_DOMAINS = [
+  "gmail.com",
+  "yahoo.com",
+  "outlook.com",
+  "hotmail.com",
+  "icloud.com",
+  "urbangaon.com",
+];
 
 export function UrbanGaonEnquiryModal({
   isOpen,
@@ -47,8 +59,11 @@ export function UrbanGaonEnquiryModal({
   const [state, setState] = useState("Rajasthan");
   const [country, setCountry] = useState("India");
   const [pinCode, setPinCode] = useState("302006");
+  
+  // Mobile & Real-time Email Suggestions
   const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
+  const [isEmailFocused, setIsEmailFocused] = useState(false);
 
   // Demographics
   const [dob, setDob] = useState("");
@@ -102,6 +117,30 @@ export function UrbanGaonEnquiryModal({
     window.print();
   };
 
+  // Mobile Real-Time Validation Handler (Strictly 10 digits numeric)
+  const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value;
+    const digitsOnly = rawVal.replace(/\D/g, "").slice(0, 10);
+    setMobile(digitsOnly);
+    if (error) setError("");
+  };
+
+  // Email Autocomplete logic
+  const emailPrefix = email.includes("@") ? email.split("@")[0] : email;
+  const emailDomainPart = email.includes("@") ? email.split("@")[1].toLowerCase() : "";
+  const matchingDomains = COMMON_EMAIL_DOMAINS.filter(
+    (d) => !emailDomainPart || d.toLowerCase().startsWith(emailDomainPart)
+  );
+  const showEmailSuggestions =
+    isEmailFocused &&
+    email.length > 0 &&
+    (email.includes("@") || emailPrefix.length >= 2);
+
+  const applyEmailDomain = (domain: string) => {
+    setEmail(`${emailPrefix}@${domain}`);
+    setIsEmailFocused(false);
+  };
+
   const payloadData = {
     salutation,
     firstName: firstName || "Customer",
@@ -150,8 +189,21 @@ export function UrbanGaonEnquiryModal({
       setError("Please provide First and Last Name.");
       return;
     }
-    if (!mobile.trim()) {
-      setError("Please provide a valid 10-digit mobile number.");
+
+    // Strict 10-Digit Indian Mobile Number Check
+    const cleanMobile = mobile.replace(/\D/g, "");
+    if (cleanMobile.length !== 10) {
+      setError(`Mobile number must be exactly 10 digits. (Currently entered ${cleanMobile.length} digits)`);
+      return;
+    }
+    if (!/^[6-9]\d{9}$/.test(cleanMobile)) {
+      setError("Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.");
+      return;
+    }
+
+    // Email Check (if entered, must be valid)
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Please enter a valid email address (e.g. rajesh@gmail.com).");
       return;
     }
 
@@ -189,7 +241,7 @@ export function UrbanGaonEnquiryModal({
       const res = await createLeadAction({
         projectId: projectId || defaultProjId,
         name: fullName,
-        phone: mobile,
+        phone: cleanMobile,
         email: email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@customer.in`,
         source: sourceLabel,
         interestedType: housingStyle,
@@ -233,7 +285,7 @@ export function UrbanGaonEnquiryModal({
                 UrbanGaon Customer Enquiry Form
               </h2>
               <p className="text-xs text-slate-500">
-                Official real estate application & automated dual-email dispatch engine
+                Official real estate application with real-time email suggestions & strict validation
               </p>
             </div>
           </div>
@@ -344,8 +396,9 @@ export function UrbanGaonEnquiryModal({
             </div>
 
             {error && (
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-medium">
-                {error}
+              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                <span>{error}</span>
               </div>
             )}
 
@@ -479,39 +532,126 @@ export function UrbanGaonEnquiryModal({
                 </div>
               </div>
 
-              {/* Mobile & Email */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Mobile (Strict 10-digit validation) & Email (Auto-suggestions) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {/* 1. STRICT 10-DIGIT MOBILE INPUT */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                    Mobile * (10 Digits)
-                  </label>
-                  <div className="flex items-center gap-1">
-                    <span className="px-2.5 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-500 font-semibold">
-                      +91
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-bold text-slate-700">
+                      Mobile Number * (Exactly 10 Digits)
+                    </label>
+                    <span
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full transition ${
+                        mobile.length === 10
+                          ? "bg-emerald-100 text-emerald-700"
+                          : mobile.length > 0
+                          ? "bg-amber-100 text-amber-800"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      {mobile.length === 10
+                        ? "✓ 10/10 Digits Complete"
+                        : mobile.length > 0
+                        ? `${mobile.length}/10 Digits (Need ${10 - mobile.length} more)`
+                        : "0/10 Digits"}
+                    </span>
+                  </div>
+
+                  <div className="relative flex items-center">
+                    <span className="px-3 py-2 rounded-l-xl bg-[#F8FAFC] border border-r-0 border-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1">
+                      <span>🇮🇳</span>
+                      <span>+91</span>
                     </span>
                     <input
                       type="tel"
                       required
+                      inputMode="numeric"
                       value={mobile}
-                      onChange={(e) => setMobile(e.target.value)}
+                      onChange={handleMobileChange}
                       placeholder="9876543210"
                       maxLength={10}
-                      className="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] tracking-wider"
+                      className={`flex-1 px-3 py-2 rounded-r-xl bg-white border font-bold text-xs tracking-widest focus:outline-none focus:ring-2 transition ${
+                        mobile.length === 10
+                          ? "border-emerald-400 text-emerald-950 focus:ring-emerald-400"
+                          : mobile.length > 0
+                          ? "border-amber-300 text-slate-900 focus:ring-amber-400"
+                          : "border-slate-200 text-slate-900 focus:ring-[#3B8CFF]"
+                      }`}
                     />
                   </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Accepts only 10-digit Indian phone numbers (6000000000 - 9999999999).
+                  </p>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                    Email Address * (for instant confirmation email)
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="rajesh.sharma@gmail.com"
-                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
-                  />
+                {/* 2. AUTO-SUGGESTION EMAIL INPUT */}
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-bold text-slate-700">
+                      Email Address *
+                    </label>
+                    <span className="text-[10px] text-slate-400">
+                      Type <strong className="text-[#3B8CFF]">@</strong> for quick domain suggestions
+                    </span>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onFocus={() => setIsEmailFocused(true)}
+                      onBlur={() => {
+                        // Delay closing slightly so clicking suggestion works
+                        setTimeout(() => setIsEmailFocused(false), 200);
+                      }}
+                      placeholder="rajesh.sharma@gmail.com"
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+                    />
+
+                    {/* Floating Auto-Suggestion Dropdown */}
+                    {showEmailSuggestions && matchingDomains.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl shadow-xl border border-slate-200/90 p-2 space-y-1 animate-in fade-in zoom-in-95 duration-100">
+                        <div className="text-[10px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">
+                          Select Domain Suggestion:
+                        </div>
+                        <div className="grid grid-cols-2 gap-1">
+                          {matchingDomains.map((dom) => (
+                            <button
+                              key={dom}
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyEmailDomain(dom);
+                              }}
+                              className="px-2.5 py-1.5 rounded-lg text-left text-xs text-slate-700 hover:bg-[#F0F6FF] hover:text-[#3B8CFF] font-medium flex items-center justify-between transition group"
+                            >
+                              <span className="truncate">
+                                {emailPrefix ? `${emailPrefix}@` : "@"}
+                                <strong className="text-slate-900 group-hover:text-[#3B8CFF]">{dom}</strong>
+                              </span>
+                              <AtSign className="w-3 h-3 text-slate-300 group-hover:text-[#3B8CFF]" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quick Domain Quick-Pill Badges */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                    <span className="text-[10px] text-slate-400">Quick domains:</span>
+                    {["gmail.com", "yahoo.com", "outlook.com", "icloud.com"].map((dom) => (
+                      <button
+                        key={dom}
+                        type="button"
+                        onClick={() => applyEmailDomain(dom)}
+                        className="px-2 py-0.5 rounded-md bg-[#F8FAFC] hover:bg-[#F0F6FF] hover:text-[#3B8CFF] text-[10px] font-semibold text-slate-600 border border-slate-200 transition"
+                      >
+                        @{dom}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -901,8 +1041,8 @@ export function UrbanGaonEnquiryModal({
 
                 <button
                   type="submit"
-                  disabled={isPending}
-                  className="px-6 py-2.5 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-bold shadow-md shadow-[#3B8CFF]/25 flex items-center gap-2 transition disabled:opacity-50"
+                  disabled={isPending || mobile.length !== 10}
+                  className="px-6 py-2.5 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-bold shadow-md shadow-[#3B8CFF]/25 flex items-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
