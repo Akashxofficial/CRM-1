@@ -71,7 +71,7 @@ export function generateCustomerWelcomeEmail(data: LeadEnquiryEmailPayload) {
           </div>
           <div style="background: #f1f5f9; padding: 20px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0;">
             <div style="font-weight: bold; color: #0f172a; margin-bottom: 4px;">Get in touch</div>
-            <div>Email: <a href="mailto:Info@urbangaon.com" style="color: #3b8cff; text-decoration: none;">Info@urbangaon.com</a> | <a href="mailto:yudhister.tiwari@urbangaon.com" style="color: #3b8cff; text-decoration: none;">yudhister.tiwari@urbangaon.com</a></div>
+            <div>Email: <a href="mailto:Info@urbangaon.com" style="color: #3b8cff; text-decoration: none;">Info@urbangaon.com</a> | <a href="mailto:dasaakash84@gmail.com" style="color: #3b8cff; text-decoration: none;">dasaakash84@gmail.com</a></div>
             <div>Contact: +91-9251836284 | 0141-6763064 | Website: <a href="https://www.urbangaon.com" style="color: #3b8cff;">www.urbangaon.com</a></div>
             <div style="margin-top: 8px; font-size: 10px; color: #94a3b8;">UrbanGaon, 2nd Floor, 74A, Sawai Pratap Singh Road, Near CM House, Opp. Loharu House, Gaurav Nagar, Civil lines, Jaipur, PIN: 302006, Rajasthan, India.</div>
           </div>
@@ -107,7 +107,7 @@ export function generateCustomerWelcomeEmail(data: LeadEnquiryEmailPayload) {
           </div>
           <div style="background: #f1f5f9; padding: 20px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0;">
             <div style="font-weight: bold; color: #0f172a; margin-bottom: 4px;">Get in touch</div>
-            <div>Email: <a href="mailto:Info@urbangaon.com" style="color: #3b8cff; text-decoration: none;">Info@urbangaon.com</a></div>
+            <div>Email: <a href="mailto:dasaakash84@gmail.com" style="color: #3b8cff; text-decoration: none;">dasaakash84@gmail.com</a></div>
             <div>Contact: +91-9251836284 | 0141-6763064 | Website: <a href="https://www.urbangaon.com" style="color: #3b8cff;">www.urbangaon.com</a></div>
             <div style="margin-top: 8px; font-size: 10px; color: #94a3b8;">UrbanGaon, 2nd Floor, 74A, Sawai Pratap Singh Road, Near CM House, Opp. Loharu House, Gaurav Nagar, Civil lines, Jaipur, PIN: 302006, Rajasthan, India.</div>
           </div>
@@ -139,7 +139,7 @@ export function generateCustomerWelcomeEmail(data: LeadEnquiryEmailPayload) {
           </div>
           <div style="background: #f1f5f9; padding: 20px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0;">
             <div style="font-weight: bold; color: #0f172a; margin-bottom: 4px;">Get in touch</div>
-            <div>Email: <a href="mailto:Info@urbangaon.com" style="color: #3b8cff; text-decoration: none;">Info@urbangaon.com</a></div>
+            <div>Email: <a href="mailto:dasaakash84@gmail.com" style="color: #3b8cff; text-decoration: none;">dasaakash84@gmail.com</a></div>
             <div>Contact: +91-9251836284 | 0141-6763064 | Website: <a href="https://www.urbangaon.com" style="color: #3b8cff;">www.urbangaon.com</a></div>
             <div style="margin-top: 8px; font-size: 10px; color: #94a3b8;">UrbanGaon, 2nd Floor, 74A, Sawai Pratap Singh Road, Near CM House, Opp. Loharu House, Gaurav Nagar, Civil lines, Jaipur, PIN: 302006, Rajasthan, India.</div>
           </div>
@@ -164,7 +164,7 @@ export function generateCustomerWelcomeEmail(data: LeadEnquiryEmailPayload) {
           <p>Just in case you don't receive a call, please connect with us directly on:</p>
           
           <div style="margin: 20px 0; padding: 16px; background: #f0f6ff; border-radius: 12px; border: 1px solid #bfdbfe;">
-            <div style="margin-bottom: 6px;"><strong>Email:</strong> <a href="mailto:yudhister.tiwari@urbangaon.com" style="color: #2563eb; text-decoration: none;">yudhister.tiwari@urbangaon.com</a></div>
+            <div style="margin-bottom: 6px;"><strong>Email:</strong> <a href="mailto:dasaakash84@gmail.com" style="color: #2563eb; text-decoration: none;">dasaakash84@gmail.com</a></div>
             <div style="margin-bottom: 6px;"><strong>Contact number:</strong> +91-9251836284</div>
             <div><strong>Website:</strong> <a href="https://www.urbangaon.com" style="color: #2563eb; text-decoration: none;">www.urbangaon.com</a></div>
           </div>
@@ -188,7 +188,7 @@ export function generateInternalCompanyNotificationEmail(data: LeadEnquiryEmailP
   const fullName = `${data.salutation} ${data.firstName} ${data.middleName ? data.middleName + " " : ""}${data.lastName}`.trim();
 
   return {
-    to: "yudhister.tiwari@urbangaon.com",
+    to: "dasaakash84@gmail.com",
     subject: `🚨 New Lead Captured: ${fullName} (${data.housingStyle || "Housing"}) - ${data.projectName || "UrbanGaon"}`,
     html: `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background: #ffffff; color: #1e293b;">
