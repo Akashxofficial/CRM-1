@@ -1,7 +1,9 @@
 /**
- * UrbanGaon Automated Email Dispatch Engine
+ * UrbanGaon Automated Real-Time Email Dispatch Engine
  * Formats and sends customer welcome emails (Drafts 1-6) and internal company notification emails.
  */
+
+import nodemailer from "nodemailer";
 
 export interface LeadEnquiryEmailPayload {
   salutation: string;
@@ -263,31 +265,86 @@ export function generateInternalCompanyNotificationEmail(data: LeadEnquiryEmailP
 }
 
 /**
- * Dispatch function with fallback logging and webhook/SMTP support
+ * Creates Nodemailer Transporter based on configured Environment Variables
+ */
+function createSmtpTransporter() {
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = parseInt(process.env.SMTP_PORT || "465", 10);
+  const user = process.env.SMTP_USER || process.env.GMAIL_USER || "dasaakash84@gmail.com";
+  const pass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "";
+
+  if (!pass) {
+    console.log("[SMTP CONFIG] SMTP_PASS not set. Emails will be logged to server console.");
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: {
+      user,
+      pass,
+    },
+  });
+}
+
+/**
+ * Real-time Email Dispatch Function
  */
 export async function sendLeadEnquiryEmails(data: LeadEnquiryEmailPayload) {
   try {
     const customerEmail = generateCustomerWelcomeEmail(data);
     const companyEmail = generateInternalCompanyNotificationEmail(data);
 
-    // In Server Action / Production: Log dispatch payloads and send via configured SMTP / Webhook
-    console.log("--------------------------------------------------");
-    console.log(`[EMAIL DISPATCHED TO CUSTOMER: ${customerEmail.to}]`);
-    console.log(`Subject: ${customerEmail.subject}`);
-    console.log("--------------------------------------------------");
-    console.log(`[EMAIL DISPATCHED TO COMPANY: ${companyEmail.to}]`);
-    console.log(`Subject: ${companyEmail.subject}`);
-    console.log("--------------------------------------------------");
+    const fromAddress = process.env.SMTP_FROM || `"UrbanGaon Customer Delight" <${process.env.SMTP_USER || "dasaakash84@gmail.com"}>`;
+
+    const transporter = createSmtpTransporter();
+
+    let customerSent = false;
+    let companySent = false;
+
+    if (transporter) {
+      try {
+        // 1. Send Customer Welcome Email
+        if (customerEmail.to && customerEmail.to.includes("@")) {
+          const custRes = await transporter.sendMail({
+            from: fromAddress,
+            to: customerEmail.to,
+            subject: customerEmail.subject,
+            html: customerEmail.html,
+          });
+          console.log("✅ Customer Welcome Email sent:", custRes.messageId);
+          customerSent = true;
+        }
+
+        // 2. Send Company Notification Email
+        const compRes = await transporter.sendMail({
+          from: fromAddress,
+          to: companyEmail.to,
+          subject: companyEmail.subject,
+          html: companyEmail.html,
+        });
+        console.log("✅ Company Notification Email sent:", compRes.messageId);
+        companySent = true;
+      } catch (smtpErr) {
+        console.warn("⚠️ SMTP real-time delivery attempt error:", smtpErr);
+      }
+    } else {
+      console.log("ℹ️ Real-time dispatch logged (Configure SMTP_PASS in .env for direct inbox delivery).");
+    }
 
     return {
       success: true,
       customerEmail: {
         to: customerEmail.to,
         subject: customerEmail.subject,
+        delivered: customerSent,
       },
       companyEmail: {
         to: companyEmail.to,
         subject: companyEmail.subject,
+        delivered: companySent,
       },
     };
   } catch (error) {
