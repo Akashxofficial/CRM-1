@@ -67,14 +67,14 @@ export function Sidebar({ user, onCloseMobile }: Props) {
       icon: Users,
     },
     {
-      name: "Deals",
-      href: "/bookings",
-      icon: Briefcase,
-    },
-    {
       name: "Calls",
       href: "/calls",
       icon: PhoneCall,
+    },
+    {
+      name: "Deals",
+      href: "/bookings",
+      icon: Briefcase,
     },
     {
       name: "Collections",
