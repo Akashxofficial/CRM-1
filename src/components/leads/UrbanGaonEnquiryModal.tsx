@@ -422,19 +422,35 @@ export function UrbanGaonEnquiryModal({
         ) : (
           /* Scrollable Form Body */
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 text-slate-800 text-xs">
-            {/* Header Banner matching PDF with Official UrbanGaon Logo */}
-            <div className="text-center pb-4 border-b border-slate-200 flex flex-col items-center">
-              <img
-                src="/urbangaon-logo.png"
-                alt="UrbanGaon — a perfect balance"
-                className="h-12 sm:h-14 w-auto object-contain mx-auto mb-1"
-              />
-              <h1 className="text-2xl font-bold text-slate-900 mt-1 font-heading tracking-tight">
-                Customer Enquiry Form
-              </h1>
-              <p className="text-[11px] text-slate-500 italic mt-0.5">
-                (Please complete this application thoroughly so we can process it as quickly as possible)
-              </p>
+            {/* Header Banner with UrbanGaon (Left) and AXIO Luxury Brand Logo (Right) */}
+            <div className="pb-4 border-b border-slate-200">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4">
+                {/* Left: UrbanGaon Brand & Form Title */}
+                <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
+                  <img
+                    src="/urbangaon-logo.png"
+                    alt="UrbanGaon — a perfect balance"
+                    className="h-10 sm:h-12 w-auto object-contain mb-1"
+                  />
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1 font-heading tracking-tight">
+                    Customer Enquiry Form
+                  </h1>
+                  <p className="text-[11px] sm:text-xs text-slate-500 italic mt-0.5">
+                    (Please complete this application thoroughly so we can process it as quickly as possible)
+                  </p>
+                </div>
+
+                {/* Top Right: AXIO Luxury Project Logo */}
+                <div className="flex-shrink-0 flex items-center justify-end sm:self-center">
+                  <div className="p-1 sm:p-2 rounded-2xl bg-white border border-slate-100 shadow-2xs hover:shadow-xs transition">
+                    <img
+                      src="/axio-logo.png"
+                      alt="AXIO — An asset with the Class."
+                      className="h-11 sm:h-13 w-auto object-contain"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {error && (
