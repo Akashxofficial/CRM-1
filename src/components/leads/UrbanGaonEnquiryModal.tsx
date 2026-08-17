@@ -422,11 +422,11 @@ export function UrbanGaonEnquiryModal({
         ) : (
           /* Scrollable Form Body */
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 text-slate-800 text-xs">
-            {/* Header Banner: Centered UrbanGaon & Form Title + Right-aligned AXIO Logo */}
-            <div className="pb-4 border-b border-slate-200 relative">
-              <div className="flex items-center justify-between">
-                {/* Left invisible spacer for balance on wide screens */}
-                <div className="hidden md:block w-32 lg:w-40 flex-shrink-0" />
+            {/* Header Banner: Centered UrbanGaon & Form Title + Large Right-aligned AXIO Luxury Logo */}
+            <div className="pb-5 border-b border-slate-200 relative">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                {/* Left invisible spacer to ensure exact mathematical center alignment */}
+                <div className="hidden sm:block w-48 md:w-56 lg:w-64 flex-shrink-0" />
 
                 {/* Center: Official UrbanGaon Logo & Title */}
                 <div className="text-center flex-1 flex flex-col items-center">
@@ -443,13 +443,13 @@ export function UrbanGaonEnquiryModal({
                   </p>
                 </div>
 
-                {/* Right Side Space: Attached AXIO Luxury Project Logo */}
-                <div className="flex-shrink-0 flex items-center justify-end">
-                  <div className="p-1 sm:p-2 rounded-2xl bg-white border border-slate-100 shadow-2xs hover:shadow-xs transition">
+                {/* Right Side: High-Impact AXIO Luxury Brand Logo */}
+                <div className="w-full sm:w-48 md:w-56 lg:w-64 flex-shrink-0 flex items-center justify-center sm:justify-end">
+                  <div className="px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl bg-white border border-slate-200/90 shadow-xs hover:shadow-sm transition flex items-center justify-center">
                     <img
                       src="/axio-logo.png"
                       alt="AXIO — An asset with the Class."
-                      className="h-11 sm:h-13 w-auto object-contain"
+                      className="h-14 sm:h-16 md:h-18 lg:h-20 w-auto object-contain max-w-[220px]"
                     />
                   </div>
                 </div>
