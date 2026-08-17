@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { createAuditLog } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
+import { sendLeadEnquiryEmails } from "@/lib/email-service";
 
 export async function getLeads(filters?: {
   projectId?: string;
@@ -218,12 +219,26 @@ export async function createLeadAction(data: {
     entityType: "LEAD",
     entityId: lead.id,
     action: "CREATED",
-    details: `Lead ${lead.name} created by ${user.name}.`,
+    details: `Lead ${lead.name} created by ${user.name}. Automated welcome & company emails dispatched.`,
     performedById: user.id,
   });
 
+  // Automatically dispatch customer welcome email & company notification email
+  const emailRes = await sendLeadEnquiryEmails({
+    salutation: data.name.startsWith("Mr.") ? "Mr." : data.name.startsWith("Mrs.") ? "Mrs." : data.name.startsWith("Ms.") ? "Ms." : "Mr.",
+    firstName: data.name.replace(/^(Mr\.|Mrs\.|Ms\.)\s*/, "").split(" ")[0] || data.name,
+    lastName: data.name.replace(/^(Mr\.|Mrs\.|Ms\.)\s*/, "").split(" ").slice(1).join(" ") || "",
+    email: data.email,
+    mobile: data.phone,
+    sourceOption: data.source || "Website",
+    housingStyle: data.interestedType,
+    budgetRange: data.budgetMin ? `₹${data.budgetMin / 100000}L - ₹${(data.budgetMax || 10000000) / 100000}L` : undefined,
+    projectName: "UrbanGaon One",
+    assignedAgentName: user.name,
+  });
+
   revalidatePath("/leads");
-  return { success: true, lead };
+  return { success: true, lead, emailsDispatched: emailRes };
 }
 
 export async function updateLeadStatusAction(

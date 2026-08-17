@@ -2,22 +2,17 @@
 
 import { useState, useTransition, useRef } from "react";
 import { createLeadAction } from "@/actions/leads-actions";
+import { generateCustomerWelcomeEmail, generateInternalCompanyNotificationEmail } from "@/lib/email-service";
 import {
   X,
   Printer,
   CheckCircle2,
   Loader2,
-  Building,
-  UserCheck,
-  Sparkles,
-  Phone,
   Mail,
-  MapPin,
-  Calendar,
-  Briefcase,
-  Layers,
-  Clock,
-  DollarSign,
+  Send,
+  Sparkles,
+  Eye,
+  Check,
 } from "lucide-react";
 
 interface Props {
@@ -38,6 +33,8 @@ export function UrbanGaonEnquiryModal({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+  const [dispatchedEmails, setDispatchedEmails] = useState<any>(null);
+  const [previewEmailTab, setPreviewEmailTab] = useState<"customer" | "company" | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
   // Form State matching the PDF
@@ -105,6 +102,45 @@ export function UrbanGaonEnquiryModal({
     window.print();
   };
 
+  const payloadData = {
+    salutation,
+    firstName: firstName || "Customer",
+    middleName,
+    lastName: lastName || "",
+    email: email || `${firstName.toLowerCase() || "lead"}.${lastName.toLowerCase() || "user"}@customer.in`,
+    mobile: mobile || "9876543210",
+    address,
+    city,
+    state,
+    country,
+    pinCode,
+    dob,
+    maritalStatus,
+    childrenCount,
+    residentialStatus,
+    purposeOfPurchase,
+    customerProfile,
+    industryType,
+    companyName,
+    designation,
+    department,
+    annualIncome,
+    sourceOption,
+    channelPartnerName,
+    empId,
+    referralDetails,
+    otherSource,
+    livingStatus,
+    housingStyle,
+    purchaseTimeline,
+    budgetRange,
+    projectName: "UrbanGaon One, Jagatpura, Jaipur",
+    assignedAgentName: "Yudhister Tiwari (Senior Relationship Officer)",
+  };
+
+  const customerPreview = generateCustomerWelcomeEmail(payloadData);
+  const companyPreview = generateInternalCompanyNotificationEmail(payloadData);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -166,11 +202,14 @@ export function UrbanGaonEnquiryModal({
 
       if (res.success) {
         setIsSuccess(true);
+        setDispatchedEmails({
+          customerTo: email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@customer.in`,
+          customerSubject: customerPreview.subject,
+          companyTo: "yudhister.tiwari@urbangaon.com",
+          companySubject: companyPreview.subject,
+        });
+
         if (onSuccess) onSuccess();
-        setTimeout(() => {
-          setIsSuccess(false);
-          onClose();
-        }, 1500);
       } else {
         setError("Failed to create lead. Please check your inputs.");
       }
@@ -181,7 +220,7 @@ export function UrbanGaonEnquiryModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/70 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-150">
       <div
         ref={printRef}
-        className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150 font-sans"
+        className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-5xl lg:max-w-6xl max-h-[94vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150 font-sans"
       >
         {/* Modal Top Action Bar */}
         <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-[#F8FAFC]">
@@ -194,12 +233,25 @@ export function UrbanGaonEnquiryModal({
                 UrbanGaon Customer Enquiry Form
               </h2>
               <p className="text-xs text-slate-500">
-                Official real estate application & lead capture registry
+                Official real estate application & automated dual-email dispatch engine
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPreviewEmailTab(previewEmailTab ? null : "customer")}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition ${
+                previewEmailTab
+                  ? "bg-[#3B8CFF] text-white border-[#3B8CFF]"
+                  : "border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-2xs"
+              }`}
+            >
+              <Mail className="w-3.5 h-3.5" />
+              <span>{previewEmailTab ? "Back to Form" : "Preview Emails"}</span>
+            </button>
+
             <button
               type="button"
               onClick={handlePrint}
@@ -220,564 +272,651 @@ export function UrbanGaonEnquiryModal({
           </div>
         </div>
 
-        {/* Scrollable Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 text-slate-800 text-xs">
-          {/* Header Banner exactly matching PDF */}
-          <div className="text-center pb-4 border-b border-slate-200">
-            <div className="inline-flex items-center gap-2 text-[#3B8CFF] font-bold text-lg font-heading">
-              <span className="w-6 h-6 rounded-lg bg-[#3B8CFF] text-white flex items-center justify-center text-xs">✦</span>
-              <span>UrbanGaon</span>
-            </div>
-            <span className="text-[11px] text-slate-400 block tracking-widest uppercase">a perfect balance</span>
-            <h1 className="text-xl font-bold text-slate-900 mt-2 font-heading tracking-tight">
-              Customer Enquiry Form
-            </h1>
-            <p className="text-[11px] text-slate-500 italic">
-              (Please complete this application thoroughly so we can process it as quickly as possible)
-            </p>
-          </div>
-
-          {error && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-medium">
-              {error}
-            </div>
-          )}
-
-          {isSuccess && (
-            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              <span>Customer Enquiry Form submitted & registered into UrbanGaon CRM!</span>
-            </div>
-          )}
-
-          {/* 1. PERSONAL / CONTACT DETAILS */}
-          <div className="space-y-3.5">
-            {/* Name Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-              <div className="sm:col-span-2">
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  Name: Mr./Ms./Mrs.
-                </label>
-                <select
-                  value={salutation}
-                  onChange={(e: any) => setSalutation(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+        {/* Email Preview Overlay */}
+        {previewEmailTab ? (
+          <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 bg-[#F8FAFC]">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPreviewEmailTab("customer")}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                    previewEmailTab === "customer"
+                      ? "bg-[#3B8CFF] text-white shadow-sm"
+                      : "bg-white text-slate-700 border border-slate-200"
+                  }`}
                 >
-                  <option value="Mr.">Mr.</option>
-                  <option value="Ms.">Ms.</option>
-                  <option value="Mrs.">Mrs.</option>
-                </select>
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>1. Customer Welcome Email ({sourceOption.includes("Channel Partner") ? "Draft-6" : sourceOption.includes("Employee") ? "Draft-4" : sourceOption.includes("Referral") ? "Draft-3" : "Draft-1"})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPreviewEmailTab("company")}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                    previewEmailTab === "company"
+                      ? "bg-[#3B8CFF] text-white shadow-sm"
+                      : "bg-white text-slate-700 border border-slate-200"
+                  }`}
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>2. Company Notification Email (yudhister.tiwari@urbangaon.com)</span>
+                </button>
               </div>
 
-              <div className="sm:col-span-3">
-                <label className="block text-[10px] text-slate-400 mb-1">First Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="e.g. Rajesh"
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
-                />
-              </div>
-
-              <div className="sm:col-span-3">
-                <label className="block text-[10px] text-slate-400 mb-1">Middle Name</label>
-                <input
-                  type="text"
-                  value={middleName}
-                  onChange={(e) => setMiddleName(e.target.value)}
-                  placeholder="e.g. Kumar"
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
-                />
-              </div>
-
-              <div className="sm:col-span-4">
-                <label className="block text-[10px] text-slate-400 mb-1">Last Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="e.g. Sharma"
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
-                />
-              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewEmailTab(null)}
+                className="text-xs font-bold text-[#3B8CFF] hover:underline"
+              >
+                ← Return to Form
+              </button>
             </div>
 
-            {/* Correspondence Address */}
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                Correspondence Address:
-              </label>
-              <input
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="House / Flat No., Street, Landmark..."
-                className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto">
+              <div className="mb-4 pb-3 border-b border-slate-100 text-xs text-slate-500 space-y-1">
+                <div><strong>To:</strong> {previewEmailTab === "customer" ? customerPreview.to : companyPreview.to}</div>
+                <div><strong>Subject:</strong> {previewEmailTab === "customer" ? customerPreview.subject : companyPreview.subject}</div>
+              </div>
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: previewEmailTab === "customer" ? customerPreview.html : companyPreview.html,
+                }}
               />
             </div>
-
-            {/* City, State, Country, Pin */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div>
-                <label className="block text-[10px] text-slate-400 mb-1">City</label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
-                />
+          </div>
+        ) : (
+          /* Scrollable Form Body */
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 text-slate-800 text-xs">
+            {/* Header Banner matching PDF */}
+            <div className="text-center pb-4 border-b border-slate-200">
+              <div className="inline-flex items-center gap-2 text-[#3B8CFF] font-bold text-xl font-heading">
+                <span className="w-7 h-7 rounded-lg bg-[#3B8CFF] text-white flex items-center justify-center text-sm shadow-sm">✦</span>
+                <span>UrbanGaon</span>
               </div>
-              <div>
-                <label className="block text-[10px] text-slate-400 mb-1">State</label>
-                <input
-                  type="text"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] text-slate-400 mb-1">Country</label>
-                <input
-                  type="text"
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] text-slate-400 mb-1">Pin</label>
-                <input
-                  type="text"
-                  value={pinCode}
-                  onChange={(e) => setPinCode(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
-                />
-              </div>
+              <span className="text-[11px] text-slate-400 block tracking-widest uppercase mt-0.5">a perfect balance</span>
+              <h1 className="text-2xl font-bold text-slate-900 mt-2 font-heading tracking-tight">
+                Customer Enquiry Form
+              </h1>
+              <p className="text-[11px] text-slate-500 italic">
+                (Please complete this application thoroughly so we can process it as quickly as possible)
+              </p>
             </div>
 
-            {/* Mobile & Email */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  Mobile * (10 Digits)
-                </label>
-                <div className="flex items-center gap-1">
-                  <span className="px-2.5 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-500 font-semibold">
-                    +91
-                  </span>
+            {error && (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-medium">
+                {error}
+              </div>
+            )}
+
+            {isSuccess && dispatchedEmails && (
+              <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-2 animate-in fade-in">
+                <div className="flex items-center gap-2 font-bold text-sm text-emerald-700">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  <span>Lead Registered & Automated Dual-Emails Dispatched!</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1">
+                  <div className="p-2.5 rounded-xl bg-white border border-emerald-100">
+                    <span className="text-emerald-600 font-bold block mb-0.5">✉️ Customer Welcome Email:</span>
+                    <div>To: <strong>{dispatchedEmails.customerTo}</strong></div>
+                    <div className="text-slate-500 truncate">{dispatchedEmails.customerSubject}</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white border border-emerald-100">
+                    <span className="text-blue-600 font-bold block mb-0.5">🏢 Company Notification Email:</span>
+                    <div>To: <strong>{dispatchedEmails.companyTo}</strong></div>
+                    <div className="text-slate-500 truncate">{dispatchedEmails.companySubject}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 1. PERSONAL / CONTACT DETAILS */}
+            <div className="space-y-4">
+              {/* Name Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                <div className="sm:col-span-2">
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Name: Mr./Ms./Mrs.
+                  </label>
+                  <select
+                    value={salutation}
+                    onChange={(e: any) => setSalutation(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+                  >
+                    <option value="Mr.">Mr.</option>
+                    <option value="Ms.">Ms.</option>
+                    <option value="Mrs.">Mrs.</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-3">
+                  <label className="block text-[10px] text-slate-400 mb-1">First Name *</label>
                   <input
-                    type="tel"
+                    type="text"
                     required
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value)}
-                    placeholder="9876543210"
-                    maxLength={10}
-                    className="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] tracking-wider"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="e.g. Rajesh"
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+                  />
+                </div>
+
+                <div className="sm:col-span-3">
+                  <label className="block text-[10px] text-slate-400 mb-1">Middle Name</label>
+                  <input
+                    type="text"
+                    value={middleName}
+                    onChange={(e) => setMiddleName(e.target.value)}
+                    placeholder="e.g. Kumar"
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+                  />
+                </div>
+
+                <div className="sm:col-span-4">
+                  <label className="block text-[10px] text-slate-400 mb-1">Last Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="e.g. Sharma"
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
                   />
                 </div>
               </div>
 
+              {/* Correspondence Address */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  Email Address
+                  Correspondence Address:
                 </label>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="rajesh.sharma@gmail.com"
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="House / Flat No., Street, Landmark..."
                   className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
                 />
               </div>
-            </div>
-          </div>
 
-          {/* 2. DEMOGRAPHICS (4 Box Cards matching PDF) */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-2">
-            {/* Date of Birth */}
-            <div className="p-3 rounded-2xl border border-slate-200 bg-[#F8FAFC] space-y-1.5">
-              <label className="block text-[11px] font-bold text-slate-700">Date of Birth:</label>
-              <input
-                type="date"
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                className="w-full px-2 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs"
-              />
-              <span className="text-[9px] text-slate-400 block text-center">DD-MM-YYYY</span>
+              {/* City, State, Country, Pin */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-[10px] text-slate-400 mb-1">City</label>
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-400 mb-1">State</label>
+                  <input
+                    type="text"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-400 mb-1">Country</label>
+                  <input
+                    type="text"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-400 mb-1">Pin</label>
+                  <input
+                    type="text"
+                    value={pinCode}
+                    onChange={(e) => setPinCode(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+                  />
+                </div>
+              </div>
+
+              {/* Mobile & Email */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Mobile * (10 Digits)
+                  </label>
+                  <div className="flex items-center gap-1">
+                    <span className="px-2.5 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-500 font-semibold">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      value={mobile}
+                      onChange={(e) => setMobile(e.target.value)}
+                      placeholder="9876543210"
+                      maxLength={10}
+                      className="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] tracking-wider"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Email Address * (for instant confirmation email)
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="rajesh.sharma@gmail.com"
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Marital Status */}
-            <div className="p-3 rounded-2xl border border-slate-200 bg-[#F8FAFC] space-y-1.5">
-              <label className="block text-[11px] font-bold text-slate-700">Marital Status</label>
+            {/* 2. DEMOGRAPHICS (4 Box Cards matching PDF) */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3.5 pt-2">
+              {/* Date of Birth */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-[#F8FAFC] space-y-1.5">
+                <label className="block text-[11px] font-bold text-slate-700">Date of Birth:</label>
+                <input
+                  type="date"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="w-full px-2 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs"
+                />
+                <span className="text-[9px] text-slate-400 block text-center">DD-MM-YYYY</span>
+              </div>
+
+              {/* Marital Status */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-[#F8FAFC] space-y-1.5">
+                <label className="block text-[11px] font-bold text-slate-700">Marital Status</label>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-1 text-[11px] cursor-pointer">
+                    <input
+                      type="radio"
+                      name="marital"
+                      checked={maritalStatus === "Single"}
+                      onChange={() => setMaritalStatus("Single")}
+                      className="text-[#3B8CFF]"
+                    />
+                    <span>Single</span>
+                  </label>
+                  <label className="flex items-center gap-1 text-[11px] cursor-pointer">
+                    <input
+                      type="radio"
+                      name="marital"
+                      checked={maritalStatus === "Married"}
+                      onChange={() => setMaritalStatus("Married")}
+                      className="text-[#3B8CFF]"
+                    />
+                    <span>Married</span>
+                  </label>
+                </div>
+                {maritalStatus === "Married" && (
+                  <input
+                    type="text"
+                    value={childrenCount}
+                    onChange={(e) => setChildrenCount(e.target.value)}
+                    placeholder="If married, No. of Children..."
+                    className="w-full px-2 py-1 text-[11px] rounded bg-white border border-slate-200"
+                  />
+                )}
+              </div>
+
+              {/* Residential Status */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-[#F8FAFC] space-y-1">
+                <label className="block text-[11px] font-bold text-slate-700">Residential Status</label>
+                <div className="space-y-1 text-[11px]">
+                  {["Resident", "Non-Resident", "Foreign National of Indian Origin"].map((r) => (
+                    <label key={r} className="flex items-center gap-1 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="residential"
+                        checked={residentialStatus === r}
+                        onChange={() => setResidentialStatus(r as any)}
+                        className="text-[#3B8CFF]"
+                      />
+                      <span className="truncate">{r}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Purpose of Purchase */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-[#F8FAFC] space-y-1">
+                <label className="block text-[11px] font-bold text-slate-700">Purpose of Purchase</label>
+                <div className="space-y-1.5 text-[11px] pt-1">
+                  {["Investment", "End Use"].map((p) => (
+                    <label key={p} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="purpose"
+                        checked={purposeOfPurchase === p}
+                        onChange={() => setPurposeOfPurchase(p as any)}
+                        className="text-[#3B8CFF]"
+                      />
+                      <span className="font-medium">{p}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 3. CUSTOMER PROFILE & EMPLOYMENT DETAILS */}
+            <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-white space-y-3.5">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-2">Customer Profile:</label>
+                <div className="flex flex-wrap items-center gap-4 text-[11px]">
+                  {["Self Employed", "Private Service", "Govt. Service", "Retired", "NRI", "Housewife"].map((cp) => (
+                    <label key={cp} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="custProfile"
+                        checked={customerProfile === cp}
+                        onChange={() => setCustomerProfile(cp as any)}
+                        className="text-[#3B8CFF]"
+                      />
+                      <span>{cp}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+                <div>
+                  <label className="block text-[10px] text-slate-400 mb-1">Industry Type</label>
+                  <input
+                    type="text"
+                    value={industryType}
+                    onChange={(e) => setIndustryType(e.target.value)}
+                    placeholder="e.g. IT / Real Estate"
+                    className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-400 mb-1">Company Name</label>
+                  <input
+                    type="text"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="e.g. Infosys / Self-Practicing"
+                    className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-400 mb-1">Designation</label>
+                  <input
+                    type="text"
+                    value={designation}
+                    onChange={(e) => setDesignation(e.target.value)}
+                    placeholder="e.g. VP / Senior Lead"
+                    className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-400 mb-1">Department</label>
+                  <input
+                    type="text"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    placeholder="e.g. Engineering"
+                    className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
+                  />
+                </div>
+
+                <div className="sm:col-span-2 lg:col-span-4">
+                  <label className="block text-[10px] text-slate-400 mb-1">Annual Income</label>
+                  <input
+                    type="text"
+                    value={annualIncome}
+                    onChange={(e) => setAnnualIncome(e.target.value)}
+                    placeholder="e.g. ₹25,00,000 / Year"
+                    className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 4. HOW DID YOU FIRST HEAR ABOUT THIS PROJECT */}
+            <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-[#F8FAFC] space-y-3">
+              <label className="block text-[11px] font-bold text-slate-900">
+                How did you first hear about this Project (Determines automated welcome email draft):
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[11px]">
+                {[
+                  "Newspaper/magazine ad",
+                  "Hoarding/billboard",
+                  "Email/SMS/ Whats app campaign",
+                  "Event/Exhibition",
+                  "Channel Partner",
+                  "Employee Referral",
+                  "Referral from friend/family/ Existing Customer",
+                  "Company website / social media / online search",
+                  "Real estate portal (e.g., Magic Bricks, 99acres)",
+                  "Other",
+                ].map((src) => (
+                  <label key={src} className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="leadSource"
+                      checked={sourceOption.startsWith(src)}
+                      onChange={() => setSourceOption(src)}
+                      className="mt-0.5 text-[#3B8CFF]"
+                    />
+                    <span>{src}</span>
+                  </label>
+                ))}
+              </div>
+
+              {/* Conditional input fields */}
+              {sourceOption === "Channel Partner" && (
+                <div className="mt-2">
+                  <label className="block text-[10px] text-slate-500 mb-1">Channel Partner Name * (triggers Draft-6 email)</label>
+                  <input
+                    type="text"
+                    value={channelPartnerName}
+                    onChange={(e) => setChannelPartnerName(e.target.value)}
+                    placeholder="e.g. Horizon Realty Partners"
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs"
+                  />
+                </div>
+              )}
+              {sourceOption === "Employee Referral" && (
+                <div className="mt-2">
+                  <label className="block text-[10px] text-slate-500 mb-1">Employee Referral Emp ID * (triggers Draft-4 email)</label>
+                  <input
+                    type="text"
+                    value={empId}
+                    onChange={(e) => setEmpId(e.target.value)}
+                    placeholder="e.g. EMP-9204"
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs"
+                  />
+                </div>
+              )}
+              {sourceOption.includes("Referral from") && (
+                <div className="mt-2">
+                  <label className="block text-[10px] text-slate-500 mb-1">Referral details / Existing Unit / Vendor Name * (triggers Draft-3 email)</label>
+                  <input
+                    type="text"
+                    value={referralDetails}
+                    onChange={(e) => setReferralDetails(e.target.value)}
+                    placeholder="Referral from friend/family/ Existing Customer unit no. Name..."
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs"
+                  />
+                </div>
+              )}
+              {sourceOption === "Other" && (
+                <div className="mt-2">
+                  <label className="block text-[10px] text-slate-500 mb-1">Other source details</label>
+                  <input
+                    type="text"
+                    value={otherSource}
+                    onChange={(e) => setOtherSource(e.target.value)}
+                    placeholder="Other please specify..."
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* 5. HOUSING STYLE, LIVING STATUS, TIMELINES & BUDGET (4 Box Cards matching PDF) */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3.5">
+              {/* Current living Status */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1">
+                <label className="block text-[11px] font-bold text-slate-700">Current living Status:</label>
+                <div className="space-y-1.5 text-[11px] pt-1">
+                  {["Own", "Rent"].map((s) => (
+                    <label key={s} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="livingStatus"
+                        checked={livingStatus === s}
+                        onChange={() => setLivingStatus(s as any)}
+                        className="text-[#3B8CFF]"
+                      />
+                      <span>{s}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Desired Housing Style */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1">
+                <label className="block text-[11px] font-bold text-slate-700">Desired Housing Style:</label>
+                <div className="space-y-1.5 text-[11px] pt-1">
+                  {["Plot", "2/3 BHK", "Serviced Apartment"].map((h) => (
+                    <label key={h} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="housingStyle"
+                        checked={housingStyle === h}
+                        onChange={() => setHousingStyle(h as any)}
+                        className="text-[#3B8CFF]"
+                      />
+                      <span>{h}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Purchase Timelines */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1">
+                <label className="block text-[11px] font-bold text-slate-700">Purchase Timelines:</label>
+                <div className="space-y-1.5 text-[11px] pt-1">
+                  {["With in 1 Month", "1-3 Months", "6-12 Months"].map((t) => (
+                    <label key={t} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="timeline"
+                        checked={purchaseTimeline === t}
+                        onChange={() => setPurchaseTimeline(t as any)}
+                        className="text-[#3B8CFF]"
+                      />
+                      <span>{t}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Budget Range */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white space-y-1">
+                <label className="block text-[11px] font-bold text-slate-700">Overall Budget Range:</label>
+                <div className="space-y-1 text-[11px] pt-1">
+                  {["<₹50 Lakhs", "₹50 Lakhs-₹1 Crore", ">₹1 Crore", "Prefer not to disclose"].map((b) => (
+                    <label key={b} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="budget"
+                        checked={budgetRange === b}
+                        onChange={() => setBudgetRange(b as any)}
+                        className="text-[#3B8CFF]"
+                      />
+                      <span className="truncate">{b}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 6. CRM PROJECT ASSIGNMENT & AGENT */}
+            <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-[#F0F6FF]/60 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">Target Project</label>
+                <select
+                  value={projectId}
+                  onChange={(e) => setProjectId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 font-semibold focus:outline-none"
+                >
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.location})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">Assign Sales Executive</label>
+                <select
+                  value={assignedToId}
+                  onChange={(e) => setAssignedToId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none"
+                >
+                  <option value="">Auto-Assign / Yudhister Tiwari</option>
+                  {agents.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name} ({a.role})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Official Footer matching PDF */}
+            <div className="pt-4 border-t border-slate-200 text-center text-[10px] text-slate-400 leading-relaxed">
+              <strong>UrbanGaon</strong>, 2nd Floor, 74A, Sawai Pratap Singh Road, Near CM House, Opp. Loharu House, Gaurav Nagar, Civil lines, Jaipur, PIN: 302006, Rajasthan, India.
+            </div>
+
+            {/* Actions Button */}
+            <div className="pt-2 flex items-center justify-between">
+              <span className="text-[11px] text-slate-400">
+                ⚡ Automatically sends customer welcome email + internal company notification on submit.
+              </span>
+
               <div className="flex items-center gap-3">
-                <label className="flex items-center gap-1 text-[11px] cursor-pointer">
-                  <input
-                    type="radio"
-                    name="marital"
-                    checked={maritalStatus === "Single"}
-                    onChange={() => setMaritalStatus("Single")}
-                    className="text-[#3B8CFF]"
-                  />
-                  <span>Single</span>
-                </label>
-                <label className="flex items-center gap-1 text-[11px] cursor-pointer">
-                  <input
-                    type="radio"
-                    name="marital"
-                    checked={maritalStatus === "Married"}
-                    onChange={() => setMaritalStatus("Married")}
-                    className="text-[#3B8CFF]"
-                  />
-                  <span>Married</span>
-                </label>
-              </div>
-              {maritalStatus === "Married" && (
-                <input
-                  type="text"
-                  value={childrenCount}
-                  onChange={(e) => setChildrenCount(e.target.value)}
-                  placeholder="If married, No. of Children..."
-                  className="w-full px-2 py-1 text-[11px] rounded bg-white border border-slate-200"
-                />
-              )}
-            </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold transition"
+                >
+                  Cancel
+                </button>
 
-            {/* Residential Status */}
-            <div className="p-3 rounded-2xl border border-slate-200 bg-[#F8FAFC] space-y-1">
-              <label className="block text-[11px] font-bold text-slate-700">Residential Status</label>
-              <div className="space-y-1 text-[11px]">
-                {["Resident", "Non-Resident", "Foreign National of Indian Origin"].map((r) => (
-                  <label key={r} className="flex items-center gap-1 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="residential"
-                      checked={residentialStatus === r}
-                      onChange={() => setResidentialStatus(r as any)}
-                      className="text-[#3B8CFF]"
-                    />
-                    <span className="truncate">{r}</span>
-                  </label>
-                ))}
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="px-6 py-2.5 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-bold shadow-md shadow-[#3B8CFF]/25 flex items-center gap-2 transition disabled:opacity-50"
+                >
+                  {isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>Submit Customer Enquiry</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
-
-            {/* Purpose of Purchase */}
-            <div className="p-3 rounded-2xl border border-slate-200 bg-[#F8FAFC] space-y-1">
-              <label className="block text-[11px] font-bold text-slate-700">Purpose of Purchase</label>
-              <div className="space-y-1.5 text-[11px] pt-1">
-                {["Investment", "End Use"].map((p) => (
-                  <label key={p} className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="purpose"
-                      checked={purposeOfPurchase === p}
-                      onChange={() => setPurposeOfPurchase(p as any)}
-                      className="text-[#3B8CFF]"
-                    />
-                    <span className="font-medium">{p}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* 3. CUSTOMER PROFILE & EMPLOYMENT DETAILS */}
-          <div className="p-4 rounded-2xl border border-slate-200 bg-white space-y-3">
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-2">Customer Profile:</label>
-              <div className="flex flex-wrap items-center gap-4 text-[11px]">
-                {["Self Employed", "Private Service", "Govt. Service", "Retired", "NRI", "Housewife"].map((cp) => (
-                  <label key={cp} className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="custProfile"
-                      checked={customerProfile === cp}
-                      onChange={() => setCustomerProfile(cp as any)}
-                      className="text-[#3B8CFF]"
-                    />
-                    <span>{cp}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              <div>
-                <label className="block text-[10px] text-slate-400 mb-1">Industry Type</label>
-                <input
-                  type="text"
-                  value={industryType}
-                  onChange={(e) => setIndustryType(e.target.value)}
-                  placeholder="e.g. IT, Healthcare, Manufacturing"
-                  className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] text-slate-400 mb-1">Company Name</label>
-                <input
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="e.g. Infosys / Self-Practicing"
-                  className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] text-slate-400 mb-1">Designation</label>
-                <input
-                  type="text"
-                  value={designation}
-                  onChange={(e) => setDesignation(e.target.value)}
-                  placeholder="e.g. VP / Senior Architect"
-                  className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] text-slate-400 mb-1">Department</label>
-                <input
-                  type="text"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  placeholder="e.g. Technology / Operations"
-                  className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
-                />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="block text-[10px] text-slate-400 mb-1">Annual Income</label>
-                <input
-                  type="text"
-                  value={annualIncome}
-                  onChange={(e) => setAnnualIncome(e.target.value)}
-                  placeholder="e.g. ₹25,00,000 / Year"
-                  className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* 4. HOW DID YOU FIRST HEAR ABOUT THIS PROJECT */}
-          <div className="p-4 rounded-2xl border border-slate-200 bg-[#F8FAFC] space-y-2.5">
-            <label className="block text-[11px] font-bold text-slate-900">
-              How did you first hear about this Project:
-            </label>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[11px]">
-              {[
-                "Newspaper/magazine ad",
-                "Hoarding/billboard",
-                "Email/SMS/ Whats app campaign",
-                "Event/Exhibition",
-                "Channel Partner",
-                "Employee Referral",
-                "Referral from friend/family/ Existing Customer",
-                "Company website / social media / online search",
-                "Real estate portal (e.g., Magic Bricks, 99acres)",
-                "Other",
-              ].map((src) => (
-                <label key={src} className="flex items-start gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="leadSource"
-                    checked={sourceOption.startsWith(src)}
-                    onChange={() => setSourceOption(src)}
-                    className="mt-0.5 text-[#3B8CFF]"
-                  />
-                  <span>{src}</span>
-                </label>
-              ))}
-            </div>
-
-            {/* Conditional input fields */}
-            {sourceOption === "Channel Partner" && (
-              <input
-                type="text"
-                value={channelPartnerName}
-                onChange={(e) => setChannelPartnerName(e.target.value)}
-                placeholder="Channel Partner Name..."
-                className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs mt-2"
-              />
-            )}
-            {sourceOption === "Employee Referral" && (
-              <input
-                type="text"
-                value={empId}
-                onChange={(e) => setEmpId(e.target.value)}
-                placeholder="Employee Referral Emp. ID..."
-                className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs mt-2"
-              />
-            )}
-            {sourceOption.includes("Referral from") && (
-              <input
-                type="text"
-                value={referralDetails}
-                onChange={(e) => setReferralDetails(e.target.value)}
-                placeholder="Referral from friend/family/ Existing Customer unit no. Name..."
-                className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs mt-2"
-              />
-            )}
-            {sourceOption === "Other" && (
-              <input
-                type="text"
-                value={otherSource}
-                onChange={(e) => setOtherSource(e.target.value)}
-                placeholder="Other please specify..."
-                className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs mt-2"
-              />
-            )}
-          </div>
-
-          {/* 5. HOUSING STYLE, LIVING STATUS, TIMELINES & BUDGET (4 Box Cards matching PDF) */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-            {/* Current living Status */}
-            <div className="p-3 rounded-2xl border border-slate-200 bg-white space-y-1">
-              <label className="block text-[11px] font-bold text-slate-700">Current living Status:</label>
-              <div className="space-y-1.5 text-[11px] pt-1">
-                {["Own", "Rent"].map((s) => (
-                  <label key={s} className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="livingStatus"
-                      checked={livingStatus === s}
-                      onChange={() => setLivingStatus(s as any)}
-                      className="text-[#3B8CFF]"
-                    />
-                    <span>{s}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Desired Housing Style */}
-            <div className="p-3 rounded-2xl border border-slate-200 bg-white space-y-1">
-              <label className="block text-[11px] font-bold text-slate-700">Desired Housing Style:</label>
-              <div className="space-y-1.5 text-[11px] pt-1">
-                {["Plot", "2/3 BHK", "Serviced Apartment"].map((h) => (
-                  <label key={h} className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="housingStyle"
-                      checked={housingStyle === h}
-                      onChange={() => setHousingStyle(h as any)}
-                      className="text-[#3B8CFF]"
-                    />
-                    <span>{h}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Purchase Timelines */}
-            <div className="p-3 rounded-2xl border border-slate-200 bg-white space-y-1">
-              <label className="block text-[11px] font-bold text-slate-700">Purchase Timelines:</label>
-              <div className="space-y-1.5 text-[11px] pt-1">
-                {["With in 1 Month", "1-3 Months", "6-12 Months"].map((t) => (
-                  <label key={t} className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="timeline"
-                      checked={purchaseTimeline === t}
-                      onChange={() => setPurchaseTimeline(t as any)}
-                      className="text-[#3B8CFF]"
-                    />
-                    <span>{t}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Budget Range */}
-            <div className="p-3 rounded-2xl border border-slate-200 bg-white space-y-1">
-              <label className="block text-[11px] font-bold text-slate-700">Overall Budget Range:</label>
-              <div className="space-y-1 text-[11px] pt-1">
-                {["<₹50 Lakhs", "₹50 Lakhs-₹1 Crore", ">₹1 Crore", "Prefer not to disclose"].map((b) => (
-                  <label key={b} className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="budget"
-                      checked={budgetRange === b}
-                      onChange={() => setBudgetRange(b as any)}
-                      className="text-[#3B8CFF]"
-                    />
-                    <span className="truncate">{b}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* 6. CRM PROJECT ASSIGNMENT & AGENT */}
-          <div className="p-4 rounded-2xl border border-slate-200 bg-[#F0F6FF]/60 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Target Project</label>
-              <select
-                value={projectId}
-                onChange={(e) => setProjectId(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 font-semibold focus:outline-none"
-              >
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.location})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Assign Sales Executive</label>
-              <select
-                value={assignedToId}
-                onChange={(e) => setAssignedToId(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none"
-              >
-                <option value="">Auto-Assign / Unassigned</option>
-                {agents.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name} ({a.role})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Official Footer matching PDF */}
-          <div className="pt-4 border-t border-slate-200 text-center text-[10px] text-slate-400 leading-relaxed">
-            <strong>UrbanGaon</strong>, 2nd Floor, 74A, Sawai Pratap Singh Road, Near CM House, Opp. Loharu House, Gaurav Nagar, Civil lines, Jaipur, PIN: 302006, Rajasthan, India.
-          </div>
-
-          {/* Actions Button */}
-          <div className="pt-2 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold transition"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="submit"
-              disabled={isPending}
-              className="px-6 py-2.5 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-bold shadow-md shadow-[#3B8CFF]/25 flex items-center gap-2 transition disabled:opacity-50"
-            >
-              {isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Submit Customer Enquiry</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+          </form>
+        )}
       </div>
     </div>
   );
