@@ -106,6 +106,8 @@ export async function getInventoryUnits(filters?: {
   ];
 }
 
+export const getUnits = getInventoryUnits;
+
 export async function holdUnitAction(unitId: string, leadId?: string, hours: number = 48) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
