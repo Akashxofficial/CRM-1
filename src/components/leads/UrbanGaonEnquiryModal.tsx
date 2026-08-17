@@ -40,6 +40,55 @@ const COMMON_EMAIL_DOMAINS = [
   "urbangaon.com",
 ];
 
+const DESIGNATIONS_LIST = [
+  "-None-",
+  "CEO",
+  "CTO",
+  "CFO",
+  "Vice President (VP)",
+  "Country Head / Regional Head",
+  "Executive",
+  "Director",
+  "Director / Executive Director",
+  "Assistant / Associate Vice President (Avp)",
+  "Senior Manager",
+  "General Manager (GM)",
+  "Manager",
+  "Supervisor",
+  "Operations Manager",
+  "Team-Lead",
+  "Architect",
+  "Sales / Business Development Manager",
+  "Marketing Manager",
+  "Hr Manager",
+  "Finance / Accounts Manager",
+  "Project / Program Manager",
+  "Product Manager",
+  "Assistant Manager",
+  "Team Lead / Supervisor",
+  "Senior Executive / Senior Officer",
+  "Coordinator",
+  "Executive / Officer / Associate",
+  "Engineer / Developer / Analyst",
+  "Consultant / Specialist",
+  "Intern",
+  "Product-Manager",
+  "Project-Manager",
+  "Business-Analyst",
+  "HR-Specialist",
+  "Marketing-Specialist",
+  "Sales-Representative",
+  "Customer-Service-Rep",
+  "Financial-Analyst",
+  "Advisor",
+  "Freelancer / Self-Employed",
+  "Intern / Trainee",
+  "Student",
+  "Homemaker",
+  "Retired",
+  "Other / Not Applicable",
+];
+
 export function UrbanGaonEnquiryModal({
   isOpen,
   onClose,
@@ -92,7 +141,7 @@ export function UrbanGaonEnquiryModal({
   const [customerProfile, setCustomerProfile] = useState<string>("-None-");
   const [industryType, setIndustryType] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [designation, setDesignation] = useState("");
+  const [designation, setDesignation] = useState("-None-");
   const [department, setDepartment] = useState("");
   const [annualIncome, setAnnualIncome] = useState("-None-");
 
@@ -892,47 +941,55 @@ export function UrbanGaonEnquiryModal({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+                {/* 1. Company Name */}
                 <div>
-                  <label className="block text-[10px] text-slate-400 mb-1">Industry Type</label>
-                  <input
-                    type="text"
-                    value={industryType}
-                    onChange={(e) => setIndustryType(e.target.value)}
-                    placeholder="e.g. IT / Real Estate"
-                    className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] text-slate-400 mb-1">Company Name</label>
+                  <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Company Name</label>
                   <input
                     type="text"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     placeholder="e.g. Infosys / Self-Practicing"
-                    className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
+                    className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
                   />
                 </div>
 
+                {/* 2. Industry Type */}
                 <div>
-                  <label className="block text-[10px] text-slate-400 mb-1">Designation</label>
+                  <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Industry Type</label>
                   <input
                     type="text"
-                    value={designation}
-                    onChange={(e) => setDesignation(e.target.value)}
-                    placeholder="e.g. VP / Senior Lead"
-                    className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
+                    value={industryType}
+                    onChange={(e) => setIndustryType(e.target.value)}
+                    placeholder="e.g. IT / Real Estate / Finance"
+                    className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
                   />
                 </div>
 
+                {/* 3. Designation Dropdown (45 options) */}
                 <div>
-                  <label className="block text-[10px] text-slate-400 mb-1">Department</label>
+                  <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Designation</label>
+                  <select
+                    value={designation}
+                    onChange={(e) => setDesignation(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer"
+                  >
+                    {DESIGNATIONS_LIST.map((des) => (
+                      <option key={des} value={des}>
+                        {des}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 4. Department */}
+                <div>
+                  <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Department</label>
                   <input
                     type="text"
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
-                    placeholder="e.g. Engineering"
-                    className="w-full px-3 py-1.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900"
+                    placeholder="e.g. Engineering / Sales"
+                    className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
                   />
                 </div>
 
