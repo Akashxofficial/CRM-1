@@ -364,77 +364,87 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
             </div>
           </div>
 
-          {/* Enquiries Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Full-width Responsive Customer Enquiries Cards (No Empty Right Gap) */}
+          <div className="space-y-3.5">
             {filteredLeads.map((lead) => {
               const stateLabel = leadStates[lead.id] || "Inquiry";
 
               return (
                 <div
                   key={lead.id}
-                  className="bg-[#F8FAFC] hover:bg-white rounded-2xl border border-slate-200/90 hover:border-[#3B8CFF] hover:shadow-md transition-all duration-200 p-5 flex flex-col justify-between space-y-4"
+                  className="bg-[#F8FAFC] hover:bg-white rounded-2xl border border-slate-200/90 hover:border-[#3B8CFF] hover:shadow-md transition-all duration-200 p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-5"
                 >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-[#3B8CFF]/15 text-[#3B8CFF] flex items-center justify-center font-bold text-sm">
-                          {lead.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-bold text-slate-900">
-                            {lead.name}
-                          </h3>
-                          <div className="text-xs text-slate-500 font-mono flex items-center gap-1 mt-0.5">
-                            <Phone className="w-3 h-3 text-emerald-500" />
-                            <span>{lead.phone}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          stateLabel === "Interested"
-                            ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                            : stateLabel === "Attempted to Contact"
-                            ? "bg-amber-100 text-amber-700 border border-amber-200"
-                            : "bg-blue-100 text-blue-700 border border-blue-200"
-                        }`}
-                      >
-                        {stateLabel}
-                      </span>
+                  {/* Left: Customer Info */}
+                  <div className="flex items-center gap-4 min-w-[240px]">
+                    <div className="w-12 h-12 rounded-2xl bg-[#3B8CFF]/15 text-[#3B8CFF] flex items-center justify-center font-bold text-base flex-shrink-0 shadow-2xs">
+                      {lead.name.charAt(0).toUpperCase()}
                     </div>
-
-                    <div className="bg-white rounded-xl p-3 border border-slate-200/70 text-xs space-y-1.5">
-                      <div className="flex items-center justify-between text-slate-500">
-                        <span>Email:</span>
-                        <span className="font-medium text-slate-800 truncate max-w-[170px]">
-                          {lead.email}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-sm font-bold text-slate-900 font-heading">
+                          {lead.name}
+                        </h3>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            stateLabel === "Interested"
+                              ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                              : stateLabel === "Attempted to Contact"
+                              ? "bg-amber-100 text-amber-700 border border-amber-200"
+                              : "bg-blue-100 text-blue-700 border border-blue-200"
+                          }`}
+                        >
+                          {stateLabel}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-slate-500">
-                        <span>Project Preference:</span>
-                        <span className="font-medium text-slate-800">
-                          {lead.project?.name || "UrbanGaon One"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-slate-500">
-                        <span>Housing Style:</span>
-                        <span className="font-medium text-slate-800">
-                          {lead.interestedType || "2/3 BHK"}
-                        </span>
+                      <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+                        <div className="flex items-center gap-1 font-mono text-slate-700 font-semibold">
+                          <Phone className="w-3 h-3 text-emerald-500" />
+                          <span>{lead.phone}</span>
+                        </div>
+                        <span className="text-slate-300">•</span>
+                        <div className="flex items-center gap-1 text-slate-500">
+                          <Mail className="w-3 h-3 text-slate-400" />
+                          <span>{lead.email}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* PRIMARY TAKE INTO CALL BUTTON */}
-                  <button
-                    onClick={() => handleTakeIntoCall(lead)}
-                    className="w-full py-2.5 px-4 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-bold text-xs shadow-xs hover:shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Phone className="w-3.5 h-3.5" />
-                    <span>Take Into The Call</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  {/* Middle: Project & Preferences Meta Grid */}
+                  <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-3 bg-white p-3.5 rounded-xl border border-slate-200/70 text-xs">
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-medium block">Project Preference</span>
+                      <span className="font-semibold text-slate-800 truncate block">
+                        {lead.project?.name || "UrbanGaon One, Jagatpura"}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-medium block">Housing Style</span>
+                      <span className="font-semibold text-slate-800 block">
+                        {lead.interestedType || "2/3 BHK"}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-medium block">Source</span>
+                      <span className="font-semibold text-slate-800 block">
+                        {lead.source || "Customer Form"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Right: Primary "Take Into The Call" Action */}
+                  <div className="flex-shrink-0 flex items-center justify-end">
+                    <button
+                      onClick={() => handleTakeIntoCall(lead)}
+                      className="w-full sm:w-auto py-2.5 px-6 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-bold text-xs shadow-xs hover:shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Phone className="w-4 h-4 animate-bounce" />
+                      <span>Take Into The Call</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               );
             })}
