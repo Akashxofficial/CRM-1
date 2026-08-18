@@ -31,6 +31,9 @@ import {
   DollarSign,
   Briefcase,
   AlertCircle,
+  Headphones,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { updateLeadStatusAction, gatherLeadDetailsAction } from "@/actions/leads-actions";
 import Link from "next/link";
@@ -65,6 +68,20 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  // Track if call has been initiated ("taken") for each lead
+  // If a lead was already in CONTACTED / INTERESTED in DB, it's considered unlocked
+  const [unlockedCalls, setUnlockedCalls] = useState<Record<string, boolean>>(() => {
+    const map: Record<string, boolean> = {};
+    initialLeads.forEach((l) => {
+      if (l.status && l.status !== "NEW" && l.status !== "Inquiry") {
+        map[l.id] = true;
+      } else {
+        map[l.id] = false;
+      }
+    });
+    return map;
+  });
 
   // Lead Tags
   const [leadTags, setLeadTags] = useState<Record<string, string[]>>({
@@ -140,10 +157,27 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
 
   const currentState = leadStates[selectedLead.id] || "Inquiry";
   const currentTags = leadTags[selectedLead.id] || ["Customer Lead"];
+  const isCallUnlocked = unlockedCalls[selectedLead.id] ?? false;
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 3000);
+  };
+
+  // Trigger "Take Into Call"
+  const handleTakeIntoCall = (leadId: string) => {
+    setSelectedLeadId(leadId);
+    setUnlockedCalls((prev) => ({ ...prev, [leadId]: true }));
+    setLeadStates((prev) => ({ ...prev, [leadId]: "Attempted to Contact" }));
+
+    startTransition(async () => {
+      await updateLeadStatusAction(leadId, "CONTACTED", {
+        phone: selectedLead.phone,
+        name: selectedLead.name,
+        note: `Call session initiated via "Take Into Call".`,
+      });
+      triggerToast(`Call initiated with ${selectedLead.name}! Details unlocked.`);
+    });
   };
 
   const handleStateTransition = (newState: string) => {
@@ -275,7 +309,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
         </div>
       )}
 
-      {/* LEFT SIDEBAR: Real-time Inquiries & Calls Queue */}
+      {/* LEFT SIDEBAR: Single Focused Customer Enquiries Queue with "Take Into Call" */}
       <div className="w-full lg:w-80 bg-white rounded-2xl border border-slate-200 shadow-2xs p-4 flex flex-col flex-shrink-0">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
@@ -283,7 +317,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
               <PhoneCall className="w-4 h-4 text-[#3B8CFF]" />
               <span>Calls Queue</span>
             </h2>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-400 font-medium">
               {leads.length} Customer Enquiries
             </p>
           </div>
@@ -304,32 +338,33 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
           />
         </div>
 
-        {/* Leads List */}
-        <div className="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[70vh]">
+        {/* Customer Enquiries Leads List */}
+        <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 max-h-[70vh]">
           {filteredLeads.map((lead) => {
             const isSelected = lead.id === selectedLead.id;
             const stateLabel = leadStates[lead.id] || "Inquiry";
+            const isUnlocked = unlockedCalls[lead.id] ?? false;
 
             return (
               <div
                 key={lead.id}
                 onClick={() => setSelectedLeadId(lead.id)}
-                className={`p-3 rounded-xl cursor-pointer border transition-all duration-150 ${
+                className={`p-3.5 rounded-xl cursor-pointer border transition-all duration-150 space-y-2.5 ${
                   isSelected
-                    ? "bg-[#F0F6FF] border-[#3B8CFF] shadow-xs"
+                    ? "bg-[#F0F6FF] border-[#3B8CFF] shadow-xs ring-1 ring-[#3B8CFF]/30"
                     : "bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50/70"
                 }`}
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-[#3B8CFF]/10 text-[#3B8CFF] flex items-center justify-center font-bold text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#3B8CFF]/10 text-[#3B8CFF] flex items-center justify-center font-bold text-xs">
                       {lead.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <div className="text-xs font-bold text-slate-900 truncate max-w-[130px]">
                         {lead.name}
                       </div>
-                      <div className="text-[10px] text-slate-500 font-mono">
+                      <div className="text-[11px] text-slate-500 font-mono">
                         {lead.phone}
                       </div>
                     </div>
@@ -350,21 +385,43 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                   </span>
                 </div>
 
-                <div className="mt-2 text-[10px] text-slate-400 flex items-center justify-between pt-1 border-t border-slate-100/70">
+                <div className="text-[10px] text-slate-400 flex items-center justify-between pt-1 border-t border-slate-100/70">
                   <span className="truncate max-w-[120px]">
                     {lead.project?.name || "UrbanGaon One"}
                   </span>
-                  <span>{lead.source || "Website"}</span>
+                  <span>{lead.source || "Customer Form"}</span>
                 </div>
+
+                {/* Primary "Take Into Call" Action Button on Lead Card */}
+                {!isUnlocked ? (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleTakeIntoCall(lead.id);
+                    }}
+                    className="w-full py-1.5 px-3 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs transition shadow-xs flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>Take Into Call</span>
+                  </button>
+                ) : (
+                  <div className="flex items-center justify-between text-[11px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-1 rounded-md">
+                    <span className="flex items-center gap-1">
+                      <Headphones className="w-3 h-3" />
+                      <span>In Call / Unlocked</span>
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-normal">Active</span>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* RIGHT MAIN DETAIL & STATE TRANSITION PANEL (Matches Screenshots 1, 2, 3) */}
+      {/* RIGHT MAIN PANEL: Controlled Reveal upon "Take Into Call" */}
       <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden flex flex-col">
-        {/* Top Action Header Bar with Fully Working Buttons */}
+        {/* Top Action Header Bar */}
         <div className="px-5 py-3.5 border-b border-slate-200/80 bg-white flex flex-wrap items-center justify-between gap-3 relative">
           <div className="flex items-center gap-3">
             <button className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 transition">
@@ -411,7 +468,6 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
 
           {/* Interactive Working Action Buttons */}
           <div className="flex items-center gap-2 relative">
-            {/* 1. SEND EMAIL BUTTON */}
             <button
               onClick={() => setIsEmailModalOpen(true)}
               className="px-3.5 py-1.5 text-xs font-semibold bg-[#3B8CFF] hover:bg-[#2570E8] text-white rounded-lg transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
@@ -420,7 +476,6 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
               <span>Send Email</span>
             </button>
 
-            {/* 2. CONVERT BUTTON */}
             <button
               onClick={() => setIsConvertModalOpen(true)}
               className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-lg transition cursor-pointer active:scale-95"
@@ -428,7 +483,6 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
               Convert
             </button>
 
-            {/* 3. EDIT BUTTON */}
             <button
               onClick={openEditModal}
               className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-lg transition cursor-pointer active:scale-95"
@@ -436,7 +490,6 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
               Edit
             </button>
 
-            {/* 4. MORE (···) BUTTON & DROPDOWN */}
             <div className="relative">
               <button
                 onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
@@ -485,293 +538,310 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
           </div>
         </div>
 
-        {/* Content Body */}
-        <div className="flex-1 flex flex-col md:flex-row">
-          {/* Related List mini-sidebar */}
-          <div className="w-full md:w-44 p-4 border-b md:border-b-0 md:border-r border-slate-200/70 bg-[#F8FAFC] text-xs space-y-4 flex-shrink-0">
-            <div>
-              <div className="font-bold text-slate-900 mb-2">Related List</div>
-              <ul className="space-y-1 text-slate-600">
-                <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer font-medium text-slate-900 bg-white shadow-2xs">
-                  Notes
-                </li>
-                <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer">
-                  Open Activities
-                </li>
-                <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer">
-                  Closed Activities
-                </li>
-                <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer">
-                  Invited Meetings
-                </li>
-                <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer flex items-center justify-between">
-                  <span>Emails</span>
-                  <span className="text-[10px] bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded-full font-bold">
-                    1
-                  </span>
-                </li>
-                <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer">
-                  Attachments
-                </li>
-              </ul>
-              <button
-                onClick={() => triggerToast("New related list module created.")}
-                className="text-[11px] text-[#3B8CFF] hover:underline mt-2 font-medium cursor-pointer"
-              >
-                + Add Related List
-              </button>
+        {/* DYNAMIC CONTENT: INITIAL CALL BANNER vs UNLOCKED FULL DETAILS */}
+        {!isCallUnlocked ? (
+          /* Initial Screen: Customer Enquiry Preview & Big "Take Into Call" Action */
+          <div className="flex-1 p-8 sm:p-14 flex flex-col items-center justify-center text-center bg-slate-50/40 space-y-6">
+            <div className="w-16 h-16 rounded-3xl bg-[#F0F6FF] border border-[#3B8CFF]/20 text-[#3B8CFF] flex items-center justify-center shadow-xs">
+              <PhoneCall className="w-8 h-8" />
             </div>
 
-            <div className="pt-3 border-t border-slate-200/60">
-              <div className="font-bold text-slate-900 mb-1">Links</div>
+            <div className="max-w-md space-y-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#3B8CFF] bg-[#F0F6FF] px-3 py-1 rounded-full border border-[#3B8CFF]/20">
+                Incoming Customer Enquiry
+              </span>
+              <h2 className="text-xl font-bold text-slate-900 font-heading mt-2">
+                {selectedLead.name}
+              </h2>
+              <p className="text-xs text-slate-500 font-mono">
+                Phone: {selectedLead.phone} &nbsp;|&nbsp; Email: {selectedLead.email}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                Project Interested: <strong className="text-slate-700">{selectedLead.project?.name || "UrbanGaon One, Jagatpura"}</strong>
+              </p>
+            </div>
+
+            {/* BIG PROMINENT "TAKE INTO CALL" BUTTON */}
+            <div className="pt-2">
               <button
-                onClick={() => triggerToast("External link dialog opened.")}
-                className="text-[11px] text-[#3B8CFF] hover:underline font-medium cursor-pointer"
+                onClick={() => handleTakeIntoCall(selectedLead.id)}
+                className="px-8 py-3.5 rounded-2xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-2.5 cursor-pointer"
               >
-                + Add Link
+                <Phone className="w-4 h-4 animate-bounce" />
+                <span>Take Into The Call</span>
+                <ArrowRight className="w-4 h-4 ml-1" />
               </button>
+              <p className="text-[11px] text-slate-400 mt-2">
+                Clicking will initiate the telephony session and unlock all customer transition details.
+              </p>
             </div>
           </div>
+        ) : (
+          /* UNLOCKED FULL DETAILS (Matches Screenshots 1, 2, 3 & 4) */
+          <div className="flex-1 flex flex-col md:flex-row animate-in fade-in duration-200">
+            {/* Related List mini-sidebar */}
+            <div className="w-full md:w-44 p-4 border-b md:border-b-0 md:border-r border-slate-200/70 bg-[#F8FAFC] text-xs space-y-4 flex-shrink-0">
+              <div>
+                <div className="font-bold text-slate-900 mb-2">Related List</div>
+                <ul className="space-y-1 text-slate-600">
+                  <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer font-medium text-slate-900 bg-white shadow-2xs">
+                    Notes
+                  </li>
+                  <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer">
+                    Open Activities
+                  </li>
+                  <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer">
+                    Closed Activities
+                  </li>
+                  <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer">
+                    Invited Meetings
+                  </li>
+                  <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer flex items-center justify-between">
+                    <span>Emails</span>
+                    <span className="text-[10px] bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded-full font-bold">
+                      1
+                    </span>
+                  </li>
+                  <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer">
+                    Attachments
+                  </li>
+                </ul>
+                <button
+                  onClick={() => triggerToast("New related list module created.")}
+                  className="text-[11px] text-[#3B8CFF] hover:underline mt-2 font-medium cursor-pointer"
+                >
+                  + Add Related List
+                </button>
+              </div>
 
-          {/* Main Detail Area */}
-          <div className="flex-1 p-5 space-y-5 overflow-y-auto">
-            {/* Overview / Timeline Tabs */}
-            <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
-              <button className="px-3.5 py-1 text-xs font-bold text-slate-900 bg-slate-100 rounded-full border border-slate-200 shadow-2xs">
-                Overview
-              </button>
-              <button className="px-3.5 py-1 text-xs font-medium text-slate-500 hover:text-slate-900 rounded-full">
-                Timeline
-              </button>
+              <div className="pt-3 border-t border-slate-200/60">
+                <div className="font-bold text-slate-900 mb-1">Links</div>
+                <button
+                  onClick={() => triggerToast("External link dialog opened.")}
+                  className="text-[11px] text-[#3B8CFF] hover:underline font-medium cursor-pointer"
+                >
+                  + Add Link
+                </button>
+              </div>
             </div>
 
-            {/* STATE MACHINE TRANSITION BAR (Screenshot 1, 2, 3) */}
-            <div className="p-4 rounded-xl border border-slate-200/90 bg-[#F8FAFC] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
-                  <span className="w-24 text-slate-400">Current State</span>
-                  <div className="relative inline-block">
-                    <select
-                      value={currentState}
-                      onChange={(e) => handleStateTransition(e.target.value)}
-                      className="text-slate-900 font-bold bg-white pl-2.5 pr-7 py-1 rounded-lg border border-slate-200 shadow-2xs text-xs focus:outline-none focus:ring-1 focus:ring-[#3B8CFF] cursor-pointer"
-                    >
-                      <option value="Inquiry">Inquiry</option>
-                      <option value="Attempted to Contact">Attempted to Contact</option>
-                      <option value="Interested">Interested</option>
-                      <option value="Follow up 2">Follow up 2</option>
-                      <option value="Not Interested">Not Interested</option>
-                      <option value="Junk Lead">Junk Lead</option>
-                    </select>
+            {/* Main Detail Area */}
+            <div className="flex-1 p-5 space-y-5 overflow-y-auto">
+              {/* Overview / Timeline Tabs */}
+              <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+                <button className="px-3.5 py-1 text-xs font-bold text-slate-900 bg-slate-100 rounded-full border border-slate-200 shadow-2xs">
+                  Overview
+                </button>
+                <button className="px-3.5 py-1 text-xs font-medium text-slate-500 hover:text-slate-900 rounded-full">
+                  Timeline
+                </button>
+              </div>
+
+              {/* STATE MACHINE TRANSITION BAR */}
+              <div className="p-4 rounded-xl border border-slate-200/90 bg-[#F8FAFC] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
+                    <span className="w-24 text-slate-400">Current State</span>
+                    <div className="relative inline-block">
+                      <select
+                        value={currentState}
+                        onChange={(e) => handleStateTransition(e.target.value)}
+                        className="text-slate-900 font-bold bg-white pl-2.5 pr-7 py-1 rounded-lg border border-slate-200 shadow-2xs text-xs focus:outline-none focus:ring-1 focus:ring-[#3B8CFF] cursor-pointer"
+                      >
+                        <option value="Inquiry">Inquiry</option>
+                        <option value="Attempted to Contact">Attempted to Contact</option>
+                        <option value="Interested">Interested</option>
+                        <option value="Follow up 2">Follow up 2</option>
+                        <option value="Not Interested">Not Interested</option>
+                        <option value="Junk Lead">Junk Lead</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3 text-xs">
+                    <span className="w-24 text-slate-400 font-semibold">
+                      Transitions
+                    </span>
+
+                    {/* State = "Attempted to Contact" ➔ [Not Interested, Interested, Junk Lead, Follow up 2] */}
+                    {currentState === "Attempted to Contact" && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => handleStateTransition("Not Interested")}
+                          className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition cursor-pointer"
+                        >
+                          Not Interested
+                        </button>
+                        <button
+                          onClick={() => handleStateTransition("Interested")}
+                          className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition cursor-pointer"
+                        >
+                          Interested
+                        </button>
+                        <button
+                          onClick={() => handleStateTransition("Junk Lead")}
+                          className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition cursor-pointer"
+                        >
+                          Junk Lead
+                        </button>
+                        <button
+                          onClick={() => handleStateTransition("Follow up 2")}
+                          className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition cursor-pointer"
+                        >
+                          Follow up 2
+                        </button>
+                      </div>
+                    )}
+
+                    {/* State = "Interested" ➔ [Gather Details] */}
+                    {currentState === "Interested" && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => setIsGatherModalOpen(true)}
+                          className="px-4 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>Gather Details</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleStateTransition("Follow up 2")}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs shadow-2xs transition cursor-pointer"
+                        >
+                          Follow up 2
+                        </button>
+
+                        <button
+                          onClick={() => handleStateTransition("Not Interested")}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 font-medium text-xs shadow-2xs transition cursor-pointer"
+                        >
+                          Not Interested
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Other states */}
+                    {(currentState === "Not Interested" ||
+                      currentState === "Junk Lead" ||
+                      currentState === "Follow up 2" ||
+                      currentState === "Inquiry") && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => handleStateTransition("Interested")}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-2xs transition cursor-pointer"
+                        >
+                          Mark Interested
+                        </button>
+                        <button
+                          onClick={() => handleStateTransition("Attempted to Contact")}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs shadow-2xs transition cursor-pointer"
+                        >
+                          Re-call / Attempt Contact
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 text-xs">
-                  <span className="w-24 text-slate-400 font-semibold">
-                    Transitions
-                  </span>
+                <button
+                  onClick={() => triggerToast("Viewing configured workflow state transitions.")}
+                  className="text-[11px] text-[#3B8CFF] hover:underline self-start sm:self-center font-medium cursor-pointer"
+                >
+                  View configured actions
+                </button>
+              </div>
 
-                  {/* STEP 1: Current State = "Inquiry" ➔ Transition: [Take Into Call] */}
-                  {currentState === "Inquiry" && (
+              {/* LEAD CORE FIELDS BLOCK */}
+              <div className="bg-white rounded-xl border border-slate-200/90 p-5 space-y-3.5 shadow-2xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-8 text-xs">
+                  <div className="flex items-center">
+                    <span className="w-36 text-slate-400 font-medium">Lead Owner</span>
+                    <span className="font-semibold text-slate-900">
+                      {selectedLead.assignedTo?.name || currentUserName || "Yudhister Tiwari"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center">
+                    <span className="w-36 text-slate-400 font-medium">Email</span>
                     <button
-                      onClick={() => handleStateTransition("Attempted to Contact")}
-                      className="px-4 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                      onClick={() => setIsEmailModalOpen(true)}
+                      className="font-medium text-[#3B8CFF] hover:underline cursor-pointer text-left"
                     >
-                      <Phone className="w-3.5 h-3.5" />
-                      <span>Take Into Call</span>
+                      {selectedLead.email}
                     </button>
-                  )}
+                  </div>
 
-                  {/* STEP 2: Current State = "Attempted to Contact" ➔ Transitions: [Not Interested, Interested, Junk Lead, Follow up 2] */}
-                  {currentState === "Attempted to Contact" && (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => handleStateTransition("Not Interested")}
-                        className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition cursor-pointer"
+                  <div className="flex items-center">
+                    <span className="w-36 text-slate-400 font-medium">Mobile</span>
+                    <div className="flex items-center gap-2 font-semibold text-slate-900">
+                      <span>{selectedLead.phone}</span>
+                      <a
+                        href={`tel:${selectedLead.phone}`}
+                        className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transition"
+                        title="Direct Dial"
                       >
-                        Not Interested
-                      </button>
-                      <button
-                        onClick={() => handleStateTransition("Interested")}
-                        className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition cursor-pointer"
-                      >
-                        Interested
-                      </button>
-                      <button
-                        onClick={() => handleStateTransition("Junk Lead")}
-                        className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition cursor-pointer"
-                      >
-                        Junk Lead
-                      </button>
-                      <button
-                        onClick={() => handleStateTransition("Follow up 2")}
-                        className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition cursor-pointer"
-                      >
-                        Follow up 2
-                      </button>
+                        <Phone className="w-3 h-3" />
+                      </a>
                     </div>
-                  )}
+                  </div>
 
-                  {/* STEP 3: Current State = "Interested" ➔ Transition: [Gather Details] + Change State options */}
-                  {currentState === "Interested" && (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => setIsGatherModalOpen(true)}
-                        className="px-4 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        <span>Gather Details</span>
-                      </button>
+                  <div className="flex items-center">
+                    <span className="w-36 text-slate-400 font-medium">Lead Status</span>
+                    <span className="font-semibold text-slate-900">
+                      {currentState}
+                    </span>
+                  </div>
 
-                      <button
-                        onClick={() => handleStateTransition("Follow up 2")}
-                        className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs shadow-2xs transition cursor-pointer"
-                      >
-                        Follow up 2
-                      </button>
-
-                      <button
-                        onClick={() => handleStateTransition("Not Interested")}
-                        className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 font-medium text-xs shadow-2xs transition cursor-pointer"
-                      >
-                        Not Interested
-                      </button>
-
-                      <button
-                        onClick={() => handleStateTransition("Attempted to Contact")}
-                        className="text-xs text-[#3B8CFF] hover:underline font-semibold cursor-pointer ml-1"
-                      >
-                        ← Back to Calling
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Other states (Not Interested / Junk / Followup) */}
-                  {(currentState === "Not Interested" ||
-                    currentState === "Junk Lead" ||
-                    currentState === "Follow up 2") && (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => handleStateTransition("Interested")}
-                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-2xs transition cursor-pointer"
-                      >
-                        Mark Interested
-                      </button>
-                      <button
-                        onClick={() => handleStateTransition("Attempted to Contact")}
-                        className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs shadow-2xs transition cursor-pointer"
-                      >
-                        Re-call / Attempt Contact
-                      </button>
-                      <button
-                        onClick={() => handleStateTransition("Inquiry")}
-                        className="text-xs text-[#3B8CFF] hover:underline font-semibold cursor-pointer"
-                      >
-                        Reset to Inquiry
-                      </button>
-                    </div>
-                  )}
+                  <div className="flex items-center">
+                    <span className="w-36 text-slate-400 font-medium">
+                      Scheduling site visit
+                    </span>
+                    <span className="text-slate-400">—</span>
+                  </div>
                 </div>
               </div>
 
-              <button
-                onClick={() => triggerToast("Viewing configured workflow state transitions.")}
-                className="text-[11px] text-[#3B8CFF] hover:underline self-start sm:self-center font-medium cursor-pointer"
-              >
-                View configured actions
-              </button>
-            </div>
-
-            {/* LEAD CORE FIELDS BLOCK (Screenshot 1, 2, 3) */}
-            <div className="bg-white rounded-xl border border-slate-200/90 p-5 space-y-3.5 shadow-2xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-8 text-xs">
-                <div className="flex items-center">
-                  <span className="w-36 text-slate-400 font-medium">Lead Owner</span>
-                  <span className="font-semibold text-slate-900">
-                    {selectedLead.assignedTo?.name || currentUserName || "Yudhister Tiwari"}
-                  </span>
-                </div>
-
-                <div className="flex items-center">
-                  <span className="w-36 text-slate-400 font-medium">Email</span>
-                  <button
-                    onClick={() => setIsEmailModalOpen(true)}
-                    className="font-medium text-[#3B8CFF] hover:underline cursor-pointer text-left"
-                  >
-                    {selectedLead.email}
-                  </button>
-                </div>
-
-                <div className="flex items-center">
-                  <span className="w-36 text-slate-400 font-medium">Mobile</span>
-                  <div className="flex items-center gap-2 font-semibold text-slate-900">
-                    <span>{selectedLead.phone}</span>
-                    <a
-                      href={`tel:${selectedLead.phone}`}
-                      className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transition"
-                      title="Direct Dial"
+              {/* Basic Information section */}
+              <div className="pt-2">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-900 pb-2 border-b border-slate-200">
+                  <span>Basic Information</span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => triggerToast("Lead details view toggled")}
+                      className="text-slate-400 hover:text-slate-600 font-normal cursor-pointer"
                     >
-                      <Phone className="w-3 h-3" />
+                      Hide Details
+                    </button>
+                    <a
+                      href="https://maps.google.com/?q=Jagatpura+Jaipur"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-2.5 py-1 rounded-md border border-slate-200 hover:bg-slate-50 text-[11px] font-semibold text-slate-700 flex items-center gap-1"
+                    >
+                      <MapPin className="w-3 h-3 text-rose-500" />
+                      <span>Locate Map</span>
                     </a>
                   </div>
                 </div>
 
-                <div className="flex items-center">
-                  <span className="w-36 text-slate-400 font-medium">Lead Status</span>
-                  <span className="font-semibold text-slate-900">
-                    {currentState}
-                  </span>
-                </div>
-
-                <div className="flex items-center">
-                  <span className="w-36 text-slate-400 font-medium">
-                    Scheduling site visit
-                  </span>
-                  <span className="text-slate-400">—</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Basic Information section */}
-            <div className="pt-2">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-900 pb-2 border-b border-slate-200">
-                <span>Basic Information</span>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => triggerToast("Lead details view toggled")}
-                    className="text-slate-400 hover:text-slate-600 font-normal cursor-pointer"
-                  >
-                    Hide Details
-                  </button>
-                  <a
-                    href="https://maps.google.com/?q=Jagatpura+Jaipur"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-2.5 py-1 rounded-md border border-slate-200 hover:bg-slate-50 text-[11px] font-semibold text-slate-700 flex items-center gap-1"
-                  >
-                    <MapPin className="w-3 h-3 text-rose-500" />
-                    <span>Locate Map</span>
-                  </a>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 text-xs">
-                <div>
-                  <span className="text-slate-400 block text-[10px]">Project Preference</span>
-                  <span className="font-medium text-slate-800">
-                    {selectedLead.project?.name || "UrbanGaon One, Jagatpura"}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">Source</span>
-                  <span className="font-medium text-slate-800">
-                    {selectedLead.source || "Customer Enquiry Form"}
-                  </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 text-xs">
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">Project Preference</span>
+                    <span className="font-medium text-slate-800">
+                      {selectedLead.project?.name || "UrbanGaon One, Jagatpura"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">Source</span>
+                    <span className="font-medium text-slate-800">
+                      {selectedLead.source || "Customer Enquiry Form"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* 1. ADD TAGS MODAL */}
