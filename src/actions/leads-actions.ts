@@ -297,6 +297,7 @@ export async function createLeadAction(data: {
   });
 
   revalidatePath("/leads");
+  revalidatePath("/calls");
   revalidatePath("/dashboard");
   return { success: true, lead: finalLead, emailsDispatched: emailRes };
 }
@@ -329,6 +330,57 @@ export async function updateLeadStatusAction(
 
   revalidatePath("/leads");
   return { success: true, lead: { id: leadId, status: newStatus } };
+}
+
+export async function gatherLeadDetailsAction(data: {
+  leadId: string;
+  annualIncome?: string;
+  purposeOfPurchase?: string;
+  livingStatus?: string;
+  purchaseTimeline?: string;
+  budgetRange?: string;
+  housingStyle?: string;
+  notes?: string;
+}) {
+  const user = await getCurrentUser();
+  try {
+    const formattedNotes = `
+[Gathered Details from Call]
+- Annual Income: ${data.annualIncome || "-None-"}
+- Purpose of Purchase: ${data.purposeOfPurchase || "-None-"}
+- Current living Status: ${data.livingStatus || "-None-"}
+- Purchase Timelines: ${data.purchaseTimeline || "-None-"}
+- Budget Range: ${data.budgetRange || "-None-"}
+- Desired Housing Style: ${data.housingStyle || "-None-"}
+${data.notes ? `- Notes: ${data.notes}` : ""}
+    `.trim();
+
+    if (data.leadId && data.leadId.length === 24) {
+      await prisma.leadActivity.create({
+        data: {
+          leadId: data.leadId,
+          type: "CALL",
+          title: "Call Details Gathered (Interested)",
+          notes: formattedNotes,
+          performedById: user.id && user.id.length === 24 ? user.id : null,
+        },
+      });
+
+      await prisma.lead.update({
+        where: { id: data.leadId },
+        data: {
+          interestedType: data.housingStyle && data.housingStyle !== "-None-" ? data.housingStyle : undefined,
+          status: "INTERESTED",
+        },
+      });
+    }
+  } catch (error) {
+    console.warn("Database gatherLeadDetailsAction error:", error);
+  }
+
+  revalidatePath("/calls");
+  revalidatePath("/leads");
+  return { success: true };
 }
 
 export async function addLeadActivityAction(data: {
