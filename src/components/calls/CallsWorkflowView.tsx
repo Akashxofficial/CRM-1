@@ -544,9 +544,20 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
               <div className="space-y-2">
                 <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
                   <span className="w-24 text-slate-400">Current State</span>
-                  <span className="text-slate-900 font-bold bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
-                    {currentState}
-                  </span>
+                  <div className="relative inline-block">
+                    <select
+                      value={currentState}
+                      onChange={(e) => handleStateTransition(e.target.value)}
+                      className="text-slate-900 font-bold bg-white pl-2.5 pr-7 py-1 rounded-lg border border-slate-200 shadow-2xs text-xs focus:outline-none focus:ring-1 focus:ring-[#3B8CFF] cursor-pointer"
+                    >
+                      <option value="Inquiry">Inquiry</option>
+                      <option value="Attempted to Contact">Attempted to Contact</option>
+                      <option value="Interested">Interested</option>
+                      <option value="Follow up 2">Follow up 2</option>
+                      <option value="Not Interested">Not Interested</option>
+                      <option value="Junk Lead">Junk Lead</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 text-xs">
@@ -595,30 +606,62 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                     </div>
                   )}
 
-                  {/* STEP 3: Current State = "Interested" ➔ Transition: [Gather Details] */}
+                  {/* STEP 3: Current State = "Interested" ➔ Transition: [Gather Details] + Change State options */}
                   {currentState === "Interested" && (
-                    <button
-                      onClick={() => setIsGatherModalOpen(true)}
-                      className="px-4 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <FileText className="w-3.5 h-3.5" />
-                      <span>Gather Details</span>
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => setIsGatherModalOpen(true)}
+                        className="px-4 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>Gather Details</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleStateTransition("Follow up 2")}
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs shadow-2xs transition cursor-pointer"
+                      >
+                        Follow up 2
+                      </button>
+
+                      <button
+                        onClick={() => handleStateTransition("Not Interested")}
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 font-medium text-xs shadow-2xs transition cursor-pointer"
+                      >
+                        Not Interested
+                      </button>
+
+                      <button
+                        onClick={() => handleStateTransition("Attempted to Contact")}
+                        className="text-xs text-[#3B8CFF] hover:underline font-semibold cursor-pointer ml-1"
+                      >
+                        ← Back to Calling
+                      </button>
+                    </div>
                   )}
 
                   {/* Other states (Not Interested / Junk / Followup) */}
                   {(currentState === "Not Interested" ||
                     currentState === "Junk Lead" ||
                     currentState === "Follow up 2") && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-500 font-medium italic">
-                        State logged: {currentState}
-                      </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => handleStateTransition("Interested")}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-2xs transition cursor-pointer"
+                      >
+                        Mark Interested
+                      </button>
                       <button
                         onClick={() => handleStateTransition("Attempted to Contact")}
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs shadow-2xs transition cursor-pointer"
+                      >
+                        Re-call / Attempt Contact
+                      </button>
+                      <button
+                        onClick={() => handleStateTransition("Inquiry")}
                         className="text-xs text-[#3B8CFF] hover:underline font-semibold cursor-pointer"
                       >
-                        Re-call / Change
+                        Reset to Inquiry
                       </button>
                     </div>
                   )}
