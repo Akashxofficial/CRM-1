@@ -6,8 +6,8 @@ import { getCurrentUser } from "@/lib/auth";
 export async function getDashboardData() {
   try {
     const user = await getCurrentUser();
-    const orgId = user?.organizationId || "67b31a000000000000000001";
-    const userId = user?.id || "67b31a000000000000000002";
+    const orgId = user?.organizationId || "6a82dec61c46f7e67e87b709";
+    const userId = user?.id || "6a83eb552d8dbcfff36d0d7b";
 
     // Base counts
     const [
