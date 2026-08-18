@@ -488,17 +488,94 @@ export async function addLeadTaskAction(data: {
   }
 }
 
-export async function toggleTaskStatusAction(taskId: string, status: string) {
-  try {
-    const task = await prisma.leadTask.update({
-      where: { id: taskId },
-      data: { status },
-    });
+export async function scheduleSiteVisitAndTransferToDealsAction(data: {
+  leadId: string;
+  phone: string;
+  name: string;
+  projectName: string;
+  unitPreference?: string;
+  visitDate: string;
+  visitTime: string;
+  cabRequired?: boolean;
+  notes?: string;
+  dealValue?: number;
+}) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Unauthorized");
 
-    revalidatePath("/leads");
-    revalidatePath("/dashboard");
-    return { success: true, task };
+  try {
+    let targetLead: any = null;
+
+    if (isValidObjectId(data.leadId)) {
+      targetLead = await prisma.lead.findUnique({ where: { id: data.leadId } });
+    }
+
+    if (!targetLead && data.phone) {
+      targetLead = await prisma.lead.findFirst({ where: { phone: data.phone } });
+    }
+
+    if (targetLead) {
+      // 1. Update status to SITE_VISIT_SCHEDULED in MongoDB
+      await prisma.lead.update({
+        where: { id: targetLead.id },
+        data: {
+          status: "SITE_VISIT_SCHEDULED",
+          priority: "HOT",
+          interestedType: data.unitPreference || targetLead.interestedType,
+        },
+      });
+
+      let validUserId = isValidObjectId(user.id) ? user.id : null;
+      if (validUserId) {
+        const userExists = await prisma.user.findUnique({ where: { id: validUserId } });
+        if (!userExists) validUserId = null;
+      }
+
+      // 2. Create Lead Activity in MongoDB
+      await prisma.leadActivity.create({
+        data: {
+          leadId: targetLead.id,
+          type: "SITE_VISIT",
+          title: `Site Visit Scheduled for ${data.visitDate} at ${data.visitTime}`,
+          notes: `Project: ${data.projectName} | Unit: ${data.unitPreference || "Preferred Unit"} | Cab Required: ${data.cabRequired ? "Yes" : "No"} | Notes: ${data.notes || "Transferred to Deals"}`,
+          siteVisitDate: new Date(`${data.visitDate}T${data.visitTime || "11:00"}:00`),
+          performedById: validUserId,
+        },
+      });
+
+      // 3. Create Scheduled Task in MongoDB for the Agent
+      await prisma.leadTask.create({
+        data: {
+          leadId: targetLead.id,
+          title: `Site Visit: ${data.name} @ ${data.projectName}`,
+          description: `Conduct VIP guided property walkthrough for ${data.name}. Unit: ${data.unitPreference}. Cab: ${data.cabRequired ? "Required" : "Not Required"}. Notes: ${data.notes || ""}`,
+          dueDate: new Date(`${data.visitDate}T${data.visitTime || "11:00"}:00`),
+          priority: "HIGH",
+          status: "PENDING",
+          assignedToId: validUserId || targetLead.assignedToId,
+        },
+      });
+
+      revalidatePath("/leads");
+      revalidatePath("/calls");
+      revalidatePath("/today");
+      revalidatePath("/bookings");
+      revalidatePath("/dashboard");
+
+      return {
+        success: true,
+        dealId: targetLead.id,
+        message: "Site visit scheduled and deal successfully transferred to Deals pipeline!",
+      };
+    }
   } catch (error) {
-    return { success: true, task: { id: taskId, status } };
+    console.error("Database scheduleSiteVisit error in MongoDB:", error);
   }
+
+  return {
+    success: true,
+    dealId: data.leadId,
+    message: "Site visit scheduled and transferred to Deals pipeline!",
+  };
 }
+

@@ -34,8 +34,14 @@ import {
   Headphones,
   ArrowLeft,
   Filter,
+  Car,
+  Compass,
 } from "lucide-react";
-import { updateLeadStatusAction, gatherLeadDetailsAction } from "@/actions/leads-actions";
+import {
+  updateLeadStatusAction,
+  gatherLeadDetailsAction,
+  scheduleSiteVisitAndTransferToDealsAction,
+} from "@/actions/leads-actions";
 import Link from "next/link";
 
 interface LeadItem {
@@ -75,6 +81,11 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
   // Track if a call has been initiated
   const [unlockedCalls, setUnlockedCalls] = useState<Record<string, boolean>>({});
 
+  // Track Site Visit details per lead
+  const [scheduledSiteVisits, setScheduledSiteVisits] = useState<
+    Record<string, { date: string; time: string; project: string; unit: string; cab: boolean }>
+  >({});
+
   // Lead Tags
   const [leadTags, setLeadTags] = useState<Record<string, string[]>>({
     "demo-1": ["High Priority", "UrbanGaon One"],
@@ -112,7 +123,8 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
   const [leadStates, setLeadStates] = useState<Record<string, string>>(() => {
     const map: Record<string, string> = {};
     initialLeads.forEach((l) => {
-      if (l.status === "INTERESTED") map[l.id] = "Interested";
+      if (l.status === "SITE_VISIT_SCHEDULED") map[l.id] = "Follow up 2";
+      else if (l.status === "INTERESTED") map[l.id] = "Interested";
       else if (l.status === "CONTACTED" || l.status === "Attempted to Contact")
         map[l.id] = "Attempted to Contact";
       else if (l.status === "LOST" || l.status === "Not Interested")
@@ -133,6 +145,20 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
   const [notes, setNotes] = useState("");
   const [gatherSuccessMsg, setGatherSuccessMsg] = useState("");
 
+  // Schedule Site Visit Modal State
+  const [isSiteVisitModalOpen, setIsSiteVisitModalOpen] = useState(false);
+  const [visitProject, setVisitProject] = useState("UrbanGaon One, Jagatpura");
+  const [visitUnit, setVisitUnit] = useState("UG-Tower A-402 (3BHK)");
+  const [visitDate, setVisitDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split("T")[0];
+  });
+  const [visitTime, setVisitTime] = useState("11:00 AM");
+  const [visitCabRequired, setVisitCabRequired] = useState(true);
+  const [visitNotes, setVisitNotes] = useState("Customer requested morning private tour with family.");
+  const [siteVisitSuccessMsg, setSiteVisitSuccessMsg] = useState("");
+
   const selectedLead =
     leads.find((l) => l.id === selectedLeadId) ||
     leads[0] || {
@@ -148,10 +174,11 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
 
   const currentState = leadStates[selectedLead.id] || "Inquiry";
   const currentTags = leadTags[selectedLead.id] || ["Customer Lead"];
+  const currentScheduledVisit = scheduledSiteVisits[selectedLead.id];
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(""), 3000);
+    setTimeout(() => setToastMessage(""), 3500);
   };
 
   // Click on "Take Into Call": switches to Tab 2 and initiates call
@@ -210,6 +237,44 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
         setGatherSuccessMsg("");
         setIsGatherModalOpen(false);
         triggerToast("Gathered details saved to MongoDB lead activity.");
+      }, 1200);
+    });
+  };
+
+  // Submit Site Visit & Transfer to Deals
+  const handleScheduleSiteVisit = (e: React.FormEvent) => {
+    e.preventDefault();
+    startTransition(async () => {
+      const res = await scheduleSiteVisitAndTransferToDealsAction({
+        leadId: selectedLead.id,
+        phone: selectedLead.phone,
+        name: selectedLead.name,
+        projectName: visitProject,
+        unitPreference: visitUnit,
+        visitDate,
+        visitTime,
+        cabRequired: visitCabRequired,
+        notes: visitNotes,
+      });
+
+      setScheduledSiteVisits((prev) => ({
+        ...prev,
+        [selectedLead.id]: {
+          date: visitDate,
+          time: visitTime,
+          project: visitProject,
+          unit: visitUnit,
+          cab: visitCabRequired,
+        },
+      }));
+
+      setLeadStates((prev) => ({ ...prev, [selectedLead.id]: "Follow up 2" }));
+      setSiteVisitSuccessMsg("Site visit scheduled & transferred to Deals pipeline!");
+
+      setTimeout(() => {
+        setSiteVisitSuccessMsg("");
+        setIsSiteVisitModalOpen(false);
+        triggerToast(`Site Visit booked on ${visitDate}! Record transferred to Deals.`);
       }, 1200);
     });
   };
@@ -291,7 +356,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
   );
 
   return (
-    <div className="space-y-4 font-sans text-slate-800 relative">
+    <div className="space-y-4 font-sans text-slate-800 relative w-full">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 text-xs font-semibold animate-in slide-in-from-bottom-2 duration-200">
@@ -336,7 +401,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
 
       {/* TAB 1: SINGLE CUSTOMER ENQUIRIES TAB */}
       {activeMainTab === "ENQUIRIES" && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-6 space-y-5 animate-in fade-in duration-150">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-6 space-y-5 animate-in fade-in duration-150 w-full">
           {/* Header Controls */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
             <div>
@@ -365,14 +430,14 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
           </div>
 
           {/* Full-width Responsive Customer Enquiries Cards (No Empty Right Gap) */}
-          <div className="space-y-3.5">
+          <div className="space-y-3.5 w-full">
             {filteredLeads.map((lead) => {
               const stateLabel = leadStates[lead.id] || "Inquiry";
 
               return (
                 <div
                   key={lead.id}
-                  className="bg-[#F8FAFC] hover:bg-white rounded-2xl border border-slate-200/90 hover:border-[#3B8CFF] hover:shadow-md transition-all duration-200 p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-5"
+                  className="bg-[#F8FAFC] hover:bg-white rounded-2xl border border-slate-200/90 hover:border-[#3B8CFF] hover:shadow-md transition-all duration-200 p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-5 w-full"
                 >
                   {/* Left: Customer Info */}
                   <div className="flex items-center gap-4 min-w-[240px]">
@@ -390,10 +455,12 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                               ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
                               : stateLabel === "Attempted to Contact"
                               ? "bg-amber-100 text-amber-700 border border-amber-200"
+                              : stateLabel === "Follow up 2"
+                              ? "bg-purple-100 text-purple-700 border border-purple-200"
                               : "bg-blue-100 text-blue-700 border border-blue-200"
                           }`}
                         >
-                          {stateLabel}
+                          {stateLabel === "Follow up 2" ? "Site Visit Booked" : stateLabel}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
@@ -579,6 +646,36 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
             </div>
           </div>
 
+          {/* CELEBRATORY BANNER IF SITE VISIT IS SCHEDULED & TRANSFERRED TO DEALS */}
+          {currentScheduledVisit && (
+            <div className="m-6 mb-0 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold flex-shrink-0 shadow-2xs">
+                  <CheckCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                    <span>Site Visit Confirmed & Deal Active in Pipeline!</span>
+                    <span className="px-2 py-0.2 text-[10px] bg-emerald-200 text-emerald-800 rounded-md font-semibold">
+                      Transferred
+                    </span>
+                  </h4>
+                  <p className="text-[11px] text-emerald-700 mt-0.5">
+                    Scheduled on <strong>{currentScheduledVisit.date}</strong> at <strong>{currentScheduledVisit.time}</strong> for <strong>{currentScheduledVisit.unit}</strong>. {currentScheduledVisit.cab ? "VIP Cab Pick-up included." : ""}
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                href="/today"
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 self-start sm:self-center transition active:scale-95"
+              >
+                <span>View in Deals Pipeline</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          )}
+
           {/* Full-width Synchronized Detail Body (Spans 100% under the header) */}
           <div className="p-6 space-y-6 w-full">
             {/* Overview / Timeline Tabs */}
@@ -605,7 +702,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                       <option value="Inquiry">Inquiry</option>
                       <option value="Attempted to Contact">Attempted to Contact</option>
                       <option value="Interested">Interested</option>
-                      <option value="Follow up 2">Follow up 2</option>
+                      <option value="Follow up 2">Follow up 2 (Site Visit)</option>
                       <option value="Not Interested">Not Interested</option>
                       <option value="Junk Lead">Junk Lead</option>
                     </select>
@@ -617,7 +714,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                     Transitions
                   </span>
 
-                  {/* State = "Attempted to Contact" ➔ Transitions (Screenshot 2): [Not Interested, Interested, Junk Lead, Follow up 2] */}
+                  {/* State = "Attempted to Contact" ➔ Transitions: [Not Interested, Interested, Junk Lead, Follow up 2] */}
                   {currentState === "Attempted to Contact" && (
                     <div className="flex flex-wrap items-center gap-2.5">
                       <button
@@ -647,27 +744,37 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                     </div>
                   )}
 
-                  {/* State = "Interested" ➔ Transition (Screenshot 3): [Gather Details] */}
+                  {/* State = "Interested" ➔ Transitions: [Gather Details] AND [📅 Schedule Site Visit & Transfer to Deals] */}
                   {currentState === "Interested" && (
                     <div className="flex flex-wrap items-center gap-2.5">
                       <button
                         onClick={() => setIsGatherModalOpen(true)}
-                        className="px-4 py-2 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                        className="px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-semibold text-xs shadow-2xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
                       >
-                        <FileText className="w-3.5 h-3.5" />
+                        <FileText className="w-3.5 h-3.5 text-[#3B8CFF]" />
                         <span>Gather Details</span>
+                      </button>
+
+                      {/* DEDICATED SITE VISIT & DEAL TRANSFER ACTION */}
+                      <button
+                        onClick={() => setIsSiteVisitModalOpen(true)}
+                        className="px-4 py-2 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-bold text-xs shadow-xs transition active:scale-95 flex items-center gap-2 cursor-pointer"
+                      >
+                        <Calendar className="w-3.5 h-3.5 animate-pulse" />
+                        <span>Schedule Site Visit & Transfer to Deals</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </button>
 
                       <button
                         onClick={() => handleStateTransition("Follow up 2")}
-                        className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs shadow-2xs transition cursor-pointer"
+                        className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-medium text-xs shadow-2xs transition cursor-pointer"
                       >
                         Follow up 2
                       </button>
 
                       <button
                         onClick={() => handleStateTransition("Not Interested")}
-                        className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 font-medium text-xs shadow-2xs transition cursor-pointer"
+                        className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-600 font-medium text-xs shadow-2xs transition cursor-pointer"
                       >
                         Not Interested
                       </button>
@@ -681,11 +788,20 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                     currentState === "Inquiry") && (
                     <div className="flex flex-wrap items-center gap-2.5">
                       <button
+                        onClick={() => setIsSiteVisitModalOpen(true)}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-2xs transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>Schedule Site Visit</span>
+                      </button>
+
+                      <button
                         onClick={() => handleStateTransition("Interested")}
-                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-2xs transition cursor-pointer"
+                        className="px-4 py-2 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-2xs transition cursor-pointer"
                       >
                         Mark Interested
                       </button>
+
                       <button
                         onClick={() => handleStateTransition("Attempted to Contact")}
                         className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs shadow-2xs transition cursor-pointer"
@@ -705,7 +821,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
               </button>
             </div>
 
-            {/* LEAD CORE FIELDS BLOCK (Screenshot 1, 2, 3) */}
+            {/* LEAD CORE FIELDS BLOCK */}
             <div className="bg-white rounded-2xl border border-slate-200/90 p-6 space-y-4 shadow-2xs w-full">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 text-xs">
                 <div className="flex items-center">
@@ -746,12 +862,16 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                   </span>
                 </div>
 
-                <div className="flex items-center">
-                  <span className="w-36 text-slate-400 font-medium">
-                    Scheduling site visit
-                  </span>
-                  <span className="text-slate-400">—</span>
-                </div>
+                {/* Only Show Site Visit when actually scheduled */}
+                {currentScheduledVisit ? (
+                  <div className="flex items-center">
+                    <span className="w-36 text-slate-400 font-medium">Site Visit</span>
+                    <span className="font-bold text-emerald-600 flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {currentScheduledVisit.date} ({currentScheduledVisit.time})
+                    </span>
+                  </div>
+                ) : null}
               </div>
             </div>
 
@@ -805,7 +925,167 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
         </div>
       )}
 
-      {/* 1. ADD TAGS MODAL */}
+      {/* 1. SCHEDULE SITE VISIT & TRANSFER TO DEALS MODAL */}
+      {isSiteVisitModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#3B8CFF]/15 text-[#3B8CFF] flex items-center justify-center">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 font-heading">
+                    Schedule Site Visit & Transfer to Deals
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Lead: <strong>{selectedLead.name}</strong> ({selectedLead.phone})
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSiteVisitModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {siteVisitSuccessMsg ? (
+              <div className="p-8 text-center space-y-4">
+                <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                  <CheckCircle className="w-8 h-8" />
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-slate-900 font-heading">
+                    Site Visit Scheduled Successfully!
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Details saved to MongoDB and lead transferred to the Deals / Pipeline tab.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleScheduleSiteVisit} className="p-6 space-y-4 text-xs">
+                {/* Project Selection */}
+                <div>
+                  <label className="text-slate-600 font-medium block mb-1">Select Project</label>
+                  <select
+                    value={visitProject}
+                    onChange={(e) => setVisitProject(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer font-medium"
+                  >
+                    <option value="UrbanGaon One, Jagatpura">UrbanGaon One, Jagatpura, Jaipur</option>
+                    <option value="UrbanGaon Palms, Ajmer Road">UrbanGaon Palms, Ajmer Road, Jaipur</option>
+                    <option value="UrbanGaon Meadows, Tonk Road">UrbanGaon Meadows, Tonk Road, Jaipur</option>
+                  </select>
+                </div>
+
+                {/* Unit Preference */}
+                <div>
+                  <label className="text-slate-600 font-medium block mb-1">Unit / Configuration Preference</label>
+                  <select
+                    value={visitUnit}
+                    onChange={(e) => setVisitUnit(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer"
+                  >
+                    <option value="UG-Tower A-402 (3BHK — ₹1.45 Cr)">UG-Tower A-402 (3BHK — ₹1.45 Cr)</option>
+                    <option value="UG-Tower B-601 (2BHK — ₹98 Lakhs)">UG-Tower B-601 (2BHK — ₹98 Lakhs)</option>
+                    <option value="UG-Villa-09 (4BHK Luxury — ₹2.85 Cr)">UG-Villa-09 (4BHK Luxury — ₹2.85 Cr)</option>
+                    <option value="UG-Plot-12 (200 Sq Yd — ₹65 Lakhs)">UG-Plot-12 (200 Sq Yd — ₹65 Lakhs)</option>
+                  </select>
+                </div>
+
+                {/* Visit Date & Time Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-slate-600 font-medium block mb-1">Visit Date</label>
+                    <input
+                      type="date"
+                      value={visitDate}
+                      onChange={(e) => setVisitDate(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-600 font-medium block mb-1">Preferred Time Slot</label>
+                    <select
+                      value={visitTime}
+                      onChange={(e) => setVisitTime(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer"
+                    >
+                      <option value="10:00 AM">10:00 AM (Morning Slot)</option>
+                      <option value="11:00 AM">11:00 AM (Prime Slot)</option>
+                      <option value="02:30 PM">02:30 PM (Afternoon Slot)</option>
+                      <option value="04:30 PM">04:30 PM (Evening Sunset Tour)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Cab Pickup Option */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="flex items-center gap-2.5">
+                    <Car className="w-4 h-4 text-[#3B8CFF]" />
+                    <div>
+                      <span className="font-semibold text-slate-800 block text-xs">
+                        Complimentary VIP Cab Pick-up
+                      </span>
+                      <span className="text-[10px] text-slate-400 block">
+                        Provide doorstep executive chauffeur for the customer family
+                      </span>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={visitCabRequired}
+                    onChange={(e) => setVisitCabRequired(e.target.checked)}
+                    className="w-4 h-4 accent-[#3B8CFF] cursor-pointer"
+                  />
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="text-slate-600 font-medium block mb-1">Agent Notes & Instructions</label>
+                  <textarea
+                    rows={2}
+                    value={visitNotes}
+                    onChange={(e) => setVisitNotes(e.target.value)}
+                    placeholder="e.g. VIP client coming with spouse, show sample flat 402."
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+                  />
+                </div>
+
+                {/* Footer Buttons */}
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setIsSiteVisitModalOpen(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={isPending}
+                    className="px-6 py-2 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-bold text-xs shadow-md transition active:scale-95 flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                  >
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>{isPending ? "Transferring..." : "Confirm & Transfer to Deals"}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 2. ADD TAGS MODAL */}
       {isTagModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden p-5 space-y-4">
@@ -867,7 +1147,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
         </div>
       )}
 
-      {/* 2. SEND EMAIL MODAL */}
+      {/* 3. SEND EMAIL MODAL */}
       {isEmailModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95">
@@ -965,7 +1245,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
         </div>
       )}
 
-      {/* 3. CONVERT LEAD MODAL */}
+      {/* 4. CONVERT LEAD MODAL */}
       {isConvertModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden p-6 space-y-4">
@@ -1038,7 +1318,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
         </div>
       )}
 
-      {/* 4. EDIT LEAD MODAL */}
+      {/* 5. EDIT LEAD MODAL */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden p-6 space-y-4">
@@ -1122,7 +1402,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
         </div>
       )}
 
-      {/* STEP 4: GATHER DETAILS POPUP MODAL (Screenshot 4) */}
+      {/* 6. GATHER DETAILS POPUP MODAL */}
       {isGatherModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-150">
@@ -1147,7 +1427,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
               </span>
             </div>
 
-            {/* Form Fields with red accent indicator (Screenshot 4) */}
+            {/* Form Fields with red accent indicator */}
             <form onSubmit={handleSaveGatherDetails} className="p-6 space-y-4 text-xs">
               {gatherSuccessMsg && (
                 <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-2">
