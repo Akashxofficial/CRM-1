@@ -155,7 +155,11 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
       else if (newState === "Not Interested" || newState === "Junk Lead") dbStatus = "LOST";
       else if (newState === "Follow up 2") dbStatus = "SITE_VISIT_SCHEDULED";
 
-      await updateLeadStatusAction(selectedLead.id, dbStatus);
+      await updateLeadStatusAction(selectedLead.id, dbStatus, {
+        phone: selectedLead.phone,
+        name: selectedLead.name,
+        note: `Transitioned to ${newState} in Calls module.`,
+      });
       triggerToast(`State updated to "${newState}"`);
     });
   };
@@ -165,6 +169,8 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
     startTransition(async () => {
       await gatherLeadDetailsAction({
         leadId: selectedLead.id,
+        phone: selectedLead.phone,
+        name: selectedLead.name,
         annualIncome,
         purposeOfPurchase,
         livingStatus,
@@ -178,7 +184,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
       setTimeout(() => {
         setGatherSuccessMsg("");
         setIsGatherModalOpen(false);
-        triggerToast("Gathered details saved to lead activity.");
+        triggerToast("Gathered details saved to MongoDB lead activity.");
       }, 1200);
     });
   };

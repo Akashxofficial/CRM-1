@@ -158,8 +158,11 @@ export async function checkDuplicateLead(phone: string, email?: string) {
   return { exists: false };
 }
 
+function isValidObjectId(id?: string | null): boolean {
+  return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
+}
+
 export async function createLeadAction(data: {
-  projectId: string;
   name: string;
   phone: string;
   email: string;
@@ -168,29 +171,27 @@ export async function createLeadAction(data: {
   budgetMin?: number;
   budgetMax?: number;
   priority?: string;
+  projectId?: string;
   assignedToId?: string;
-  interestedUnitId?: string;
   initialNote?: string;
 }) {
   const user = await getCurrentUser();
-  let createdLeadId = `lead-${Date.now()}`;
+  let createdLeadId = "temp-" + Date.now();
   let finalLead: any = null;
 
   try {
     // 1. Resolve or Create valid Organization in database
-    let organization = await prisma.organization.findFirst({
-      where: {
-        OR: [
-          { id: user.organizationId },
-          { slug: "urbangaon" },
-        ],
-      },
-    });
-
+    let organization: any = null;
+    if (isValidObjectId(user.organizationId)) {
+      organization = await prisma.organization.findUnique({ where: { id: user.organizationId } });
+    }
     if (!organization) {
-      organization = await prisma.organization.findFirst() || await prisma.organization.create({
+      organization = await prisma.organization.findFirst();
+    }
+    if (!organization) {
+      organization = await prisma.organization.create({
         data: {
-          name: user.organizationName || "UrbanGaon Realty & Infrastructure",
+          name: user.organizationName || "UrbanGaon",
           slug: "urbangaon",
           reraNo: "RAJ/RERA/2026/001",
         },
@@ -198,15 +199,13 @@ export async function createLeadAction(data: {
     }
 
     // 2. Resolve or Create valid Project in database
-    let project = await prisma.project.findFirst({
-      where: {
-        OR: [
-          { id: data.projectId },
-          { organizationId: organization.id },
-        ],
-      },
-    });
-
+    let project: any = null;
+    if (isValidObjectId(data.projectId)) {
+      project = await prisma.project.findUnique({ where: { id: data.projectId } });
+    }
+    if (!project) {
+      project = await prisma.project.findFirst({ where: { organizationId: organization.id } });
+    }
     if (!project) {
       project = await prisma.project.create({
         data: {
@@ -224,16 +223,19 @@ export async function createLeadAction(data: {
 
     // 3. Resolve assignedToId (verify User exists to avoid FK error)
     let validAssignedToId: string | null = null;
-    if (data.assignedToId) {
+    if (isValidObjectId(data.assignedToId)) {
       const existingUser = await prisma.user.findUnique({
         where: { id: data.assignedToId },
       });
-      if (existingUser) {
-        validAssignedToId = existingUser.id;
-      }
+      if (existingUser) validAssignedToId = existingUser.id;
+    } else if (isValidObjectId(user.id)) {
+      const existingUser = await prisma.user.findUnique({
+        where: { id: user.id },
+      });
+      if (existingUser) validAssignedToId = existingUser.id;
     }
 
-    // 4. Create Lead in Prisma
+    // 4. Create Lead in MongoDB Atlas
     finalLead = await prisma.lead.create({
       data: {
         organizationId: organization.id,
@@ -254,20 +256,18 @@ export async function createLeadAction(data: {
 
     createdLeadId = finalLead.id;
 
-    // Log initial activity
-    if (validAssignedToId) {
-      await prisma.leadActivity.create({
-        data: {
-          leadId: finalLead.id,
-          type: "NOTE",
-          title: "Customer Enquiry Form Submitted",
-          notes: data.initialNote || `Enquiry captured via ${finalLead.source}.`,
-          performedById: validAssignedToId,
-        },
-      });
-    }
+    // Log initial activity in MongoDB
+    await prisma.leadActivity.create({
+      data: {
+        leadId: finalLead.id,
+        type: "NOTE",
+        title: "Customer Enquiry Form Submitted",
+        notes: data.initialNote || `Enquiry captured via ${finalLead.source}.`,
+        performedById: validAssignedToId,
+      },
+    });
   } catch (error) {
-    console.warn("Database createLead fallback executed:", error);
+    console.error("Database createLead error in MongoDB:", error);
     finalLead = {
       id: createdLeadId,
       name: data.name,
@@ -305,29 +305,58 @@ export async function createLeadAction(data: {
 export async function updateLeadStatusAction(
   leadId: string,
   newStatus: string,
-  options?: { lostReason?: string; note?: string }
+  options?: { lostReason?: string; note?: string; phone?: string; name?: string }
 ) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
   try {
-    const prev = await prisma.lead.findUnique({ where: { id: leadId } });
-    if (prev) {
-      const lead = await prisma.lead.update({
-        where: { id: leadId },
+    let targetLead: any = null;
+
+    if (isValidObjectId(leadId)) {
+      targetLead = await prisma.lead.findUnique({ where: { id: leadId } });
+    }
+
+    if (!targetLead && options?.phone) {
+      targetLead = await prisma.lead.findFirst({ where: { phone: options.phone } });
+    }
+
+    if (targetLead) {
+      const updated = await prisma.lead.update({
+        where: { id: targetLead.id },
         data: {
           status: newStatus,
           lostReason: newStatus === "LOST" ? options?.lostReason || "No response" : null,
         },
       });
 
+      // Log Status Transition in MongoDB LeadActivity
+      let validUserId = isValidObjectId(user.id) ? user.id : null;
+      if (validUserId) {
+        const userExists = await prisma.user.findUnique({ where: { id: validUserId } });
+        if (!userExists) validUserId = null;
+      }
+
+      await prisma.leadActivity.create({
+        data: {
+          leadId: targetLead.id,
+          type: "STATUS_CHANGE",
+          title: `Status updated to ${newStatus}`,
+          notes: options?.note || `Lead state changed to ${newStatus} in Calls Workflow.`,
+          performedById: validUserId,
+        },
+      });
+
+      revalidatePath("/calls");
       revalidatePath("/leads");
-      return { success: true, lead };
+      revalidatePath("/dashboard");
+      return { success: true, lead: updated };
     }
   } catch (error) {
-    console.warn("Database updateLeadStatus error:", error);
+    console.error("Database updateLeadStatus error in MongoDB:", error);
   }
 
+  revalidatePath("/calls");
   revalidatePath("/leads");
   return { success: true, lead: { id: leadId, status: newStatus } };
 }
@@ -341,6 +370,8 @@ export async function gatherLeadDetailsAction(data: {
   budgetRange?: string;
   housingStyle?: string;
   notes?: string;
+  phone?: string;
+  name?: string;
 }) {
   const user = await getCurrentUser();
   try {
@@ -355,19 +386,34 @@ export async function gatherLeadDetailsAction(data: {
 ${data.notes ? `- Notes: ${data.notes}` : ""}
     `.trim();
 
-    if (data.leadId && data.leadId.length === 24) {
+    let targetLead: any = null;
+    if (isValidObjectId(data.leadId)) {
+      targetLead = await prisma.lead.findUnique({ where: { id: data.leadId } });
+    }
+
+    if (!targetLead && data.phone) {
+      targetLead = await prisma.lead.findFirst({ where: { phone: data.phone } });
+    }
+
+    if (targetLead) {
+      let validUserId = isValidObjectId(user.id) ? user.id : null;
+      if (validUserId) {
+        const userExists = await prisma.user.findUnique({ where: { id: validUserId } });
+        if (!userExists) validUserId = null;
+      }
+
       await prisma.leadActivity.create({
         data: {
-          leadId: data.leadId,
+          leadId: targetLead.id,
           type: "CALL",
           title: "Call Details Gathered (Interested)",
           notes: formattedNotes,
-          performedById: user.id && user.id.length === 24 ? user.id : null,
+          performedById: validUserId,
         },
       });
 
       await prisma.lead.update({
-        where: { id: data.leadId },
+        where: { id: targetLead.id },
         data: {
           interestedType: data.housingStyle && data.housingStyle !== "-None-" ? data.housingStyle : undefined,
           status: "INTERESTED",
@@ -375,11 +421,12 @@ ${data.notes ? `- Notes: ${data.notes}` : ""}
       });
     }
   } catch (error) {
-    console.warn("Database gatherLeadDetailsAction error:", error);
+    console.error("Database gatherLeadDetailsAction error in MongoDB:", error);
   }
 
   revalidatePath("/calls");
   revalidatePath("/leads");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
