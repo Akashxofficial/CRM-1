@@ -577,58 +577,8 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                 )}
               </div>
             </div>
-          </div>
-
-          {/* Body */}
-          <div className="flex-1 flex flex-col md:flex-row">
-            {/* Related List mini-sidebar */}
-            <div className="w-full md:w-44 p-4 border-b md:border-b-0 md:border-r border-slate-200/70 bg-[#F8FAFC] text-xs space-y-4 flex-shrink-0">
-              <div>
-                <div className="font-bold text-slate-900 mb-2">Related List</div>
-                <ul className="space-y-1 text-slate-600">
-                  <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer font-medium text-slate-900 bg-white shadow-2xs">
-                    Notes
-                  </li>
-                  <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer">
-                    Open Activities
-                  </li>
-                  <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer">
-                    Closed Activities
-                  </li>
-                  <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer">
-                    Invited Meetings
-                  </li>
-                  <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer flex items-center justify-between">
-                    <span>Emails</span>
-                    <span className="text-[10px] bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded-full font-bold">
-                      1
-                    </span>
-                  </li>
-                  <li className="px-2 py-1 rounded-md hover:bg-white cursor-pointer">
-                    Attachments
-                  </li>
-                </ul>
-                <button
-                  onClick={() => triggerToast("New related list module created.")}
-                  className="text-[11px] text-[#3B8CFF] hover:underline mt-2 font-medium cursor-pointer"
-                >
-                  + Add Related List
-                </button>
-              </div>
-
-              <div className="pt-3 border-t border-slate-200/60">
-                <div className="font-bold text-slate-900 mb-1">Links</div>
-                <button
-                  onClick={() => triggerToast("External link dialog opened.")}
-                  className="text-[11px] text-[#3B8CFF] hover:underline font-medium cursor-pointer"
-                >
-                  + Add Link
-                </button>
-              </div>
-            </div>
-
-            {/* Main Detail Area */}
-            <div className="flex-1 p-5 space-y-5 overflow-y-auto">
+          {/* Full-width Synchronized Detail Body */}
+          <div className="flex-1 p-6 space-y-6 overflow-y-auto">
               {/* Overview / Timeline Tabs */}
               <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
                 <button className="px-3.5 py-1 text-xs font-bold text-slate-900 bg-slate-100 rounded-full border border-slate-200 shadow-2xs">
