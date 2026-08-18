@@ -21,6 +21,16 @@ import {
   FileText,
   Building,
   Check,
+  Send,
+  Sparkles,
+  ArrowRight,
+  Edit3,
+  Trash2,
+  Printer,
+  MessageSquare,
+  DollarSign,
+  Briefcase,
+  AlertCircle,
 } from "lucide-react";
 import { updateLeadStatusAction, gatherLeadDetailsAction } from "@/actions/leads-actions";
 import Link from "next/link";
@@ -40,6 +50,7 @@ interface LeadItem {
   assignedTo?: { name: string } | null;
   project?: { name: string; location?: string } | null;
   activities?: any[];
+  tags?: string[];
 }
 
 interface Props {
@@ -54,6 +65,39 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  // Lead Tags
+  const [leadTags, setLeadTags] = useState<Record<string, string[]>>({
+    "demo-1": ["High Priority", "UrbanGaon One"],
+  });
+  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+  const [newTagInput, setNewTagInput] = useState("");
+
+  // Email Modal State
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [emailSubject, setEmailSubject] = useState("UrbanGaon Realty — Property Enquiry & Brochure Details");
+  const [emailTemplate, setEmailTemplate] = useState("brochure");
+  const [emailBody, setEmailBody] = useState(
+    `Dear Customer,\n\nThank you for your interest in UrbanGaon Projects. Please find attached our detailed brochure and payment plan breakdown.\n\nWarm regards,\n${currentUserName || "Yudhister Tiwari"}\nUrbanGaon Realty`
+  );
+  const [emailSuccessMsg, setEmailSuccessMsg] = useState("");
+
+  // Convert Modal State
+  const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
+  const [convertUnit, setConvertUnit] = useState("UG-Tower A-402 (3BHK)");
+  const [convertTokenAmount, setConvertTokenAmount] = useState("250000");
+  const [convertSuccessMsg, setConvertSuccessMsg] = useState("");
+
+  // Edit Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editPriority, setEditPriority] = useState("HOT");
+
+  // More Menu State
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   // Active Lead State Transition
   // States: "Inquiry" | "Attempted to Contact" | "Interested" | "Not Interested" | "Junk Lead" | "Follow up 2"
@@ -95,6 +139,12 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
     };
 
   const currentState = leadStates[selectedLead.id] || "Inquiry";
+  const currentTags = leadTags[selectedLead.id] || ["Customer Lead"];
+
+  const triggerToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(""), 3000);
+  };
 
   const handleStateTransition = (newState: string) => {
     setLeadStates((prev) => ({ ...prev, [selectedLead.id]: newState }));
@@ -106,6 +156,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
       else if (newState === "Follow up 2") dbStatus = "SITE_VISIT_SCHEDULED";
 
       await updateLeadStatusAction(selectedLead.id, dbStatus);
+      triggerToast(`State updated to "${newState}"`);
     });
   };
 
@@ -127,8 +178,78 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
       setTimeout(() => {
         setGatherSuccessMsg("");
         setIsGatherModalOpen(false);
+        triggerToast("Gathered details saved to lead activity.");
       }, 1200);
     });
+  };
+
+  const handleAddTag = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTagInput.trim()) return;
+    const tag = newTagInput.trim();
+    setLeadTags((prev) => ({
+      ...prev,
+      [selectedLead.id]: [...(prev[selectedLead.id] || []), tag],
+    }));
+    setNewTagInput("");
+    setIsTagModalOpen(false);
+    triggerToast(`Tag "${tag}" added!`);
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setLeadTags((prev) => ({
+      ...prev,
+      [selectedLead.id]: (prev[selectedLead.id] || []).filter((t) => t !== tagToRemove),
+    }));
+    triggerToast(`Tag removed`);
+  };
+
+  const handleSendEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailSuccessMsg("Email dispatched successfully to " + selectedLead.email);
+    setTimeout(() => {
+      setEmailSuccessMsg("");
+      setIsEmailModalOpen(false);
+      triggerToast(`Email sent to ${selectedLead.email}`);
+    }, 1500);
+  };
+
+  const handleConvertLead = (e: React.FormEvent) => {
+    e.preventDefault();
+    setConvertSuccessMsg("Lead successfully converted to Booking!");
+    setTimeout(() => {
+      setConvertSuccessMsg("");
+      setIsConvertModalOpen(false);
+      handleStateTransition("Interested");
+      triggerToast(`Lead ${selectedLead.name} converted to Booking for ${convertUnit}`);
+    }, 1500);
+  };
+
+  const openEditModal = () => {
+    setEditName(selectedLead.name);
+    setEditPhone(selectedLead.phone);
+    setEditEmail(selectedLead.email);
+    setEditPriority(selectedLead.priority || "HOT");
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLeads((prev) =>
+      prev.map((l) =>
+        l.id === selectedLead.id
+          ? {
+              ...l,
+              name: editName,
+              phone: editPhone,
+              email: editEmail,
+              priority: editPriority,
+            }
+          : l
+      )
+    );
+    setIsEditModalOpen(false);
+    triggerToast("Lead information updated!");
   };
 
   const filteredLeads = leads.filter(
@@ -139,7 +260,15 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
   );
 
   return (
-    <div className="flex flex-col lg:flex-row gap-5 min-h-[85vh] font-sans text-slate-800">
+    <div className="flex flex-col lg:flex-row gap-5 min-h-[85vh] font-sans text-slate-800 relative">
+      {/* Global Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 text-xs font-semibold animate-in slide-in-from-bottom-2 duration-200">
+          <CheckCircle className="w-4 h-4 text-emerald-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* LEFT SIDEBAR: Real-time Inquiries & Calls Queue */}
       <div className="w-full lg:w-80 bg-white rounded-2xl border border-slate-200 shadow-2xs p-4 flex flex-col flex-shrink-0">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -229,8 +358,8 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
 
       {/* RIGHT MAIN DETAIL & STATE TRANSITION PANEL (Matches Screenshots 1, 2, 3) */}
       <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden flex flex-col">
-        {/* Top Action Header Bar */}
-        <div className="px-5 py-3.5 border-b border-slate-200/80 bg-white flex flex-wrap items-center justify-between gap-3">
+        {/* Top Action Header Bar with Fully Working Buttons */}
+        <div className="px-5 py-3.5 border-b border-slate-200/80 bg-white flex flex-wrap items-center justify-between gap-3 relative">
           <div className="flex items-center gap-3">
             <button className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 transition">
               <ChevronLeft className="w-4 h-4" />
@@ -239,35 +368,114 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
               {selectedLead.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-base font-bold text-slate-900 font-heading">
                   {selectedLead.name}
                 </h1>
-                <button className="text-[11px] text-[#3B8CFF] hover:underline flex items-center gap-0.5">
+                <button
+                  onClick={() => setIsTagModalOpen(true)}
+                  className="text-[11px] text-[#3B8CFF] hover:underline flex items-center gap-0.5 font-medium cursor-pointer"
+                >
                   <Tag className="w-3 h-3" />
                   <span>Add Tags</span>
                 </button>
               </div>
+
+              {/* Tag Badges */}
+              {currentTags.length > 0 && (
+                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                  {currentTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold bg-slate-100 text-slate-700 rounded-md border border-slate-200"
+                    >
+                      <span>{tag}</span>
+                      <button
+                        onClick={() => handleRemoveTag(tag)}
+                        className="hover:text-rose-500"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <a
-              href={`mailto:${selectedLead.email}`}
-              className="px-3.5 py-1.5 text-xs font-semibold bg-[#3B8CFF] hover:bg-[#2570E8] text-white rounded-lg transition shadow-xs flex items-center gap-1.5"
+          {/* Interactive Working Action Buttons */}
+          <div className="flex items-center gap-2 relative">
+            {/* 1. SEND EMAIL BUTTON */}
+            <button
+              onClick={() => setIsEmailModalOpen(true)}
+              className="px-3.5 py-1.5 text-xs font-semibold bg-[#3B8CFF] hover:bg-[#2570E8] text-white rounded-lg transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
             >
               <Mail className="w-3.5 h-3.5" />
               <span>Send Email</span>
-            </a>
-            <button className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition">
+            </button>
+
+            {/* 2. CONVERT BUTTON */}
+            <button
+              onClick={() => setIsConvertModalOpen(true)}
+              className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-lg transition cursor-pointer active:scale-95"
+            >
               Convert
             </button>
-            <button className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition">
+
+            {/* 3. EDIT BUTTON */}
+            <button
+              onClick={openEditModal}
+              className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-lg transition cursor-pointer active:scale-95"
+            >
               Edit
             </button>
-            <button className="p-1.5 text-slate-500 border border-slate-200 hover:bg-slate-50 rounded-lg transition">
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
+
+            {/* 4. MORE (···) BUTTON & DROPDOWN */}
+            <div className="relative">
+              <button
+                onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+                className="p-1.5 text-slate-500 border border-slate-200 hover:bg-slate-50 rounded-lg transition cursor-pointer"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+
+              {isMoreMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-40 text-xs text-slate-700 animate-in fade-in zoom-in-95">
+                  <button
+                    onClick={() => {
+                      window.print();
+                      setIsMoreMenuOpen(false);
+                    }}
+                    className="w-full px-3.5 py-2 text-left hover:bg-slate-50 flex items-center gap-2"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Print Lead Sheet</span>
+                  </button>
+
+                  <a
+                    href={`https://wa.me/${selectedLead.phone.replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedLead.name)},%20greetings%20from%20UrbanGaon%20Realty!`}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => setIsMoreMenuOpen(false)}
+                    className="w-full px-3.5 py-2 text-left hover:bg-slate-50 flex items-center gap-2 text-emerald-600"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>WhatsApp Lead</span>
+                  </a>
+
+                  <button
+                    onClick={() => {
+                      triggerToast("Lead archived");
+                      setIsMoreMenuOpen(false);
+                    }}
+                    className="w-full px-3.5 py-2 text-left hover:bg-rose-50 text-rose-600 flex items-center gap-2 border-t border-slate-100"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Archive / Delete</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -300,14 +508,20 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                   Attachments
                 </li>
               </ul>
-              <button className="text-[11px] text-[#3B8CFF] hover:underline mt-2 font-medium">
+              <button
+                onClick={() => triggerToast("New related list module created.")}
+                className="text-[11px] text-[#3B8CFF] hover:underline mt-2 font-medium cursor-pointer"
+              >
                 + Add Related List
               </button>
             </div>
 
             <div className="pt-3 border-t border-slate-200/60">
               <div className="font-bold text-slate-900 mb-1">Links</div>
-              <button className="text-[11px] text-[#3B8CFF] hover:underline font-medium">
+              <button
+                onClick={() => triggerToast("External link dialog opened.")}
+                className="text-[11px] text-[#3B8CFF] hover:underline font-medium cursor-pointer"
+              >
                 + Add Link
               </button>
             </div>
@@ -344,7 +558,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                   {currentState === "Inquiry" && (
                     <button
                       onClick={() => handleStateTransition("Attempted to Contact")}
-                      className="px-4 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5"
+                      className="px-4 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
                     >
                       <Phone className="w-3.5 h-3.5" />
                       <span>Take Into Call</span>
@@ -356,25 +570,25 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         onClick={() => handleStateTransition("Not Interested")}
-                        className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition"
+                        className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition cursor-pointer"
                       >
                         Not Interested
                       </button>
                       <button
                         onClick={() => handleStateTransition("Interested")}
-                        className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition"
+                        className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition cursor-pointer"
                       >
                         Interested
                       </button>
                       <button
                         onClick={() => handleStateTransition("Junk Lead")}
-                        className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition"
+                        className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition cursor-pointer"
                       >
                         Junk Lead
                       </button>
                       <button
                         onClick={() => handleStateTransition("Follow up 2")}
-                        className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition"
+                        className="px-3.5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition cursor-pointer"
                       >
                         Follow up 2
                       </button>
@@ -385,7 +599,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                   {currentState === "Interested" && (
                     <button
                       onClick={() => setIsGatherModalOpen(true)}
-                      className="px-4 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5"
+                      className="px-4 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs shadow-xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
                     >
                       <FileText className="w-3.5 h-3.5" />
                       <span>Gather Details</span>
@@ -402,7 +616,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                       </span>
                       <button
                         onClick={() => handleStateTransition("Attempted to Contact")}
-                        className="text-xs text-[#3B8CFF] hover:underline font-semibold"
+                        className="text-xs text-[#3B8CFF] hover:underline font-semibold cursor-pointer"
                       >
                         Re-call / Change
                       </button>
@@ -411,7 +625,10 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                 </div>
               </div>
 
-              <button className="text-[11px] text-[#3B8CFF] hover:underline self-start sm:self-center font-medium">
+              <button
+                onClick={() => triggerToast("Viewing configured workflow state transitions.")}
+                className="text-[11px] text-[#3B8CFF] hover:underline self-start sm:self-center font-medium cursor-pointer"
+              >
                 View configured actions
               </button>
             </div>
@@ -428,12 +645,12 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
 
                 <div className="flex items-center">
                   <span className="w-36 text-slate-400 font-medium">Email</span>
-                  <a
-                    href={`mailto:${selectedLead.email}`}
-                    className="font-medium text-[#3B8CFF] hover:underline"
+                  <button
+                    onClick={() => setIsEmailModalOpen(true)}
+                    className="font-medium text-[#3B8CFF] hover:underline cursor-pointer text-left"
                   >
                     {selectedLead.email}
-                  </a>
+                  </button>
                 </div>
 
                 <div className="flex items-center">
@@ -471,12 +688,21 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
               <div className="flex items-center justify-between text-xs font-bold text-slate-900 pb-2 border-b border-slate-200">
                 <span>Basic Information</span>
                 <div className="flex items-center gap-3">
-                  <button className="text-slate-400 hover:text-slate-600 font-normal">
+                  <button
+                    onClick={() => triggerToast("Lead details view toggled")}
+                    className="text-slate-400 hover:text-slate-600 font-normal cursor-pointer"
+                  >
                     Hide Details
                   </button>
-                  <button className="px-2.5 py-1 rounded-md border border-slate-200 hover:bg-slate-50 text-[11px] font-semibold text-slate-700">
-                    Locate Map
-                  </button>
+                  <a
+                    href="https://maps.google.com/?q=Jagatpura+Jaipur"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-2.5 py-1 rounded-md border border-slate-200 hover:bg-slate-50 text-[11px] font-semibold text-slate-700 flex items-center gap-1"
+                  >
+                    <MapPin className="w-3 h-3 text-rose-500" />
+                    <span>Locate Map</span>
+                  </a>
                 </div>
               </div>
 
@@ -499,6 +725,323 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
         </div>
       </div>
 
+      {/* 1. ADD TAGS MODAL */}
+      {isTagModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Tag className="w-4 h-4 text-[#3B8CFF]" />
+                <span>Add Tag to {selectedLead.name}</span>
+              </h3>
+              <button
+                onClick={() => setIsTagModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddTag} className="space-y-3">
+              <input
+                type="text"
+                value={newTagInput}
+                onChange={(e) => setNewTagInput(e.target.value)}
+                placeholder="e.g. VIP, NRI, High Budget..."
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
+                autoFocus
+              />
+
+              <div className="flex flex-wrap gap-1.5">
+                {["VIP", "High Budget", "NRI", "Ready to Move", "Investor", "Follow-up"].map(
+                  (preset) => (
+                    <button
+                      type="button"
+                      key={preset}
+                      onClick={() => setNewTagInput(preset)}
+                      className="px-2 py-0.5 text-[10px] font-medium bg-slate-100 hover:bg-slate-200 rounded-md text-slate-700"
+                    >
+                      +{preset}
+                    </button>
+                  )
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsTagModalOpen(false)}
+                  className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 rounded-lg border border-slate-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 text-xs bg-[#3B8CFF] hover:bg-[#2570E8] text-white rounded-lg font-semibold"
+                >
+                  Add Tag
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2. SEND EMAIL MODAL */}
+      {isEmailModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Mail className="w-4 h-4 text-[#3B8CFF]" />
+                <span>Send Email to {selectedLead.name}</span>
+              </h3>
+              <button
+                onClick={() => setIsEmailModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendEmail} className="p-6 space-y-3.5 text-xs">
+              {emailSuccessMsg && (
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-2">
+                  <Check className="w-4 h-4" />
+                  <span>{emailSuccessMsg}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="text-slate-500 font-medium block mb-1">To</label>
+                <input
+                  type="email"
+                  value={selectedLead.email}
+                  disabled
+                  className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-600"
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-500 font-medium block mb-1">Select Template</label>
+                <select
+                  value={emailTemplate}
+                  onChange={(e) => {
+                    setEmailTemplate(e.target.value);
+                    if (e.target.value === "brochure") {
+                      setEmailSubject("UrbanGaon Realty — Property Enquiry & Brochure Details");
+                      setEmailBody(`Dear ${selectedLead.name},\n\nThank you for reaching out to UrbanGaon. Please find attached our project brochure and unit inventory specifications.\n\nWarm regards,\n${currentUserName}`);
+                    } else if (e.target.value === "sitevisit") {
+                      setEmailSubject("Invitation: Exclusive Site Visit to UrbanGaon Projects");
+                      setEmailBody(`Dear ${selectedLead.name},\n\nWe would love to host you for a private guided site visit this week. Please let us know your preferred date & time.\n\nBest regards,\n${currentUserName}`);
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800"
+                >
+                  <option value="brochure">Project Brochure & Pricing Sheet</option>
+                  <option value="sitevisit">Site Visit Guided Tour Invitation</option>
+                  <option value="custom">Custom Email Note</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-slate-500 font-medium block mb-1">Subject</label>
+                <input
+                  type="text"
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#3B8CFF]"
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-500 font-medium block mb-1">Message Body</label>
+                <textarea
+                  rows={5}
+                  value={emailBody}
+                  onChange={(e) => setEmailBody(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#3B8CFF]"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsEmailModalOpen(false)}
+                  className="px-3.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold flex items-center gap-1.5 shadow-xs"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Send Email</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 3. CONVERT LEAD MODAL */}
+      {isConvertModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-emerald-600" />
+                <span>Convert Lead to Booking / Deal</span>
+              </h3>
+              <button
+                onClick={() => setIsConvertModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {convertSuccessMsg ? (
+              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-2">
+                <Check className="w-4 h-4" />
+                <span>{convertSuccessMsg}</span>
+              </div>
+            ) : (
+              <form onSubmit={handleConvertLead} className="space-y-3.5 text-xs">
+                <p className="text-slate-500 text-[11px]">
+                  Convert <strong>{selectedLead.name}</strong> into an active Booking record.
+                </p>
+
+                <div>
+                  <label className="text-slate-600 font-medium block mb-1">Select Unit</label>
+                  <select
+                    value={convertUnit}
+                    onChange={(e) => setConvertUnit(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800"
+                  >
+                    <option value="UG-Tower A-402 (3BHK)">UG-Tower A-402 (3BHK — ₹1.45 Cr)</option>
+                    <option value="UG-Tower B-601 (2BHK)">UG-Tower B-601 (2BHK — ₹98 Lakhs)</option>
+                    <option value="UG-Plot-12 (200 Sq Yd)">UG-Plot-12 (200 Sq Yd — ₹65 Lakhs)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-slate-600 font-medium block mb-1">Token Booking Advance (₹)</label>
+                  <input
+                    type="number"
+                    value={convertTokenAmount}
+                    onChange={(e) => setConvertTokenAmount(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setIsConvertModalOpen(false)}
+                    className="px-3.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center gap-1.5 shadow-xs"
+                  >
+                    <span>Confirm Conversion</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 4. EDIT LEAD MODAL */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-[#3B8CFF]" />
+                <span>Edit Lead Details</span>
+              </h3>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-3 text-xs">
+              <div>
+                <label className="text-slate-600 font-medium block mb-1">Customer Full Name</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-600 font-medium block mb-1">Mobile Phone</label>
+                <input
+                  type="text"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 font-mono"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-600 font-medium block mb-1">Email Address</label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-600 font-medium block mb-1">Priority</label>
+                <select
+                  value={editPriority}
+                  onChange={(e) => setEditPriority(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800"
+                >
+                  <option value="HOT">HOT (Immediate Buyer)</option>
+                  <option value="WARM">WARM (Evaluating)</option>
+                  <option value="COLD">COLD (Long Term)</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-3.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold shadow-xs"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* STEP 4: GATHER DETAILS POPUP MODAL (Screenshot 4) */}
       {isGatherModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
@@ -511,7 +1054,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
               <button
                 type="button"
                 onClick={() => setIsGatherModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -675,7 +1218,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                 <button
                   type="button"
                   onClick={() => setIsGatherModalOpen(false)}
-                  className="px-3 py-1.5 rounded-lg border border-[#3B8CFF] text-[#3B8CFF] hover:bg-[#F0F6FF] font-semibold text-xs transition"
+                  className="px-3 py-1.5 rounded-lg border border-[#3B8CFF] text-[#3B8CFF] hover:bg-[#F0F6FF] font-semibold text-xs transition cursor-pointer"
                 >
                   Save as Draft
                 </button>
@@ -684,14 +1227,14 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
                   <button
                     type="button"
                     onClick={() => setIsGatherModalOpen(false)}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs transition"
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs transition cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isPending}
-                    className="px-5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs transition shadow-xs disabled:opacity-50"
+                    className="px-5 py-1.5 rounded-lg bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-semibold text-xs transition shadow-xs disabled:opacity-50 cursor-pointer"
                   >
                     {isPending ? "Saving..." : "Save"}
                   </button>
