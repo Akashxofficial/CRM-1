@@ -26,6 +26,7 @@ import {
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { recordPaymentAction } from "@/actions/payments-actions";
 import { URBANGAON_AXIO_CLP_STAGES, AxioCLPStage } from "@/lib/axio-clp-plan";
+import { INDIAN_BANKS, searchIndianBanks, BankItem } from "@/lib/indian-banks";
 
 interface Props {
   isOpen: boolean;
@@ -138,13 +139,22 @@ export function RecordPaymentModal({ isOpen, onClose, schedule, bookingId: propB
   const [stageSearchQuery, setStageSearchQuery] = useState("");
   const [stageCategoryFilter, setStageCategoryFilter] = useState<"ALL" | "BOOKING" | "FOUNDATION" | "LOWER_SLAB" | "UPPER_SLAB">("ALL");
 
-  const stageDropdownRef = useRef<HTMLDivElement>(null);
+  // Bank dropdown state
+  const [bankName, setBankName] = useState("HDFC Bank Ltd.");
+  const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
+  const [bankFilterCategory, setBankFilterCategory] = useState<"ALL" | "PRIVATE" | "PUBLIC" | "HOME_LOAN">("ALL");
 
-  // Close dropdown on outside click
+  const stageDropdownRef = useRef<HTMLDivElement>(null);
+  const bankDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (stageDropdownRef.current && !stageDropdownRef.current.contains(event.target as Node)) {
         setIsStageDropdownOpen(false);
+      }
+      if (bankDropdownRef.current && !bankDropdownRef.current.contains(event.target as Node)) {
+        setIsBankDropdownOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -155,6 +165,15 @@ export function RecordPaymentModal({ isOpen, onClose, schedule, bookingId: propB
     if (selectedStageSrNo === "CURRENT") return null;
     return URBANGAON_AXIO_CLP_STAGES.find((s) => s.srNo === selectedStageSrNo) || null;
   }, [selectedStageSrNo]);
+
+  // Filtered Indian Banks
+  const filteredBanks = useMemo(() => {
+    let list = searchIndianBanks(bankName);
+    if (bankFilterCategory !== "ALL") {
+      list = list.filter((b) => b.category === bankFilterCategory);
+    }
+    return list;
+  }, [bankName, bankFilterCategory]);
 
   // Effective amounts & names
   const effectiveDueAmount = useMemo(() => {
@@ -175,7 +194,6 @@ export function RecordPaymentModal({ isOpen, onClose, schedule, bookingId: propB
   const [amountPaid, setAmountPaid] = useState(effectiveDueAmount.toString());
   const [mode, setMode] = useState("NEFT");
   const [referenceNo, setReferenceNo] = useState(`UTR-${Math.floor(100000000 + Math.random() * 900000000)}`);
-  const [bankName, setBankName] = useState("HDFC Bank Ltd.");
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
   const [notes, setNotes] = useState("");
 
@@ -677,32 +695,195 @@ export function RecordPaymentModal({ isOpen, onClose, schedule, bookingId: propB
           </div>
 
           {/* ═════════════════════════════════════════════════════════
-              SECTION 5: BANK & REFERENCE NUMBER
+              SECTION 5: BANK & REFERENCE NUMBER (All Indian Banks)
              ═════════════════════════════════════════════════════════ */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
-                Bank Name
-              </label>
-              <input
-                type="text"
-                value={bankName}
-                onChange={(e) => setBankName(e.target.value)}
-                placeholder="e.g. HDFC Bank, SBI, ICICI"
-                className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-              />
+          <div className="space-y-3">
+            {/* Bank Name Searchable Dropdown */}
+            <div className="space-y-1.5" ref={bankDropdownRef}>
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                  <Landmark className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Bank / Lending Institution *</span>
+                </label>
+                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 px-2 py-0.5 rounded-md">
+                  {INDIAN_BANKS.length}+ Indian Banks
+                </span>
+              </div>
+
+              {/* Custom Trigger Button */}
+              <button
+                type="button"
+                onClick={() => setIsBankDropdownOpen(!isBankDropdownOpen)}
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 flex items-center justify-between gap-3 text-left transition shadow-xs focus:outline-none"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="w-7 h-7 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 font-extrabold text-xs flex items-center justify-center flex-shrink-0 border border-blue-200 dark:border-blue-800">
+                    🏦
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                      {bankName || "Select Bank Name..."}
+                    </div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                      Click to choose from all Indian banks or enter custom name
+                    </div>
+                  </div>
+                </div>
+                <ChevronDown
+                  className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200 ${
+                    isBankDropdownOpen ? "rotate-180 text-blue-600" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Quick One-Click Bank Chips */}
+              <div className="flex flex-wrap gap-1 pt-0.5">
+                {[
+                  { label: "HDFC", val: "HDFC Bank Ltd." },
+                  { label: "SBI", val: "State Bank of India" },
+                  { label: "ICICI", val: "ICICI Bank Ltd." },
+                  { label: "Axis", val: "Axis Bank Ltd." },
+                  { label: "Kotak", val: "Kotak Mahindra Bank Ltd." },
+                  { label: "LIC HFL", val: "LIC Housing Finance Ltd." },
+                  { label: "PNB", val: "Punjab National Bank" },
+                  { label: "BOB", val: "Bank of Baroda" },
+                ].map((chip) => (
+                  <button
+                    key={chip.label}
+                    type="button"
+                    onClick={() => {
+                      setBankName(chip.val);
+                      setIsBankDropdownOpen(false);
+                    }}
+                    className={`text-[10px] px-2 py-0.5 rounded-lg font-semibold transition ${
+                      bankName === chip.val
+                        ? "bg-blue-600 text-white shadow-xs"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                    }`}
+                  >
+                    + {chip.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom Dropdown Menu for Indian Banks */}
+              {isBankDropdownOpen && (
+                <div className="mt-1.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-2.5 animate-in fade-in zoom-in-95 duration-150 z-20">
+                  {/* Search & Custom Input */}
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search bank name or acronym (e.g. SBI, HDFC, LIC, PNB, BOB)..."
+                        value={bankName}
+                        onChange={(e) => setBankName(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-medium"
+                      />
+                    </div>
+
+                    {/* Category Filter Chips for Banks */}
+                    <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[10px] scrollbar-none">
+                      <button
+                        type="button"
+                        onClick={() => setBankFilterCategory("ALL")}
+                        className={`px-2.5 py-1 rounded-lg font-semibold transition whitespace-nowrap ${
+                          bankFilterCategory === "ALL"
+                            ? "bg-blue-600 text-white"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                        }`}
+                      >
+                        All ({INDIAN_BANKS.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBankFilterCategory("PRIVATE")}
+                        className={`px-2.5 py-1 rounded-lg font-semibold transition whitespace-nowrap ${
+                          bankFilterCategory === "PRIVATE"
+                            ? "bg-blue-600 text-white"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                        }`}
+                      >
+                        🏢 Private Banks
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBankFilterCategory("PUBLIC")}
+                        className={`px-2.5 py-1 rounded-lg font-semibold transition whitespace-nowrap ${
+                          bankFilterCategory === "PUBLIC"
+                            ? "bg-blue-600 text-white"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                        }`}
+                      >
+                        🏛️ PSU / Public
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBankFilterCategory("HOME_LOAN")}
+                        className={`px-2.5 py-1 rounded-lg font-semibold transition whitespace-nowrap ${
+                          bankFilterCategory === "HOME_LOAN"
+                            ? "bg-blue-600 text-white"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                        }`}
+                      >
+                        🏠 Home Loans / HFC
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Banks Scrollable List */}
+                  <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
+                    {filteredBanks.length === 0 ? (
+                      <div className="p-3 text-center text-slate-500 text-xs">
+                        Custom Bank: <strong>&quot;{bankName}&quot;</strong> will be saved.
+                      </div>
+                    ) : (
+                      filteredBanks.map((b) => {
+                        const isSelected = bankName === b.name;
+                        return (
+                          <div
+                            key={b.name}
+                            onClick={() => {
+                              setBankName(b.name);
+                              setIsBankDropdownOpen(false);
+                            }}
+                            className={`p-2 rounded-xl flex items-center justify-between cursor-pointer transition text-xs ${
+                              isSelected
+                                ? "bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-950 dark:text-blue-200 font-bold"
+                                : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Landmark className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                              <span className="truncate">{b.name}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                {b.shortName}
+                              </span>
+                              {isSelected && <CheckCheck className="w-3.5 h-3.5 text-blue-600" />}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
+            {/* Reference / UTR Number Field */}
             <div>
               <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
-                Reference / UTR / Cheque # *
+                Reference / UTR / Cheque Number *
               </label>
               <input
                 type="text"
                 required
                 value={referenceNo}
                 onChange={(e) => setReferenceNo(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono"
+                placeholder="e.g. UTR-504631215 or Cheque #402911"
+                className="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-medium focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
