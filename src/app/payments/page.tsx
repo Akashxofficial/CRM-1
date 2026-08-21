@@ -23,6 +23,7 @@ export default async function PaymentsPage() {
         schedules={schedules}
         ageingReport={ageingReport}
         projects={projects}
+        userName={user.name}
         userRole={user.role}
       />
     </AppLayout>
