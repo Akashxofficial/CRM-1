@@ -17,6 +17,8 @@ export function PrintableDemandLetter({ schedule, booking, isOpen, onClose }: Pr
     window.print();
   };
 
+
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/75 backdrop-blur-sm animate-in fade-in duration-150">
       <div className="relative w-full max-w-4xl bg-white text-slate-900 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">

@@ -20,6 +20,16 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "UrbanGaon — Real Estate CRM (Lead to Possession)",
   description: "Next-generation real estate developer CRM for managing leads, visual unit inventory, bookings, payment milestones, post-sales paperwork and possession.",
+  icons: {
+    icon: [
+      { url: "/urbangaon-icon.png", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
+    shortcut: ["/urbangaon-icon.png"],
+    apple: [
+      { url: "/urbangaon-icon.png" },
+    ],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -35,6 +45,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={titilliumWeb.variable}>
       <head>
+        <link rel="icon" href="/urbangaon-icon.png" sizes="any" />
+        <link rel="shortcut icon" href="/urbangaon-icon.png" />
+        <link rel="apple-touch-icon" href="/urbangaon-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
