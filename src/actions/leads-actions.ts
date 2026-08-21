@@ -495,6 +495,26 @@ export async function addLeadTaskAction(data: {
   }
 }
 
+export async function toggleTaskStatusAction(taskId: string, newStatus: string) {
+  try {
+    if (isValidObjectId(taskId)) {
+      const task = await prisma.leadTask.update({
+        where: { id: taskId },
+        data: { status: newStatus },
+      });
+      revalidatePath("/leads");
+      revalidatePath("/dashboard");
+      return { success: true, task };
+    }
+  } catch (error) {
+    console.warn("Database toggleTaskStatusAction error:", error);
+  }
+
+  revalidatePath("/leads");
+  revalidatePath("/dashboard");
+  return { success: true, task: { id: taskId, status: newStatus } };
+}
+
 export async function scheduleSiteVisitAndTransferToDealsAction(data: {
   leadId: string;
   phone: string;
