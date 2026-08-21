@@ -5,6 +5,11 @@ import { getCurrentUser } from "@/lib/auth";
 import { createAuditLog } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 
+/** MongoDB ObjectId: 24-char hex string */
+function isValidObjectId(id: string) {
+  return /^[a-f0-9]{24}$/i.test(id);
+}
+
 export async function checkAndReleaseExpiredHolds() {
   const now = new Date();
   const expiredUnits = await prisma.unit.findMany({
@@ -48,12 +53,15 @@ export async function getInventoryUnits(filters?: {
   try {
     await checkAndReleaseExpiredHolds();
 
+    const user = await getCurrentUser();
     const where: any = {};
 
     if (filters?.projectId && filters.projectId !== "ALL") {
+      if (!isValidObjectId(filters.projectId)) throw new Error("Invalid projectId");
       where.projectId = filters.projectId;
     }
     if (filters?.towerId && filters.towerId !== "ALL") {
+      if (!isValidObjectId(filters.towerId)) throw new Error("Invalid towerId");
       where.towerId = filters.towerId;
     }
     if (filters?.status && filters.status !== "ALL") {
@@ -68,42 +76,72 @@ export async function getInventoryUnits(filters?: {
       };
     }
 
-    const units = await prisma.unit.findMany({
-      where,
-      include: {
-        tower: true,
-        project: true,
-        heldBy: true,
-        booking: {
-          include: {
-            lead: true,
-            salesAgent: true,
+    // Only query DB if we have a valid org session
+    if (user && isValidObjectId(user.organizationId)) {
+      const units = await prisma.unit.findMany({
+        where,
+        include: {
+          tower: true,
+          project: true,
+          heldBy: true,
+          booking: {
+            include: {
+              lead: true,
+              salesAgent: true,
+            },
           },
-        },
-        leads: {
-          where: {
-            status: {
-              notIn: ["LOST", "BOOKED"],
+          leads: {
+            where: {
+              status: {
+                notIn: ["LOST", "BOOKED"],
+              },
             },
           },
         },
-      },
-      orderBy: [{ floor: "desc" }, { unitNumber: "asc" }],
-    });
+        orderBy: [{ floor: "desc" }, { unitNumber: "asc" }],
+      });
 
-    if (units.length > 0) return units;
+      if (units.length > 0) return units;
+    }
   } catch (error) {
     console.warn("Database getInventoryUnits fallback:", error);
   }
 
-  // Fallback demo units
-  return [
-    { id: "u-101", projectId: "demo-proj-1", towerId: "demo-tower-a", unitNumber: "A-101", floor: 1, type: "2BHK", areaSqft: 1250, carpetAreaSqft: 980, facing: "East", baseRate: 8500, plcCharges: 150000, parkingCharges: 300000, totalCost: 11075000, status: "AVAILABLE", tower: { name: "Tower A (Sapphire)" }, project: { name: "Skyline Heights" } },
-    { id: "u-102", projectId: "demo-proj-1", towerId: "demo-tower-a", unitNumber: "A-102", floor: 1, type: "3BHK", areaSqft: 1650, carpetAreaSqft: 1320, facing: "North", baseRate: 8500, plcCharges: 200000, parkingCharges: 300000, totalCost: 14525000, status: "BOOKED", tower: { name: "Tower A (Sapphire)" }, project: { name: "Skyline Heights" } },
-    { id: "u-201", projectId: "demo-proj-1", towerId: "demo-tower-a", unitNumber: "A-201", floor: 2, type: "2BHK", areaSqft: 1250, carpetAreaSqft: 980, facing: "East", baseRate: 8600, plcCharges: 150000, parkingCharges: 300000, totalCost: 11200000, status: "AVAILABLE", tower: { name: "Tower A (Sapphire)" }, project: { name: "Skyline Heights" } },
-    { id: "u-202", projectId: "demo-proj-1", towerId: "demo-tower-a", unitNumber: "A-202", floor: 2, type: "3BHK", areaSqft: 1650, carpetAreaSqft: 1320, facing: "North", baseRate: 8600, plcCharges: 200000, parkingCharges: 300000, totalCost: 14690000, status: "HELD", tower: { name: "Tower A (Sapphire)" }, project: { name: "Skyline Heights" } },
-    { id: "u-b101", projectId: "demo-proj-1", towerId: "demo-tower-b", unitNumber: "B-101", floor: 1, type: "2BHK", areaSqft: 1200, carpetAreaSqft: 950, facing: "South", baseRate: 8400, plcCharges: 100000, parkingCharges: 300000, totalCost: 10480000, status: "AVAILABLE", tower: { name: "Tower B (Emerald)" }, project: { name: "Skyline Heights" } },
-  ];
+  // Fallback: 50 demo plots named "Plot 1" – "Plot 50"
+  const DEMO_PROJECT = { id: "demo-proj-1", name: "UrbanGaon Township" };
+  const DEMO_TOWER   = { name: "Phase 1" };
+  const STATUSES     = ["AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","HELD","BOOKED","SOLD","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","AVAILABLE","SOLD","AVAILABLE","AVAILABLE","AVAILABLE"];
+  const FACINGS      = ["East","North","West","South","North-East"];
+  const SIZES        = [1200,1350,1500,1800,2000,2200];
+
+  return Array.from({ length: 50 }, (_, i) => {
+    const n        = i + 1;
+    const areaSqft = SIZES[i % SIZES.length];
+    const baseRate = 4500 + (i % 5) * 200;
+    const plc      = (i % 4 === 0) ? 100000 : 0;
+    const parking  = 200000;
+    const total    = areaSqft * baseRate + plc + parking;
+    return {
+      id:              `demo-plot-${n}`,
+      projectId:       DEMO_PROJECT.id,
+      towerId:         "demo-tower-1",
+      unitNumber:      `Plot ${n}`,
+      floor:           1,
+      type:            "PLOT",
+      areaSqft,
+      carpetAreaSqft:  areaSqft,
+      facing:          FACINGS[i % FACINGS.length],
+      baseRate,
+      plcCharges:      plc,
+      parkingCharges:  parking,
+      totalCost:       total,
+      status:          STATUSES[i],
+      tower:           DEMO_TOWER,
+      project:         DEMO_PROJECT,
+      heldBy:          n === 9  ? { name: "Gayatri Sarkar" } : null,
+      booking:         n === 10 ? { id: "bk-demo-1", bookingNumber: "BK-0001", lead: { name: "Aaron Khan" } } : null,
+    };
+  });
 }
 
 export const getUnits = getInventoryUnits;
@@ -286,3 +324,97 @@ export async function bulkImportUnitsCSVAction(projectId: string, towerId: strin
   revalidatePath("/inventory");
   return { success: true, count: createdCount };
 }
+
+export async function generateUnitsBatchAction(
+  projectId: string,
+  towerName: string,
+  units: Array<{
+    unitNumber: string;
+    floor: number;
+    type: string;
+    areaSqft: number;
+    carpetAreaSqft: number;
+    facing: string;
+    baseRate: number;
+    totalCost: number;
+    status?: string;
+  }>
+) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Unauthorized");
+
+  if (isValidObjectId(user.organizationId) && isValidObjectId(projectId)) {
+    try {
+      let tower = await prisma.tower.findFirst({
+        where: { projectId, name: towerName },
+      });
+
+      if (!tower) {
+        tower = await prisma.tower.create({
+          data: {
+            projectId,
+            name: towerName,
+            totalFloors: Math.max(...units.map((u) => u.floor), 1),
+            unitsPerFloor: 4,
+          },
+        });
+      }
+
+      for (const u of units) {
+        await prisma.unit.upsert({
+          where: {
+            id: `gen-${projectId}-${u.unitNumber.replace(/[\s/]+/g, "_")}`,
+          },
+          update: {
+            floor: u.floor,
+            type: u.type,
+            areaSqft: u.areaSqft,
+            carpetAreaSqft: u.carpetAreaSqft,
+            facing: u.facing || "East",
+            baseRate: u.baseRate,
+            plcCharges: 0,
+            parkingCharges: 0,
+            totalCost: u.totalCost,
+            status: u.status || "AVAILABLE",
+          },
+          create: {
+            projectId,
+            towerId: tower.id,
+            unitNumber: u.unitNumber,
+            floor: u.floor,
+            type: u.type,
+            areaSqft: u.areaSqft,
+            carpetAreaSqft: u.carpetAreaSqft,
+            facing: u.facing || "East",
+            baseRate: u.baseRate,
+            plcCharges: 0,
+            parkingCharges: 0,
+            totalCost: u.totalCost,
+            status: u.status || "AVAILABLE",
+          },
+        });
+      }
+
+      const count = await prisma.unit.count({ where: { projectId } });
+      await prisma.project.update({
+        where: { id: projectId },
+        data: { totalUnits: count },
+      });
+
+      await createAuditLog({
+        organizationId: user.organizationId,
+        entityType: "PROJECT",
+        entityId: projectId,
+        action: "BATCH_UNITS_GENERATED",
+        details: `Batch generated ${units.length} units in ${towerName}.`,
+        performedById: user.id,
+      });
+    } catch (e) {
+      console.warn("DB generateUnitsBatchAction error:", e);
+    }
+  }
+
+  revalidatePath("/inventory");
+  return { success: true, count: units.length };
+}
+

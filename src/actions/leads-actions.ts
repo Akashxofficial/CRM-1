@@ -6,6 +6,7 @@ import { createAuditLog } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 import { sendLeadEnquiryEmails } from "@/lib/email-service";
 
+
 export async function getLeads(filters?: {
   projectId?: string;
   status?: string;
@@ -47,6 +48,12 @@ export async function getLeads(filters?: {
   }
 
   try {
+    // Skip DB query if organizationId is not a valid MongoDB ObjectId
+    if (!isValidObjectId(user.id)) {
+      console.warn("Skipping getLeads DB query — invalid userId in session:", user.id);
+      throw new Error("Invalid session");
+    }
+
     const leads = await prisma.lead.findMany({
       where,
       include: {

@@ -81,6 +81,8 @@ export async function getCurrentUser(): Promise<SessionUser> {
     organizationName: DEMO_USERS_MAP.ADMIN.orgName,
   };
 
+  const isValidObjectId = (id: string) => /^[a-f0-9]{24}$/i.test(id);
+
   try {
     const cookieStore = await cookies();
     const token =
@@ -89,7 +91,18 @@ export async function getCurrentUser(): Promise<SessionUser> {
 
     if (token) {
       const user = await verifySessionToken(token);
-      if (user && user.id && user.role) return user;
+      if (user && user.id && user.role) {
+        // Validate MongoDB ObjectIds — clear stale cookies if invalid
+        if (!isValidObjectId(user.id) || !isValidObjectId(user.organizationId)) {
+          console.warn("Stale session detected (invalid ObjectIds) — clearing cookie and using fallback.");
+          try {
+            cookieStore.delete("urbangaon_session");
+            cookieStore.delete("propcrm_session");
+          } catch {}
+          return fallbackUser;
+        }
+        return user;
+      }
     }
 
     return fallbackUser;

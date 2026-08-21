@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Calendar,
   Building2,
+  LayoutGrid,
   ListFilter,
   Users,
   Briefcase,
@@ -57,11 +58,6 @@ export function Sidebar({ user, onCloseMobile }: Props) {
       icon: Building2,
     },
     {
-      name: "Listings",
-      href: "/listings",
-      icon: ListFilter,
-    },
-    {
       name: "Leads",
       href: "/leads",
       icon: Users,
@@ -70,6 +66,11 @@ export function Sidebar({ user, onCloseMobile }: Props) {
       name: "Calls",
       href: "/calls",
       icon: PhoneCall,
+    },
+    {
+      name: "Inventory",
+      href: "/inventory",
+      icon: LayoutGrid,
     },
     {
       name: "Deals",

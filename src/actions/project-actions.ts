@@ -4,34 +4,43 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
+/** MongoDB ObjectId: 24-char hex string */
+function isValidObjectId(id: string) {
+  return /^[a-f0-9]{24}$/i.test(id);
+}
+
 export async function getProjects() {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
-  try {
-    const projects = await prisma.project.findMany({
-      where: { organizationId: user.organizationId },
-      include: {
-        towers: {
-          include: {
-            units: true,
+  if (isValidObjectId(user.organizationId)) {
+    try {
+      const projects = await prisma.project.findMany({
+        where: { organizationId: user.organizationId },
+        include: {
+          towers: {
+            include: {
+              units: true,
+            },
+          },
+          paymentPlanTemplates: true,
+          _count: {
+            select: {
+              units: true,
+              leads: true,
+              bookings: true,
+            },
           },
         },
-        paymentPlanTemplates: true,
-        _count: {
-          select: {
-            units: true,
-            leads: true,
-            bookings: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "asc" },
-    });
+        orderBy: { createdAt: "asc" },
+      });
 
-    if (projects.length > 0) return projects;
-  } catch (error) {
-    console.warn("Database projects fetch skipped:", error);
+      if (projects.length > 0) return projects;
+    } catch (error) {
+      console.warn("Database projects fetch skipped:", error);
+    }
+  } else {
+    console.warn("Skipping DB query — invalid organizationId in session:", user.organizationId);
   }
 
   // Fallback demo projects
