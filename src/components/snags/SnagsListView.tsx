@@ -311,9 +311,18 @@ export function SnagsListView({ initialSnags, userRole = "ADMIN" }: Props) {
                       ? "bg-rose-50 text-rose-700 border-rose-200"
                       : snag.status === "In Progress"
                       ? "bg-amber-50 text-amber-700 border-amber-200"
+                      : snag.status === "Awaiting Material"
+                      ? "bg-orange-50 text-orange-700 border-orange-200"
+                      : snag.status === "Ready for Recheck"
+                      ? "bg-cyan-50 text-cyan-700 border-cyan-200"
                       : snag.status === "Resolved" || snag.status === "Verified"
                       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : snag.status === "Closed"
+                      ? "bg-slate-100 text-slate-700 border-slate-200"
                       : "bg-blue-50 text-blue-700 border-blue-200";
+
+                  const raisedDate = snag.raisedOn ? new Date(snag.raisedOn) : new Date(snag.createdAt);
+                  const agingDays = Math.max(0, Math.floor((Date.now() - raisedDate.getTime()) / (1000 * 60 * 60 * 24)));
 
                   return (
                     <tr
@@ -418,7 +427,7 @@ export function SnagsListView({ initialSnags, userRole = "ADMIN" }: Props) {
                         </div>
                       </td>
 
-                      {/* Target Date */}
+                      {/* Target Date & Aging Days */}
                       <td className="py-3.5 px-4">
                         <div className="text-slate-700 font-semibold">
                           {snag.targetClosureDate
@@ -428,6 +437,9 @@ export function SnagsListView({ initialSnags, userRole = "ADMIN" }: Props) {
                                 year: "numeric",
                               })
                             : "--"}
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">
+                          Age: <span className="font-medium text-slate-600">{agingDays} {agingDays === 1 ? "day" : "days"}</span>
                         </div>
                       </td>
 

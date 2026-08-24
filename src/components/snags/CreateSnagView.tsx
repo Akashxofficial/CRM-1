@@ -382,36 +382,21 @@ export function CreateSnagView({ deals = [], users = [], initialValues, isEditMo
                 </div>
               </div>
 
-              {/* Inspection Type (Indigo for Pre Handover, Teal for Post Handover - Perfectly synced with UrbanGaon CRM) */}
+              {/* Inspection Type (Matching Snag Module Origin styling with Left Indicator) */}
               <div className="grid grid-cols-3 items-center gap-3">
-                <label className="text-slate-600 font-medium text-right pr-2">Inspection Type</label>
+                <label className="text-slate-700 font-semibold text-right pr-2">
+                  Inspection Type
+                </label>
                 <div className="col-span-2 relative flex items-center">
-                  {/* Sync Brand Indicator Dot */}
-                  <div className="absolute left-2.5 z-10 pointer-events-none">
-                    <span
-                      className={`inline-block w-2.5 h-2.5 rounded-full ${
-                        formData.inspectionType === "Pre Handover"
-                          ? "bg-indigo-600 shadow-xs ring-2 ring-indigo-200"
-                          : formData.inspectionType === "Post Handover"
-                          ? "bg-teal-600 shadow-xs ring-2 ring-teal-200"
-                          : "bg-slate-300"
-                      }`}
-                    />
-                  </div>
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500 rounded-l pointer-events-none" />
                   <select
                     value={formData.inspectionType}
                     onChange={(e) => handleFieldChange("inspectionType", e.target.value)}
-                    className={`w-full bg-white border rounded pl-7 pr-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-1 transition ${
-                      formData.inspectionType === "Pre Handover"
-                        ? "text-indigo-800 border-indigo-300 bg-indigo-50/40 focus:border-indigo-500 focus:ring-indigo-500/20"
-                        : formData.inspectionType === "Post Handover"
-                        ? "text-teal-800 border-teal-300 bg-teal-50/40 focus:border-teal-500 focus:ring-teal-500/20"
-                        : "text-slate-800 border-slate-300 focus:border-[#1F69FF] focus:ring-[#1F69FF]/30"
-                    }`}
+                    className="w-full bg-white border border-slate-300 pl-3 pr-3 py-1.5 text-xs font-semibold text-slate-800 rounded focus:outline-none focus:border-[#1F69FF] focus:ring-1 focus:ring-[#1F69FF]/30 border-l-red-500"
                   >
                     <option value="-None-" className="text-slate-800 font-normal">-None-</option>
-                    <option value="Pre Handover" className="text-indigo-700 font-semibold bg-indigo-50">Pre Handover</option>
-                    <option value="Post Handover" className="text-teal-700 font-semibold bg-teal-50">Post Handover</option>
+                    <option value="Pre Handover">Pre Handover</option>
+                    <option value="Post Handover">Post Handover</option>
                   </select>
                 </div>
               </div>
@@ -709,23 +694,25 @@ export function CreateSnagView({ deals = [], users = [], initialValues, isEditMo
                 </div>
               </div>
 
-              {/* Executive Addition: Estimated Repair Cost (₹) */}
-              <div className="grid grid-cols-3 items-center gap-3">
-                <label className="text-slate-600 font-medium text-right pr-2 flex items-center justify-end gap-1">
-                  <span>Est. Repair Cost</span>
-                </label>
-                <div className="col-span-2 relative flex items-center">
-                  <span className="absolute left-3 text-slate-400 text-xs font-semibold">₹</span>
-                  <input
-                    type="number"
-                    min={0}
-                    value={formData.estimatedCost || ""}
-                    onChange={(e) => handleFieldChange("estimatedCost", parseFloat(e.target.value) || 0)}
-                    placeholder="0 (Back-charge tracking)"
-                    className="w-full bg-white border border-slate-300 rounded pl-7 pr-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#1F69FF] focus:ring-1 focus:ring-[#1F69FF]/30"
-                  />
+              {/* Conditional: Estimated Repair Cost (₹) - Only visible when Post Handover */}
+              {formData.inspectionType === "Post Handover" && (
+                <div className="grid grid-cols-3 items-center gap-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <label className="text-slate-600 font-medium text-right pr-2 flex items-center justify-end gap-1">
+                    <span>Est. Repair Cost</span>
+                  </label>
+                  <div className="col-span-2 relative flex items-center">
+                    <span className="absolute left-3 text-slate-400 text-xs font-semibold">₹</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={formData.estimatedCost || ""}
+                      onChange={(e) => handleFieldChange("estimatedCost", parseFloat(e.target.value) || 0)}
+                      placeholder="0 (Post-handover warranty / back-charge)"
+                      className="w-full bg-white border border-slate-300 rounded pl-7 pr-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#1F69FF] focus:ring-1 focus:ring-[#1F69FF]/30"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </section>
@@ -867,24 +854,28 @@ export function CreateSnagView({ deals = [], users = [], initialValues, isEditMo
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-4 text-xs">
             {/* Left Column */}
             <div className="space-y-3.5">
-              {/* Status (with Red/Orange/Green dot indicator) */}
+              {/* Status (with colored dot indicator matching recommended flow) */}
               <div className="grid grid-cols-3 items-center gap-3">
                 <label className="text-slate-600 font-medium text-right pr-2">Status</label>
                 <div className="col-span-2 relative flex items-center">
-                  <div className="absolute left-2.5 z-10">
+                  <div className="absolute left-2.5 z-10 pointer-events-none">
                     <span
                       className={`inline-block w-2.5 h-2.5 rounded-full ${
                         formData.status === "Logged"
-                          ? "bg-red-500 shadow-xs"
+                          ? "bg-rose-500 shadow-xs"
                           : formData.status === "Open"
                           ? "bg-blue-500"
                           : formData.status === "In Progress"
                           ? "bg-amber-500"
-                          : formData.status === "Resolved"
+                          : formData.status === "Awaiting Material"
+                          ? "bg-orange-500"
+                          : formData.status === "Ready for Recheck"
+                          ? "bg-cyan-500"
+                          : formData.status === "Resolved" || formData.status === "Verified"
                           ? "bg-emerald-500"
-                          : formData.status === "Verified"
-                          ? "bg-purple-500"
-                          : "bg-slate-400"
+                          : formData.status === "Closed"
+                          ? "bg-slate-500"
+                          : "bg-purple-500"
                       }`}
                     />
                   </div>
@@ -894,8 +885,10 @@ export function CreateSnagView({ deals = [], users = [], initialValues, isEditMo
                     className="w-full bg-white border border-slate-300 rounded pl-7 pr-3 py-1.5 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#1F69FF] focus:ring-1 focus:ring-[#1F69FF]/30"
                   >
                     <option value="Logged">Logged</option>
-                    <option value="Open">Open</option>
+                    <option value="Open">Assigned / Open</option>
                     <option value="In Progress">In Progress</option>
+                    <option value="Awaiting Material">Awaiting Material</option>
+                    <option value="Ready for Recheck">Ready for Recheck</option>
                     <option value="Resolved">Resolved</option>
                     <option value="Verified">Verified</option>
                     <option value="Closed">Closed</option>

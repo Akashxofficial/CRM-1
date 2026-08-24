@@ -42,7 +42,7 @@ export interface SnagRecord {
   notifyCustomer?: boolean;
 
   // Resolution
-  status: "Logged" | "Open" | "In Progress" | "Resolved" | "Verified" | "Closed" | "Reopened";
+  status: "Logged" | "Open" | "In Progress" | "Awaiting Material" | "Ready for Recheck" | "Resolved" | "Verified" | "Closed" | "Reopened";
   rootCause?: string;
   reopenCount?: number;
   closureRemarks?: string;
