@@ -8,21 +8,25 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-async function getBookingsWithoutPossession(orgId: string) {
-  try {
-    const bookings = await prisma.booking.findMany({
-      where: {
-        organizationId: orgId,
-        possession: null,
-      },
-      include: { lead: true, unit: true },
-    });
-    if (bookings.length > 0) return bookings;
-  } catch (err) {
-    console.warn("getBookingsWithoutPossession fallback:", err);
-  }
+import { getCached } from "@/lib/cache";
 
-  return [];
+async function getBookingsWithoutPossession(orgId: string) {
+  return getCached(`bookings_no_possession_${orgId}`, async () => {
+    try {
+      const bookings = await prisma.booking.findMany({
+        where: {
+          organizationId: orgId,
+          possession: null,
+        },
+        include: { lead: true, unit: true },
+      });
+      if (bookings.length > 0) return bookings;
+    } catch (err) {
+      console.warn("getBookingsWithoutPossession fallback:", err);
+    }
+
+    return [];
+  }, 30_000);
 }
 
 export default async function PossessionPage() {

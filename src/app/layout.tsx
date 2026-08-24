@@ -37,6 +37,9 @@ export const metadata: Metadata = {
   },
 };
 
+import { Suspense } from "react";
+import { TopProgressBar } from "@/components/common/TopProgressBar";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -56,6 +59,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${titilliumWeb.className} antialiased bg-[#F8FAFC] text-slate-900 min-h-screen selection:bg-[#3B8CFF]/20 selection:text-[#1A57BD]`}>
+        <Suspense fallback={null}>
+          <TopProgressBar />
+        </Suspense>
         {children}
       </body>
     </html>

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { createAuditLog } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
+import { getCached, invalidateCache } from "@/lib/cache";
 
 export async function getPossessions(filters?: {
   projectId?: string;
@@ -13,75 +14,79 @@ export async function getPossessions(filters?: {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
-  const where: any = {
-    booking: {
-      organizationId: user.organizationId,
-    },
-  };
+  const cacheKey = `possessions_${user.organizationId}_${JSON.stringify(filters || {})}`;
 
-  if (filters?.projectId && filters.projectId !== "ALL") {
-    where.booking.projectId = filters.projectId;
-  }
-  if (filters?.status && filters.status !== "ALL") {
-    where.status = filters.status;
-  }
-  if (filters?.search) {
-    where.booking = {
-      ...where.booking,
-      OR: [
-        { bookingNumber: { contains: filters.search } },
-        { lead: { name: { contains: filters.search } } },
-        { unit: { unitNumber: { contains: filters.search } } },
-      ],
+  return getCached(cacheKey, async () => {
+    const where: any = {
+      booking: {
+        organizationId: user.organizationId,
+      },
     };
-  }
 
-  try {
-    const possessions = await prisma.possession.findMany({
-      where,
-      include: {
-        booking: {
-          include: {
-            lead: true,
-            unit: { include: { tower: true, project: true } },
-            project: { include: { organization: true } },
-            salesAgent: true,
+    if (filters?.projectId && filters.projectId !== "ALL") {
+      where.booking.projectId = filters.projectId;
+    }
+    if (filters?.status && filters.status !== "ALL") {
+      where.status = filters.status;
+    }
+    if (filters?.search) {
+      where.booking = {
+        ...where.booking,
+        OR: [
+          { bookingNumber: { contains: filters.search } },
+          { lead: { name: { contains: filters.search } } },
+          { unit: { unitNumber: { contains: filters.search } } },
+        ],
+      };
+    }
+
+    try {
+      const possessions = await prisma.possession.findMany({
+        where,
+        include: {
+          booking: {
+            include: {
+              lead: true,
+              unit: { include: { tower: true, project: true } },
+              project: { include: { organization: true } },
+              salesAgent: true,
+            },
+          },
+          snags: {
+            orderBy: { reportedAt: "desc" },
           },
         },
-        snags: {
-          orderBy: { reportedAt: "desc" },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (possessions.length > 0) return possessions;
+    } catch (error) {
+      console.warn("Database getPossessions fallback:", error);
+    }
+
+    // Fallback demo possession
+    return [
+      {
+        id: "demo-poss-1",
+        scheduledDate: new Date("2026-02-15"),
+        actualDate: new Date("2026-02-18"),
+        status: "READY_FOR_HANDOVER",
+        electricityMeterNo: "BESCOM-LT-8891223",
+        waterMeterNo: "BWSSB-WT-441299",
+        gasMeterNo: "GAIL-GAS-110022",
+        booking: {
+          id: "demo-b-1",
+          bookingNumber: "SKH-2026-001",
+          lead: { name: "Dr. Arvind Swamy", phone: "+91 98450 33221" },
+          unit: { unitNumber: "M-201", type: "4BHK", tower: { name: "Tower 1 (Orchid)" } },
+          project: { name: "Skyline Meadows", organization: { name: "Skyline Realty & Infrastructure" } },
         },
+        snags: [
+          { id: "s-1", category: "PAINTING", description: "Minor paint touch-up", location: "Master Bedroom Balcony", status: "RESOLVED" },
+        ],
       },
-      orderBy: { createdAt: "desc" },
-    });
-
-    if (possessions.length > 0) return possessions;
-  } catch (error) {
-    console.warn("Database getPossessions fallback:", error);
-  }
-
-  // Fallback demo possession
-  return [
-    {
-      id: "demo-poss-1",
-      scheduledDate: new Date("2026-02-15"),
-      actualDate: new Date("2026-02-18"),
-      status: "READY_FOR_HANDOVER",
-      electricityMeterNo: "BESCOM-LT-8891223",
-      waterMeterNo: "BWSSB-WT-441299",
-      gasMeterNo: "GAIL-GAS-110022",
-      booking: {
-        id: "demo-b-1",
-        bookingNumber: "SKH-2026-001",
-        lead: { name: "Dr. Arvind Swamy", phone: "+91 98450 33221" },
-        unit: { unitNumber: "M-201", type: "4BHK", tower: { name: "Tower 1 (Orchid)" } },
-        project: { name: "Skyline Meadows", organization: { name: "Skyline Realty & Infrastructure" } },
-      },
-      snags: [
-        { id: "s-1", category: "PAINTING", description: "Minor paint touch-up", location: "Master Bedroom Balcony", status: "RESOLVED" },
-      ],
-    },
-  ];
+    ];
+  }, 20_000);
 }
 
 export async function schedulePossessionAction(data: {

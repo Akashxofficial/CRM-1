@@ -9,19 +9,23 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-async function getOrgUsers(orgId: string) {
-  try {
-    const users = await prisma.user.findMany({ where: { organizationId: orgId } });
-    if (users.length > 0) return users;
-  } catch (err) {
-    console.warn("getOrgUsers fallback:", err);
-  }
+import { getCached } from "@/lib/cache";
 
-  return [
-    { id: "user-admin-1", name: "Yudhister Tiwari", email: "yudhister.tiwari@urbangaon.com", role: "ADMIN" },
-    { id: "user-manager-1", name: "Ananya Sharma (Sales Head)", email: "manager@propcrm.io", role: "SALES_MANAGER" },
-    { id: "user-agent-1", name: "Rahul Verma (Senior Sales Agent)", email: "agent@propcrm.io", role: "SALES_AGENT" },
-  ];
+async function getOrgUsers(orgId: string) {
+  return getCached(`org_users_${orgId}`, async () => {
+    try {
+      const users = await prisma.user.findMany({ where: { organizationId: orgId } });
+      if (users.length > 0) return users;
+    } catch (err) {
+      console.warn("getOrgUsers fallback:", err);
+    }
+
+    return [
+      { id: "user-admin-1", name: "Yudhister Tiwari", email: "yudhister.tiwari@urbangaon.com", role: "ADMIN" },
+      { id: "user-manager-1", name: "Ananya Sharma (Sales Head)", email: "manager@propcrm.io", role: "SALES_MANAGER" },
+      { id: "user-agent-1", name: "Rahul Verma (Senior Sales Agent)", email: "agent@propcrm.io", role: "SALES_AGENT" },
+    ];
+  }, 60_000);
 }
 
 export default async function LeadsPage() {

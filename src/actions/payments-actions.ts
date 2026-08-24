@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { createAuditLog } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
+import { getCached, invalidateCache } from "@/lib/cache";
 
 export async function getPaymentSchedules(filters?: {
   projectId?: string;
@@ -13,11 +14,14 @@ export async function getPaymentSchedules(filters?: {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
-  const where: any = {
-    booking: {
-      organizationId: user.organizationId,
-    },
-  };
+  const cacheKey = `paymentSchedules_${user.organizationId}_${JSON.stringify(filters || {})}`;
+
+  return getCached(cacheKey, async () => {
+    const where: any = {
+      booking: {
+        organizationId: user.organizationId,
+      },
+    };
 
   if (filters?.projectId && filters.projectId !== "ALL") {
     where.booking.projectId = filters.projectId;
@@ -445,6 +449,7 @@ export async function getPaymentSchedules(filters?: {
       transactions: [],
     },
   ];
+  }, 20_000);
 }
 
 export async function recordPaymentAction(data: {
@@ -542,6 +547,9 @@ export async function recordPaymentAction(data: {
       performedById: user.id,
     });
 
+    invalidateCache("paymentSchedules");
+    invalidateCache("dashboard");
+    invalidateCache("bookings");
     revalidatePath("/payments");
     revalidatePath("/bookings");
     return { 
@@ -555,6 +563,9 @@ export async function recordPaymentAction(data: {
     console.warn("recordPaymentAction fallback mode:", error);
     // Fallback response for demo data
     const randomReceipt = `REC-DEMO-${Math.floor(1000 + Math.random() * 9000)}`;
+    invalidateCache("paymentSchedules");
+    invalidateCache("dashboard");
+    invalidateCache("bookings");
     revalidatePath("/payments");
     revalidatePath("/bookings");
     return {

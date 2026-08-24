@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  experimental: {
+    optimizePackageImports: ["lucide-react", "date-fns", "recharts", "@prisma/client"],
+  },
 };
 
 export default nextConfig;
