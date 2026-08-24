@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -31,16 +32,20 @@ interface Props {
 
 export function Sidebar({ user, onCloseMobile }: Props) {
   const pathname = usePathname();
+  const navRef = useRef<HTMLElement | null>(null);
   const roleBadge = ROLE_LABELS[user.role] || ROLE_LABELS.ADMIN;
 
-  const initials = user.organizationName
-    ? user.organizationName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : "UG";
+  // Restore exact scroll position across route changes
+  useEffect(() => {
+    const saved = sessionStorage.getItem("urbangaon_sidebar_scroll");
+    if (saved && navRef.current) {
+      navRef.current.scrollTop = Number(saved);
+    }
+  }, [pathname]);
+
+  const handleScroll = (e: React.UIEvent<HTMLElement>) => {
+    sessionStorage.setItem("urbangaon_sidebar_scroll", e.currentTarget.scrollTop.toString());
+  };
 
   const navItems = [
     {
@@ -113,7 +118,7 @@ export function Sidebar({ user, onCloseMobile }: Props) {
   return (
     <aside className="w-64 h-full bg-white text-slate-700 flex flex-col flex-shrink-0 select-none shadow-sm border-r border-slate-200/90 font-sans">
       {/* Top Header: Organization & Role */}
-      <div className="p-4 sm:p-5 flex items-center justify-between border-b border-slate-100">
+      <div className="p-4 sm:p-5 flex items-center justify-between border-b border-slate-100 flex-shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           {/* Official UrbanGaon Logo Icon */}
           <img
@@ -135,7 +140,7 @@ export function Sidebar({ user, onCloseMobile }: Props) {
         {onCloseMobile && (
           <button
             onClick={onCloseMobile}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg lg:hidden transition"
+            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg lg:hidden transition cursor-pointer"
             aria-label="Close sidebar"
           >
             <X className="w-5 h-5" />
@@ -143,8 +148,12 @@ export function Sidebar({ user, onCloseMobile }: Props) {
         )}
       </div>
 
-      {/* Navigation Items */}
-      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
+      {/* Navigation Items (with stable scroll tracking & scroll={false}) */}
+      <nav
+        ref={navRef}
+        onScroll={handleScroll}
+        className="flex-1 px-3 py-3 space-y-1 overflow-y-auto overscroll-contain"
+      >
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -156,6 +165,7 @@ export function Sidebar({ user, onCloseMobile }: Props) {
               key={item.href}
               href={item.href}
               prefetch={true}
+              scroll={false}
               className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                 isActive
                   ? "bg-[#3B8CFF] text-white shadow-sm shadow-[#3B8CFF]/25 font-semibold"
@@ -170,10 +180,11 @@ export function Sidebar({ user, onCloseMobile }: Props) {
       </nav>
 
       {/* Bottom Profile & Settings */}
-      <div className="p-3.5 border-t border-slate-100 bg-[#F8FAFC] space-y-2">
+      <div className="p-3.5 border-t border-slate-100 bg-[#F8FAFC] space-y-2 flex-shrink-0">
         <Link
           href="/settings"
           prefetch={true}
+          scroll={false}
           className={`flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium transition ${
             pathname === "/settings"
               ? "bg-[#3B8CFF] text-white font-semibold"
@@ -191,7 +202,7 @@ export function Sidebar({ user, onCloseMobile }: Props) {
           <form action={logoutAction}>
             <button
               type="submit"
-              className="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1 transition"
+              className="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1 transition cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Sign out</span>
