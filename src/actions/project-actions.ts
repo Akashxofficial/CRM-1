@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { getCached, invalidateCache } from "@/lib/cache";
 
 /** MongoDB ObjectId: 24-char hex string */
 function isValidObjectId(id: string) {
@@ -13,72 +14,74 @@ export async function getProjects() {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
-  if (isValidObjectId(user.organizationId)) {
-    try {
-      const projects = await prisma.project.findMany({
-        where: { organizationId: user.organizationId },
-        include: {
-          towers: {
-            include: {
-              units: true,
+  return getCached(`projects_${user.organizationId}`, async () => {
+    if (isValidObjectId(user.organizationId)) {
+      try {
+        const projects = await prisma.project.findMany({
+          where: { organizationId: user.organizationId },
+          include: {
+            towers: {
+              include: {
+                units: true,
+              },
+            },
+            paymentPlanTemplates: true,
+            _count: {
+              select: {
+                units: true,
+                leads: true,
+                bookings: true,
+              },
             },
           },
-          paymentPlanTemplates: true,
-          _count: {
-            select: {
-              units: true,
-              leads: true,
-              bookings: true,
-            },
-          },
-        },
-        orderBy: { createdAt: "asc" },
-      });
+          orderBy: { createdAt: "asc" },
+        });
 
-      if (projects.length > 0) return projects;
-    } catch (error) {
-      console.warn("Database projects fetch skipped:", error);
+        if (projects.length > 0) return projects;
+      } catch (error) {
+        console.warn("Database projects fetch skipped:", error);
+      }
+    } else {
+      console.warn("Skipping DB query — invalid organizationId in session:", user.organizationId);
     }
-  } else {
-    console.warn("Skipping DB query — invalid organizationId in session:", user.organizationId);
-  }
 
-  // Fallback demo projects
-  return [
-    {
-      id: "demo-proj-1",
-      name: "Skyline Heights",
-      code: "SKH",
-      location: "Whitefield, Bangalore",
-      city: "Bangalore",
-      reraNumber: "PRM/KA/RERA/1251/446/PR/210312/004000",
-      totalUnits: 24,
-      status: "Under Construction",
-      towers: [
-        { id: "demo-tower-a", name: "Tower A (Sapphire)", totalFloors: 6, units: [] },
-        { id: "demo-tower-b", name: "Tower B (Emerald)", totalFloors: 6, units: [] },
-      ],
-      paymentPlanTemplates: [
-        { id: "demo-plan-clp", name: "Construction Linked Plan (CLP)", isDefault: true },
-      ],
-      _count: { units: 24, leads: 12, bookings: 5 },
-    },
-    {
-      id: "demo-proj-2",
-      name: "Skyline Meadows",
-      code: "SKM",
-      location: "Sarjapur Road, Bangalore",
-      city: "Bangalore",
-      reraNumber: "PRM/KA/RERA/1251/446/PR/220518/004921",
-      totalUnits: 12,
-      status: "Ready to Move",
-      towers: [
-        { id: "demo-tower-1", name: "Tower 1 (Orchid)", totalFloors: 4, units: [] },
-      ],
-      paymentPlanTemplates: [],
-      _count: { units: 12, leads: 4, bookings: 2 },
-    },
-  ];
+    // Fallback demo projects
+    return [
+      {
+        id: "demo-proj-1",
+        name: "Skyline Heights",
+        code: "SKH",
+        location: "Whitefield, Bangalore",
+        city: "Bangalore",
+        reraNumber: "PRM/KA/RERA/1251/446/PR/210312/004000",
+        totalUnits: 24,
+        status: "Under Construction",
+        towers: [
+          { id: "demo-tower-a", name: "Tower A (Sapphire)", totalFloors: 6, units: [] },
+          { id: "demo-tower-b", name: "Tower B (Emerald)", totalFloors: 6, units: [] },
+        ],
+        paymentPlanTemplates: [
+          { id: "demo-plan-clp", name: "Construction Linked Plan (CLP)", isDefault: true },
+        ],
+        _count: { units: 24, leads: 12, bookings: 5 },
+      },
+      {
+        id: "demo-proj-2",
+        name: "Skyline Meadows",
+        code: "SKM",
+        location: "Sarjapur Road, Bangalore",
+        city: "Bangalore",
+        reraNumber: "PRM/KA/RERA/1251/446/PR/220518/004921",
+        totalUnits: 12,
+        status: "Ready to Move",
+        towers: [
+          { id: "demo-tower-1", name: "Tower 1 (Orchid)", totalFloors: 4, units: [] },
+        ],
+        paymentPlanTemplates: [],
+        _count: { units: 12, leads: 4, bookings: 2 },
+      },
+    ];
+  }, 60_000);
 }
 
 export async function createProjectAction(data: {
@@ -133,6 +136,7 @@ export async function createProjectAction(data: {
     },
   });
 
+  invalidateCache("projects");
   revalidatePath("/inventory");
   revalidatePath("/projects");
   return { success: true, project };

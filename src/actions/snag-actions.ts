@@ -36,6 +36,11 @@ export interface SnagRecord {
   raisedOn?: string;
   targetClosureDate?: string;
 
+  // High-Value Real Estate Additions
+  estimatedCost?: number;
+  slaTimeline?: string;
+  notifyCustomer?: boolean;
+
   // Resolution
   status: "Logged" | "Open" | "In Progress" | "Resolved" | "Verified" | "Closed" | "Reopened";
   rootCause?: string;

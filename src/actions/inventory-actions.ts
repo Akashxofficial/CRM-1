@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { createAuditLog } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
+import { getCached, invalidateCache } from "@/lib/cache";
 
 /** MongoDB ObjectId: 24-char hex string */
 function isValidObjectId(id: string) {
@@ -50,11 +51,13 @@ export async function getInventoryUnits(filters?: {
   type?: string;
   search?: string;
 }) {
-  try {
-    await checkAndReleaseExpiredHolds();
+  const user = await getCurrentUser();
+  const cacheKey = `inventory_${user?.organizationId || "org"}_${JSON.stringify(filters || {})}`;
 
-    const user = await getCurrentUser();
-    const where: any = {};
+  return getCached(cacheKey, async () => {
+    try {
+      await checkAndReleaseExpiredHolds();
+      const where: any = {};
 
     if (filters?.projectId && filters.projectId !== "ALL") {
       if (!isValidObjectId(filters.projectId)) throw new Error("Invalid projectId");
@@ -142,6 +145,7 @@ export async function getInventoryUnits(filters?: {
       booking:         n === 10 ? { id: "bk-demo-1", bookingNumber: "BK-0001", lead: { name: "Aaron Khan" } } : null,
     };
   });
+  }, 20_000);
 }
 
 export const getUnits = getInventoryUnits;
@@ -201,6 +205,8 @@ export async function holdUnitAction(unitId: string, leadId?: string, hours: num
     performedById: user.id,
   });
 
+  invalidateCache("inventory");
+  invalidateCache("dashboard");
   revalidatePath("/inventory");
   revalidatePath("/leads");
   return { success: true, unit: updated };

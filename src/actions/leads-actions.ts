@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createAuditLog } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 import { sendLeadEnquiryEmails } from "@/lib/email-service";
-
+import { getCached, invalidateCache } from "@/lib/cache";
 
 export async function getLeads(filters?: {
   projectId?: string;
@@ -17,12 +17,15 @@ export async function getLeads(filters?: {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
-  const where: any = {};
+  const cacheKey = `leads_${user.organizationId}_${user.id}_${JSON.stringify(filters || {})}`;
 
-  // RBAC scope for Sales Agents (only own leads unless admin/manager)
-  if (user.role === "SALES_AGENT") {
-    where.OR = [
-      { assignedToId: user.id },
+  return getCached(cacheKey, async () => {
+    const where: any = {};
+
+    // RBAC scope for Sales Agents (only own leads unless admin/manager)
+    if (user.role === "SALES_AGENT") {
+      where.OR = [
+        { assignedToId: user.id },
       { assignedToId: null },
     ];
   }
@@ -136,6 +139,7 @@ export async function getLeads(filters?: {
       tasks: [],
     },
   ];
+  }, 20_000);
 }
 
 export async function checkDuplicateLead(phone: string, email?: string) {
@@ -303,6 +307,8 @@ export async function createLeadAction(data: {
     assignedAgentName: user.name,
   });
 
+  invalidateCache("leads");
+  invalidateCache("dashboard");
   revalidatePath("/leads");
   revalidatePath("/calls");
   revalidatePath("/dashboard");
@@ -354,6 +360,8 @@ export async function updateLeadStatusAction(
         },
       });
 
+      invalidateCache("leads");
+      invalidateCache("dashboard");
       revalidatePath("/calls");
       revalidatePath("/leads");
       revalidatePath("/dashboard");
@@ -363,6 +371,8 @@ export async function updateLeadStatusAction(
     console.error("Database updateLeadStatus error in MongoDB:", error);
   }
 
+  invalidateCache("leads");
+  invalidateCache("dashboard");
   revalidatePath("/calls");
   revalidatePath("/leads");
   return { success: true, lead: { id: leadId, status: newStatus } };

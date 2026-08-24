@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { createAuditLog } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
+import { getCached, invalidateCache } from "@/lib/cache";
 
 export async function convertLeadToBookingAction(data: {
   leadId: string;
@@ -182,6 +183,9 @@ export async function convertLeadToBookingAction(data: {
     performedById: user.id,
   });
 
+  invalidateCache("bookings");
+  invalidateCache("dashboard");
+  invalidateCache("leads");
   revalidatePath("/bookings");
   revalidatePath("/inventory");
   revalidatePath("/leads");
@@ -196,73 +200,77 @@ export async function getBookings(filters?: {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
-  const where: any = {
-    organizationId: user.organizationId,
-  };
+  const cacheKey = `bookings_${user.organizationId}_${user.id}_${JSON.stringify(filters || {})}`;
 
-  if (user.role === "SALES_AGENT") {
-    where.salesAgentId = user.id;
-  }
+  return getCached(cacheKey, async () => {
+    const where: any = {
+      organizationId: user.organizationId,
+    };
 
-  if (filters?.projectId && filters.projectId !== "ALL") {
-    where.projectId = filters.projectId;
-  }
-  if (filters?.status && filters.status !== "ALL") {
-    where.status = filters.status;
-  }
-  if (filters?.search) {
-    where.OR = [
-      { bookingNumber: { contains: filters.search } },
-      { lead: { name: { contains: filters.search } } },
-      { unit: { unitNumber: { contains: filters.search } } },
-    ];
-  }
+    if (user.role === "SALES_AGENT") {
+      where.salesAgentId = user.id;
+    }
 
-  try {
-    const bookings = await prisma.booking.findMany({
-      where,
-      include: {
-        lead: true,
-        unit: {
-          include: { tower: true, project: true },
+    if (filters?.projectId && filters.projectId !== "ALL") {
+      where.projectId = filters.projectId;
+    }
+    if (filters?.status && filters.status !== "ALL") {
+      where.status = filters.status;
+    }
+    if (filters?.search) {
+      where.OR = [
+        { bookingNumber: { contains: filters.search } },
+        { lead: { name: { contains: filters.search } } },
+        { unit: { unitNumber: { contains: filters.search } } },
+      ];
+    }
+
+    try {
+      const bookings = await prisma.booking.findMany({
+        where,
+        include: {
+          lead: true,
+          unit: {
+            include: { tower: true, project: true },
+          },
+          project: true,
+          salesAgent: true,
+          paymentPlan: true,
+          schedules: {
+            orderBy: { dueDate: "asc" },
+          },
+          transactions: true,
+          documents: true,
+          possession: true,
         },
-        project: true,
-        salesAgent: true,
-        paymentPlan: true,
-        schedules: {
-          orderBy: { dueDate: "asc" },
-        },
-        transactions: true,
-        documents: true,
-        possession: true,
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (bookings.length > 0) return bookings;
+    } catch (error) {
+      console.warn("Database getBookings fallback:", error);
+    }
+
+    // Fallback demo bookings
+    return [
+      {
+        id: "demo-b-1",
+        bookingNumber: "SKH-2026-001",
+        agreementValue: 14525000,
+        bookingAmountReceived: 1000000,
+        status: "CONFIRMED",
+        bookingDate: new Date("2026-01-10"),
+        projectId: "demo-proj-1",
+        project: { name: "Skyline Heights" },
+        lead: { name: "Amitabh Sen", phone: "+91 98450 11223" },
+        unit: { unitNumber: "A-102", type: "3BHK", tower: { name: "Tower A (Sapphire)" } },
+        salesAgent: { name: "Rahul Verma (Senior Sales Agent)" },
+        schedules: [],
+        transactions: [],
+        documents: [],
       },
-      orderBy: { createdAt: "desc" },
-    });
-
-    if (bookings.length > 0) return bookings;
-  } catch (error) {
-    console.warn("Database getBookings fallback:", error);
-  }
-
-  // Fallback demo bookings
-  return [
-    {
-      id: "demo-b-1",
-      bookingNumber: "SKH-2026-001",
-      agreementValue: 14525000,
-      bookingAmountReceived: 1000000,
-      status: "CONFIRMED",
-      bookingDate: new Date("2026-01-10"),
-      projectId: "demo-proj-1",
-      project: { name: "Skyline Heights" },
-      lead: { name: "Amitabh Sen", phone: "+91 98450 11223" },
-      unit: { unitNumber: "A-102", type: "3BHK", tower: { name: "Tower A (Sapphire)" } },
-      salesAgent: { name: "Rahul Verma (Senior Sales Agent)" },
-      schedules: [],
-      transactions: [],
-      documents: [],
-    },
-  ];
+    ];
+  }, 20_000);
 }
 
 export async function getBookingById(bookingId: string) {

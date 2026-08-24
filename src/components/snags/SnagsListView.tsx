@@ -331,13 +331,13 @@ export function SnagsListView({ initialSnags, userRole = "ADMIN" }: Props) {
                             <span
                               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                                 snag.inspectionType === "Pre Handover"
-                                  ? "bg-red-50 text-red-700 border-red-200"
-                                  : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                                  : "bg-teal-50 text-teal-700 border-teal-200"
                               }`}
                             >
                               <span
                                 className={`w-1.5 h-1.5 rounded-full ${
-                                  snag.inspectionType === "Pre Handover" ? "bg-red-500" : "bg-emerald-500"
+                                  snag.inspectionType === "Pre Handover" ? "bg-indigo-500" : "bg-teal-500"
                                 }`}
                               />
                               {snag.inspectionType}

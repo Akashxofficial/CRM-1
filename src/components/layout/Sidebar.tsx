@@ -155,6 +155,7 @@ export function Sidebar({ user, onCloseMobile }: Props) {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={true}
               className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                 isActive
                   ? "bg-[#3B8CFF] text-white shadow-sm shadow-[#3B8CFF]/25 font-semibold"
@@ -172,6 +173,7 @@ export function Sidebar({ user, onCloseMobile }: Props) {
       <div className="p-3.5 border-t border-slate-100 bg-[#F8FAFC] space-y-2">
         <Link
           href="/settings"
+          prefetch={true}
           className={`flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium transition ${
             pathname === "/settings"
               ? "bg-[#3B8CFF] text-white font-semibold"

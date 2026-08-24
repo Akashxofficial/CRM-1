@@ -2,12 +2,15 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { getCached } from "@/lib/cache";
 
 export async function getDashboardData() {
-  try {
-    const user = await getCurrentUser();
-    const orgId = user?.organizationId || "6a82dec61c46f7e67e87b709";
-    const userId = user?.id || "6a83eb552d8dbcfff36d0d7b";
+  const user = await getCurrentUser();
+  const orgId = user?.organizationId || "6a82dec61c46f7e67e87b709";
+  const userId = user?.id || "6a83eb552d8dbcfff36d0d7b";
+
+  return getCached(`dashboard_${orgId}_${userId}`, async () => {
+    try {
 
     // Base counts
     const [
@@ -267,4 +270,5 @@ export async function getDashboardData() {
       userName: "Demo",
     };
   }
+  }, 15_000);
 }
