@@ -16,6 +16,7 @@ import {
   FileSpreadsheet,
   BarChart3,
   Send,
+  ClipboardCheck,
   Settings,
   LogOut,
   X,
@@ -96,6 +97,11 @@ export function Sidebar({ user, onCloseMobile }: Props) {
       name: "Reports",
       href: "/reports",
       icon: BarChart3,
+    },
+    {
+      name: "Snag Module",
+      href: "/snags",
+      icon: ClipboardCheck,
     },
     {
       name: "Outreach",
