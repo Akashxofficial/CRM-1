@@ -165,7 +165,7 @@ export async function getPaymentSchedules(filters?: {
     },
     {
       id: "dem-6",
-      milestoneName: "On Slab / Structure",
+      milestoneName: "On Slab / Structure", 
       milestoneCode: "MS_SLAB",
       percentage: 20,
       dueAmount: 1000000,

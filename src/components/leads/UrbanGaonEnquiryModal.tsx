@@ -29,6 +29,8 @@ interface Props {
   projects?: any[];
   agents?: any[];
   onSuccess?: () => void;
+  formType?: "lead" | "customer";
+  title?: string;
 }
 
 const COMMON_EMAIL_DOMAINS = [
@@ -149,6 +151,8 @@ export function UrbanGaonEnquiryModal({
   projects = [],
   agents = [],
   onSuccess,
+  formType = "lead",
+  title,
 }: Props) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -423,10 +427,12 @@ export function UrbanGaonEnquiryModal({
             />
             <div>
               <h2 className="text-base font-bold text-slate-900 font-heading leading-tight">
-                UrbanGaon Customer Enquiry Form
+                {title || (formType === "customer" ? "UrbanGaon Customer Registration Form" : "UrbanGaon Customer Enquiry Form")}
               </h2>
               <p className="text-xs text-slate-500">
-                Official real estate application with real-time international flag & dial code auto-sync
+                {formType === "customer"
+                  ? "Official customer onboarding form with real-time international flag & dial code auto-sync"
+                  : "Official real estate application with real-time international flag & dial code auto-sync"}
               </p>
             </div>
           </div>
@@ -1289,7 +1295,9 @@ export function UrbanGaonEnquiryModal({
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      <span>Submit Customer Enquiry</span>
+                      <span>
+                        {formType === "customer" ? "Register & Save Customer" : "Submit Customer Enquiry"}
+                      </span>
                     </>
                   )}
                 </button>

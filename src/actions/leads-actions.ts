@@ -309,7 +309,9 @@ export async function createLeadAction(data: {
 
   invalidateCache("leads");
   invalidateCache("dashboard");
+  invalidateCache("customers");
   revalidatePath("/leads");
+  revalidatePath("/customers");
   revalidatePath("/calls");
   revalidatePath("/dashboard");
   return { success: true, lead: finalLead, emailsDispatched: emailRes };

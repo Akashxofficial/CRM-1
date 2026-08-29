@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Plus, Sparkles, Building, Bell, Menu } from "lucide-react";
+import { Search, Plus, UserPlus, Sparkles, Building, Bell, Menu } from "lucide-react";
 import { SessionUser, ROLE_LABELS } from "@/lib/rbac";
 import { RoleSwitcherModal } from "./RoleSwitcherModal";
 import { GlobalSearchModal } from "./GlobalSearchModal";
@@ -17,6 +17,7 @@ export function Navbar({ user, projects, onToggleMobileMenu }: Props) {
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [newLeadModalOpen, setNewLeadModalOpen] = useState(false);
+  const [newCustomerModalOpen, setNewCustomerModalOpen] = useState(false);
   const roleBadge = ROLE_LABELS[user.role] || ROLE_LABELS.ADMIN;
 
   return (
@@ -57,19 +58,32 @@ export function Navbar({ user, projects, onToggleMobileMenu }: Props) {
 
         {/* Right: Quick Actions, Role Badge & Notifications */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Quick Action Button: Opens Official UrbanGaon Customer Enquiry Form */}
+          {/* Quick Action Button: New Customer */}
           <button
+            type="button"
+            onClick={() => setNewCustomerModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl shadow-xs transition cursor-pointer"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">New Customer</span>
+            <span className="sm:hidden">Customer</span>
+          </button>
+
+          {/* Quick Action Button: Opens Official UrbanGaon Lead Enquiry Form */}
+          <button
+            type="button"
             onClick={() => setNewLeadModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold bg-[#3B8CFF] hover:bg-[#2570E8] text-white rounded-xl shadow-sm transition"
+            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 text-xs font-semibold bg-[#3B8CFF] hover:bg-[#2570E8] active:scale-95 text-white rounded-xl shadow-xs transition cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">New Lead</span>
+            <span className="sm:hidden">Lead</span>
           </button>
 
           {/* Role Persona Switcher Pill */}
           <button
             onClick={() => setRoleModalOpen(true)}
-            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 bg-[#F8FAFC] hover:bg-slate-100 transition"
+            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 bg-[#F8FAFC] hover:bg-slate-100 transition cursor-pointer"
           >
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
             <span className="text-xs font-medium text-slate-600 hidden md:inline">
@@ -83,7 +97,7 @@ export function Navbar({ user, projects, onToggleMobileMenu }: Props) {
 
           {/* Notification Icon */}
           <div className="relative">
-            <button className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition">
+            <button className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition cursor-pointer">
               <Bell className="w-4 h-4" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#3B8CFF]" />
             </button>
@@ -105,11 +119,22 @@ export function Navbar({ user, projects, onToggleMobileMenu }: Props) {
         onClose={() => setSearchModalOpen(false)}
       />
 
-      {/* UrbanGaon Customer Enquiry Form Modal */}
+      {/* UrbanGaon Customer Registration Form Modal */}
+      <UrbanGaonEnquiryModal
+        isOpen={newCustomerModalOpen}
+        onClose={() => setNewCustomerModalOpen(false)}
+        projects={projects}
+        formType="customer"
+        title="UrbanGaon Customer Registration Form"
+      />
+
+      {/* UrbanGaon Lead Enquiry Form Modal */}
       <UrbanGaonEnquiryModal
         isOpen={newLeadModalOpen}
         onClose={() => setNewLeadModalOpen(false)}
         projects={projects}
+        formType="lead"
+        title="UrbanGaon Customer Enquiry Form"
       />
     </>
   );

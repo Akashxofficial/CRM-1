@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   ListFilter,
   Users,
+  UserCheck,
   Briefcase,
   PhoneCall,
   CreditCard,
@@ -67,6 +68,11 @@ export function Sidebar({ user, onCloseMobile }: Props) {
       name: "Leads",
       href: "/leads",
       icon: Users,
+    },
+    {
+      name: "Customers",
+      href: "/customers",
+      icon: UserCheck,
     },
     {
       name: "Calls",
