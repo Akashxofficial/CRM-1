@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Users,
   Search,
@@ -49,6 +50,8 @@ const STAGES = [
 ];
 
 export function LeadsView({ initialLeads, projects, users, units, userRole }: Props) {
+  const router = useRouter();
+  const [leads, setLeads] = useState<any[]>(initialLeads);
   const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
   const [selectedStageTab, setSelectedStageTab] = useState<string>("ALL");
   const [selectedProjectId, setSelectedProjectId] = useState("ALL");
@@ -57,7 +60,38 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
   const [searchQuery, setSearchQuery] = useState("");
 
   const [activeLead, setActiveLead] = useState<any | null>(null);
+  const [selectedFormLead, setSelectedFormLead] = useState<any | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  useEffect(() => {
+    setLeads(initialLeads);
+  }, [initialLeads]);
+
+  const openLeadEnquiryForm = (lead: any) => {
+    setActiveLead(null);
+    setSelectedFormLead(lead);
+    setIsAddModalOpen(true);
+  };
+
+  const openNewLeadForm = () => {
+    setActiveLead(null);
+    setSelectedFormLead(null);
+    setIsAddModalOpen(true);
+  };
+
+  const handleLeadSaved = (savedLead: any) => {
+    setLeads((prev) => {
+      const exists = prev.some((l) => l.id === savedLead.id);
+      if (exists) {
+        return prev.map((l) => (l.id === savedLead.id ? { ...l, ...savedLead } : l));
+      }
+      return [savedLead, ...prev];
+    });
+    if (selectedFormLead && savedLead.id === selectedFormLead.id) {
+      setSelectedFormLead(savedLead);
+    }
+    router.refresh();
+  };
 
   // Status badge styling helper strictly calibrated for real estate sales funnel
   const getLeadStatusBadge = (status: string) => {
@@ -151,7 +185,7 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
   };
 
   // Filter leads across all pipeline dimensions
-  const filteredLeads = initialLeads.filter((l) => {
+  const filteredLeads = leads.filter((l) => {
     if (selectedStageTab !== "ALL" && l.status !== selectedStageTab) return false;
     if (selectedProjectId !== "ALL" && l.projectId !== selectedProjectId) return false;
     if (selectedSource !== "ALL" && l.source !== selectedSource) return false;
@@ -168,12 +202,12 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
   });
 
   // Calculate Executive Funnel Metrics
-  const totalLeads = initialLeads.length;
-  const newLeadsCount = initialLeads.filter((l) => l.status === "NEW").length;
-  const hotProspects = initialLeads.filter((l) => ["NEGOTIATION", "SITE_VISIT_DONE"].includes(l.status) || l.priority === "HOT").length;
-  const siteVisits = initialLeads.filter((l) => ["SITE_VISIT_SCHEDULED", "SITE_VISIT_DONE"].includes(l.status)).length;
-  const bookedCount = initialLeads.filter((l) => l.status === "BOOKED").length;
-  const totalPipelineBudget = initialLeads.reduce((acc, curr) => acc + (curr.budgetMax || 0), 0);
+  const totalLeads = leads.length;
+  const newLeadsCount = leads.filter((l) => l.status === "NEW").length;
+  const hotProspects = leads.filter((l) => ["NEGOTIATION", "SITE_VISIT_DONE"].includes(l.status) || l.priority === "HOT").length;
+  const siteVisits = leads.filter((l) => ["SITE_VISIT_SCHEDULED", "SITE_VISIT_DONE"].includes(l.status)).length;
+  const bookedCount = leads.filter((l) => l.status === "BOOKED").length;
+  const totalPipelineBudget = leads.reduce((acc, curr) => acc + (curr.budgetMax || 0), 0);
 
   const exportCSV = () => {
     const headers = ["Lead Name", "Phone", "Email", "Project", "Preference", "Pipeline Stage", "Priority", "Source", "Assigned Agent", "Budget Range"];
@@ -247,7 +281,7 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
           </button>
 
           <button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={openNewLeadForm}
             className="px-4 py-2 text-xs font-bold bg-[#3B8CFF] hover:bg-blue-600 active:scale-95 text-white rounded-xl shadow-sm shadow-[#3B8CFF]/20 flex items-center gap-2 transition cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Capture Lead
@@ -338,7 +372,7 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
         </button>
 
         {STAGES.map((stage) => {
-          const count = initialLeads.filter((l) => l.status === stage.key).length;
+          const count = leads.filter((l) => l.status === stage.key).length;
           const isActive = selectedStageTab === stage.key;
 
           return (
@@ -459,7 +493,7 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
                     return (
                       <tr
                         key={lead.id}
-                        onClick={() => setActiveLead(lead)}
+                        onClick={() => openLeadEnquiryForm(lead)}
                         className="hover:bg-slate-50/80 transition cursor-pointer group"
                       >
                         {/* Lead / Prospect Details */}
@@ -576,9 +610,9 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
                         {/* Actions */}
                         <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                           <button
-                            onClick={() => setActiveLead(lead)}
+                            onClick={() => openLeadEnquiryForm(lead)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
-                            title="Open Lead Cockpit"
+                            title="Open Prefilled Enquiry Form"
                           >
                             <ArrowRight className="w-4 h-4" />
                           </button>
@@ -622,7 +656,7 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
                   {stageLeads.map((lead) => (
                     <div
                       key={lead.id}
-                      onClick={() => setActiveLead(lead)}
+                      onClick={() => openLeadEnquiryForm(lead)}
                       className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs hover:shadow-xs hover:border-[#3B8CFF]/50 transition cursor-pointer group"
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -689,12 +723,27 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
         />
       )}
 
-      {/* UrbanGaon Customer Enquiry Form Modal */}
+      {/* UrbanGaon Customer Enquiry Form Modal (Prefilled & Auto-Synced when a lead is clicked) */}
       <UrbanGaonEnquiryModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setSelectedFormLead(null);
+        }}
         projects={projects}
         agents={users}
+        initialLead={selectedFormLead}
+        onLeadSaved={handleLeadSaved}
+        onOpenPipeline={
+          selectedFormLead
+            ? () => {
+                const target = selectedFormLead;
+                setIsAddModalOpen(false);
+                setSelectedFormLead(null);
+                setActiveLead(target);
+              }
+            : undefined
+        }
       />
     </div>
   );

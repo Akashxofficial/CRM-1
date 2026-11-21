@@ -317,6 +317,120 @@ export async function createLeadAction(data: {
   return { success: true, lead: finalLead, emailsDispatched: emailRes };
 }
 
+export async function updateLeadAction(
+  leadId: string,
+  data: {
+    projectId?: string;
+    name: string;
+    phone: string;
+    email: string;
+    source: string;
+    interestedType?: string;
+    budgetMin?: number;
+    budgetMax?: number;
+    priority?: string;
+    assignedToId?: string;
+    initialNote?: string;
+  }
+) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Unauthorized");
+
+  let updatedLead: any = {
+    id: leadId,
+    name: data.name,
+    phone: data.phone,
+    email: data.email,
+    source: data.source || "Website",
+    interestedType: data.interestedType,
+    budgetMin: data.budgetMin,
+    budgetMax: data.budgetMax,
+    priority: data.priority || "MEDIUM",
+    projectId: data.projectId,
+    assignedToId: data.assignedToId,
+  };
+
+  try {
+    let targetLead: any = null;
+    if (isValidObjectId(leadId)) {
+      targetLead = await prisma.lead.findUnique({ where: { id: leadId } });
+    }
+    if (!targetLead && data.phone) {
+      targetLead = await prisma.lead.findFirst({ where: { phone: data.phone } });
+    }
+    if (!targetLead && data.email) {
+      targetLead = await prisma.lead.findFirst({ where: { email: data.email } });
+    }
+
+    if (targetLead) {
+      let validProjectId: string | undefined = undefined;
+      if (data.projectId && isValidObjectId(data.projectId)) {
+        const proj = await prisma.project.findUnique({ where: { id: data.projectId } });
+        if (proj) validProjectId = proj.id;
+      }
+
+      let validAssignedToId: string | null | undefined = undefined;
+      if (data.assignedToId && isValidObjectId(data.assignedToId)) {
+        const agent = await prisma.user.findUnique({ where: { id: data.assignedToId } });
+        if (agent) validAssignedToId = agent.id;
+      }
+
+      updatedLead = await prisma.lead.update({
+        where: { id: targetLead.id },
+        data: {
+          name: data.name,
+          phone: data.phone,
+          email: data.email,
+          source: data.source || targetLead.source,
+          interestedType: data.interestedType ?? targetLead.interestedType,
+          budgetMin: data.budgetMin ?? targetLead.budgetMin,
+          budgetMax: data.budgetMax ?? targetLead.budgetMax,
+          priority: data.priority ?? targetLead.priority,
+          ...(validProjectId ? { projectId: validProjectId } : {}),
+          ...(validAssignedToId !== undefined ? { assignedToId: validAssignedToId } : {}),
+        },
+        include: {
+          project: true,
+          assignedTo: true,
+          interestedUnit: { include: { tower: true } },
+          activities: { include: { performedBy: true }, orderBy: { createdAt: "desc" } },
+          tasks: { include: { assignedTo: true }, orderBy: { dueDate: "asc" } },
+          booking: { include: { unit: true } },
+        },
+      });
+
+      let validUserId = isValidObjectId(user.id) ? user.id : null;
+      if (validUserId) {
+        const userExists = await prisma.user.findUnique({ where: { id: validUserId } });
+        if (!userExists) validUserId = null;
+      }
+
+      if (data.initialNote) {
+        await prisma.leadActivity.create({
+          data: {
+            leadId: targetLead.id,
+            type: "NOTE",
+            title: "Customer Enquiry Form Updated",
+            notes: data.initialNote,
+            performedById: validUserId,
+          },
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Database updateLeadAction error in MongoDB:", error);
+  }
+
+  invalidateCache("leads");
+  invalidateCache("dashboard");
+  invalidateCache("customers");
+  revalidatePath("/leads");
+  revalidatePath("/customers");
+  revalidatePath("/calls");
+  revalidatePath("/dashboard");
+  return { success: true, lead: updatedLead };
+}
+
 export async function updateLeadStatusAction(
   leadId: string,
   newStatus: string,

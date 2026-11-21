@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
-import { createLeadAction } from "@/actions/leads-actions";
+import { createLeadAction, updateLeadAction } from "@/actions/leads-actions";
 import { generateCustomerWelcomeEmail, generateInternalCompanyNotificationEmail } from "@/lib/email-templates";
 import { ALL_COUNTRIES, findCountry, CountryData } from "@/lib/countries-data";
 import { CountryFlag } from "../common/CountryFlag";
@@ -29,6 +29,9 @@ interface Props {
   projects?: any[];
   agents?: any[];
   onSuccess?: () => void;
+  onLeadSaved?: (lead: any) => void;
+  onOpenPipeline?: () => void;
+  initialLead?: any | null;
   formType?: "lead" | "customer";
   title?: string;
 }
@@ -151,6 +154,9 @@ export function UrbanGaonEnquiryModal({
   projects = [],
   agents = [],
   onSuccess,
+  onLeadSaved,
+  onOpenPipeline,
+  initialLead = null,
   formType = "lead",
   title,
 }: Props) {
@@ -225,6 +231,263 @@ export function UrbanGaonEnquiryModal({
   const [projectId, setProjectId] = useState(defaultProjId);
   const [assignedToId, setAssignedToId] = useState("");
   const [initialNote, setInitialNote] = useState("");
+
+  // Real-time Auto-Sync: Prefill all form fields from initialLead whenever opened or lead data changes
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setError("");
+    setIsSuccess(false);
+    setDispatchedEmails(null);
+    setPreviewEmailTab(null);
+
+    if (!initialLead) {
+      setSalutation("Mr.");
+      setFirstName("");
+      setMiddleName("");
+      setLastName("");
+      setAddress("");
+      setCity("Jaipur");
+      setState("Rajasthan");
+      setCountry("India");
+      setPinCode("302006");
+      setCountryIso("in");
+      setCountryDialCode("+91");
+      setTargetDigitLength(10);
+      setMobile("");
+      setEmail("");
+      setDob("");
+      setMaritalStatus("Single");
+      setChildrenCount("");
+      setResidentialStatus("-None-");
+      setPurposeOfPurchase("End Use");
+      setCustomerProfile("-None-");
+      setIndustryType("-None-");
+      setCompanyName("");
+      setDesignation("-None-");
+      setDepartment("");
+      setAnnualIncome("-None-");
+      setSourceOption("Company website / social media / online search");
+      setChannelPartnerName("");
+      setEmpId("");
+      setReferralDetails("");
+      setOtherSource("");
+      setLivingStatus("Own");
+      setHousingStyle("2/3 BHK");
+      setPurchaseTimeline("1-3 Months");
+      setBudgetRange("₹50 Lakhs-₹1 Crore");
+      setProjectId(projects[0]?.id || "demo-proj-1");
+      setAssignedToId("");
+      setInitialNote("");
+      return;
+    }
+
+    // 1. Parse Salutation, First, Middle, Last Name
+    const rawName = (initialLead.name || "").trim();
+    const salMatch = rawName.match(/^(Mr\.|Ms\.|Mrs\.)\s+/i);
+    if (salMatch) {
+      const normalized = salMatch[1].charAt(0).toUpperCase() + salMatch[1].slice(1).toLowerCase();
+      setSalutation((normalized as "Mr." | "Ms." | "Mrs.") || "Mr.");
+    } else {
+      setSalutation("Mr.");
+    }
+    const cleanName = rawName.replace(/^(Mr\.|Ms\.|Mrs\.)\s+/i, "").trim();
+    const nameParts = cleanName.split(/\s+/).filter(Boolean);
+    if (nameParts.length === 1) {
+      setFirstName(nameParts[0]);
+      setMiddleName("");
+      setLastName("");
+    } else if (nameParts.length === 2) {
+      setFirstName(nameParts[0]);
+      setMiddleName("");
+      setLastName(nameParts[1]);
+    } else if (nameParts.length >= 3) {
+      setFirstName(nameParts[0]);
+      setMiddleName(nameParts.slice(1, -1).join(" "));
+      setLastName(nameParts[nameParts.length - 1]);
+    } else {
+      setFirstName("");
+      setMiddleName("");
+      setLastName("");
+    }
+
+    // 2. Parse Phone & Sync International Country Flag + Dial Code
+    const rawPhone = (initialLead.phone || "").trim();
+    let matchedCountry = ALL_COUNTRIES.find((c) => c.iso === "in");
+    let localDigits = rawPhone.replace(/\D/g, "");
+    if (rawPhone.startsWith("+")) {
+      const sortedByCodeLen = [...ALL_COUNTRIES].sort((a, b) => b.code.length - a.code.length);
+      const found = sortedByCodeLen.find((c) => rawPhone.startsWith(c.code));
+      if (found) {
+        matchedCountry = found;
+        const codeDigits = found.code.replace(/\D/g, "");
+        localDigits = rawPhone.replace(/\D/g, "").slice(codeDigits.length);
+      }
+    } else if (localDigits.length > 10 && localDigits.startsWith("91")) {
+      localDigits = localDigits.slice(2);
+    }
+    if (matchedCountry) {
+      setCountry(matchedCountry.name);
+      setCountryIso(matchedCountry.iso);
+      setCountryDialCode(matchedCountry.code);
+      setTargetDigitLength(matchedCountry.digitLength);
+      setMobile(localDigits.slice(0, matchedCountry.digitLength));
+    } else {
+      setMobile(localDigits.slice(0, 10));
+    }
+
+    // 3. Email
+    setEmail(initialLead.email || "");
+
+    // 4. Budget Range
+    const bMax = Number(initialLead.budgetMax || 0);
+    const bMin = Number(initialLead.budgetMin || 0);
+    if (bMax > 10000000 || bMin >= 10000000) {
+      setBudgetRange(">₹1 Crore");
+    } else if (bMax > 5000000 || bMin >= 5000000) {
+      setBudgetRange("₹50 Lakhs-₹1 Crore");
+    } else if (bMax > 0 || bMin > 0) {
+      setBudgetRange("<₹50 Lakhs");
+    } else {
+      setBudgetRange("₹50 Lakhs-₹1 Crore");
+    }
+
+    // 5. Housing Style
+    const iType = (initialLead.interestedType || "").toLowerCase();
+    if (iType.includes("plot")) {
+      setHousingStyle("Plot");
+    } else if (iType.includes("serviced")) {
+      setHousingStyle("Serviced Apartment");
+    } else {
+      setHousingStyle("2/3 BHK");
+    }
+
+    // 6. Purchase Timeline from Priority
+    const prio = (initialLead.priority || "").toUpperCase();
+    if (prio === "HOT") {
+      setPurchaseTimeline("With in 1 Month");
+    } else if (prio === "HIGH" || prio === "WARM") {
+      setPurchaseTimeline("1-3 Months");
+    } else {
+      setPurchaseTimeline("6-12 Months");
+    }
+
+    // 7. Source of Enquiry Mapping
+    const rawSrc = (initialLead.source || "Website").trim();
+    const srcLower = rawSrc.toLowerCase();
+    setChannelPartnerName("");
+    setEmpId("");
+    setReferralDetails("");
+    setOtherSource("");
+
+    if (srcLower.includes("channel partner")) {
+      setSourceOption("Channel Partner");
+      const parts = rawSrc.split(":");
+      if (parts[1]) setChannelPartnerName(parts.slice(1).join(":").trim());
+    } else if (srcLower.includes("employee referral")) {
+      setSourceOption("Employee Referral");
+      const idMatch = rawSrc.match(/ID:\s*([^)]+)/i);
+      if (idMatch) setEmpId(idMatch[1].trim());
+    } else if (srcLower.includes("referral")) {
+      setSourceOption("Referral from friend/family/ Existing Customer");
+      const parts = rawSrc.split(":");
+      if (parts[1]) setReferralDetails(parts.slice(1).join(":").trim());
+    } else if (srcLower.includes("portal") || srcLower.includes("magic") || srcLower.includes("99acres")) {
+      setSourceOption("Real estate portal (e.g., Magic Bricks, 99acres)");
+    } else if (srcLower.includes("newspaper") || srcLower.includes("magazine")) {
+      setSourceOption("Newspaper/magazine ad");
+    } else if (srcLower.includes("hoarding") || srcLower.includes("billboard")) {
+      setSourceOption("Hoarding/billboard");
+    } else if (srcLower.includes("whatsapp") || srcLower.includes("sms") || srcLower.includes("email")) {
+      setSourceOption("Email/SMS/ Whats app campaign");
+    } else if (srcLower.includes("event") || srcLower.includes("exhibition") || srcLower.includes("walk")) {
+      setSourceOption("Event/Exhibition");
+    } else if (srcLower.startsWith("other")) {
+      setSourceOption("Other");
+      const parts = rawSrc.split(":");
+      if (parts[1]) setOtherSource(parts.slice(1).join(":").trim());
+    } else {
+      setSourceOption("Company website / social media / online search");
+    }
+
+    // 8. Project & Assigned Sales Executive Matching
+    const matchedProj =
+      projects.find((p) => p.id === initialLead.projectId) ||
+      projects.find((p) => p.name?.toLowerCase() === initialLead.project?.name?.toLowerCase());
+    setProjectId(matchedProj?.id || initialLead.projectId || projects[0]?.id || "demo-proj-1");
+
+    const matchedAgent =
+      agents.find((a) => a.id === initialLead.assignedToId) ||
+      agents.find((a) => a.name?.toLowerCase() === initialLead.assignedTo?.name?.toLowerCase());
+    setAssignedToId(matchedAgent?.id || initialLead.assignedToId || "");
+
+    // 9. Restore Extended Form Details from Latest Structured Activity Note (if previously saved)
+    setAddress("");
+    setCity("Jaipur");
+    setState("Rajasthan");
+    setPinCode("302006");
+    setDob("");
+    setMaritalStatus("Single");
+    setChildrenCount("");
+    setResidentialStatus("-None-");
+    setPurposeOfPurchase("End Use");
+    setCustomerProfile("-None-");
+    setIndustryType("-None-");
+    setCompanyName("");
+    setDesignation("-None-");
+    setDepartment("");
+    setAnnualIncome("-None-");
+    setLivingStatus("Own");
+    setInitialNote("");
+
+    const structuredAct = (initialLead.activities || []).find(
+      (a: any) =>
+        typeof a.notes === "string" &&
+        (a.notes.includes("[UrbanGaon Customer Enquiry Form") || a.notes.includes("- Correspondence:"))
+    );
+    if (structuredAct?.notes) {
+      const n: string = structuredAct.notes;
+      const corrMatch = n.match(/- Correspondence:\s*(.*)/);
+      if (corrMatch) {
+        const [addrPart, pinPart] = corrMatch[1].split(" - ");
+        if (pinPart) setPinCode(pinPart.trim());
+        const segs = (addrPart || "").split(",").map((s) => s.trim());
+        if (segs.length >= 4) {
+          setAddress(segs.slice(0, -3).join(", "));
+          setCity(segs[segs.length - 3] || "Jaipur");
+          setState(segs[segs.length - 2] || "Rajasthan");
+        } else if (segs[0]) {
+          setAddress(segs[0]);
+        }
+      }
+      const profMatch = n.match(/- Profile:\s*([^|]+)\|\s*([^@]+)@\s*([^(|]+)(?:\(([^)]*)\))?\s*\|\s*Income:\s*(.*)/);
+      if (profMatch) {
+        if (profMatch[1]?.trim()) setCustomerProfile(profMatch[1].trim());
+        if (profMatch[2]?.trim()) setDesignation(profMatch[2].trim());
+        if (profMatch[3]?.trim()) setCompanyName(profMatch[3].trim());
+        if (profMatch[4]?.trim()) setDepartment(profMatch[4].trim());
+        if (profMatch[5]?.trim() && profMatch[5].trim() !== "N/A") setAnnualIncome(profMatch[5].trim());
+      }
+      const housingMatch = n.match(/Purpose:\s*([^|]+)\|\s*Timeline:\s*([^|]+)/);
+      if (housingMatch) {
+        const purp = housingMatch[1].trim();
+        if (purp === "Investment" || purp === "End Use") setPurposeOfPurchase(purp);
+        const tl = housingMatch[2].trim();
+        if (tl === "With in 1 Month" || tl === "1-3 Months" || tl === "6-12 Months") {
+          setPurchaseTimeline(tl);
+        }
+      }
+      const resMatch = n.match(/- Residential Status:\s*([^|]+)\|\s*Living:\s*([^|]+)\|\s*Marital:\s*([^(]+)(?:\((\d+)\s*children\))?/);
+      if (resMatch) {
+        if (resMatch[1]?.trim()) setResidentialStatus(resMatch[1].trim());
+        const liv = resMatch[2]?.trim();
+        if (liv === "Own" || liv === "Rent") setLivingStatus(liv);
+        const mar = resMatch[3]?.trim();
+        if (mar === "Single" || mar === "Married") setMaritalStatus(mar);
+        if (resMatch[4]) setChildrenCount(resMatch[4]);
+      }
+    }
+  }, [isOpen, initialLead, projects, agents]);
 
   // Real-time Country & Dial Code Auto-Sync Function
   const syncCountryAndDialCode = (countryName: string) => {
@@ -373,13 +636,68 @@ export function UrbanGaonEnquiryModal({
       }
 
       const noteContent = `
-[UrbanGaon Customer Enquiry Form Captured]
+[UrbanGaon Customer Enquiry Form ${initialLead ? "Updated" : "Captured"}]
 - Correspondence: ${address}, ${city}, ${state}, ${country} - ${pinCode}
 - Profile: ${customerProfile} | ${designation} @ ${companyName} (${department}) | Income: ${annualIncome || "N/A"}
 - Housing: Style: ${housingStyle} | Purpose: ${purposeOfPurchase} | Timeline: ${purchaseTimeline} | Budget: ${budgetRange}
 - Residential Status: ${residentialStatus} | Living: ${livingStatus} | Marital: ${maritalStatus} (${childrenCount ? childrenCount + " children" : "0 children"})
-- Notes: ${initialNote || "Enquiry submitted via official customer form."}
+- Notes: ${initialNote || (initialLead ? "Lead enquiry profile updated and synced." : "Enquiry submitted via official customer form.")}
       `.trim();
+
+      const resolvedProject = projects.find((p) => p.id === (projectId || defaultProjId));
+      const resolvedAgent = agents.find((a) => a.id === assignedToId);
+
+      if (initialLead) {
+        const res = await updateLeadAction(initialLead.id, {
+          projectId: projectId || defaultProjId,
+          name: fullName,
+          phone: `${countryDialCode} ${cleanMobile}`,
+          email: email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@customer.in`,
+          source: sourceLabel,
+          interestedType: housingStyle,
+          budgetMin: bMin,
+          budgetMax: bMax,
+          priority: purchaseTimeline === "With in 1 Month" ? "HOT" : "MEDIUM",
+          assignedToId: assignedToId || undefined,
+          initialNote: noteContent,
+        });
+
+        if (res.success) {
+          const syncedLead = {
+            ...initialLead,
+            ...res.lead,
+            name: fullName,
+            phone: `${countryDialCode} ${cleanMobile}`,
+            email: email || initialLead.email,
+            source: sourceLabel,
+            interestedType: housingStyle,
+            budgetMin: bMin,
+            budgetMax: bMax,
+            priority: purchaseTimeline === "With in 1 Month" ? "HOT" : "MEDIUM",
+            projectId: projectId || initialLead.projectId,
+            project: resolvedProject || initialLead.project,
+            assignedToId: assignedToId || initialLead.assignedToId,
+            assignedTo: resolvedAgent || initialLead.assignedTo,
+            activities: [
+              {
+                id: `act-${Date.now()}`,
+                type: "NOTE",
+                title: "Customer Enquiry Form Updated",
+                notes: noteContent,
+                createdAt: new Date().toISOString(),
+              },
+              ...(initialLead.activities || []),
+            ],
+          };
+          setIsSuccess(true);
+          setDispatchedEmails(null);
+          if (onLeadSaved) onLeadSaved(syncedLead);
+          if (onSuccess) onSuccess();
+        } else {
+          setError("Failed to update lead. Please check your inputs.");
+        }
+        return;
+      }
 
       const res = await createLeadAction({
         projectId: projectId || defaultProjId,
@@ -404,6 +722,7 @@ export function UrbanGaonEnquiryModal({
           companySubject: companyPreview.subject,
         });
 
+        if (onLeadSaved && res.lead) onLeadSaved(res.lead);
         if (onSuccess) onSuccess();
       } else {
         setError("Failed to create lead. Please check your inputs.");
@@ -426,11 +745,21 @@ export function UrbanGaonEnquiryModal({
               className="w-10 h-10 rounded-full object-contain shadow-xs flex-shrink-0"
             />
             <div>
-              <h2 className="text-base font-bold text-slate-900 font-heading leading-tight">
-                {title || (formType === "customer" ? "UrbanGaon Customer Registration Form" : "UrbanGaon Customer Enquiry Form")}
-              </h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base font-bold text-slate-900 font-heading leading-tight">
+                  {title || (formType === "customer" ? "UrbanGaon Customer Registration Form" : "UrbanGaon Customer Enquiry Form")}
+                </h2>
+                {initialLead && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Auto-Synced • {initialLead.name}
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-500">
-                {formType === "customer"
+                {initialLead
+                  ? `Real-time prefilled lead enquiry form (${initialLead.project?.name || "UrbanGaon One"} • ${initialLead.status || "NEW"})`
+                  : formType === "customer"
                   ? "Official customer onboarding form with real-time international flag & dial code auto-sync"
                   : "Official real estate application with real-time international flag & dial code auto-sync"}
               </p>
@@ -438,6 +767,16 @@ export function UrbanGaonEnquiryModal({
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-center">
+            {initialLead && onOpenPipeline && (
+              <button
+                type="button"
+                onClick={onOpenPipeline}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#3B8CFF]" />
+                <span>Pipeline & Timeline</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setPreviewEmailTab(previewEmailTab ? null : "customer")}
@@ -565,6 +904,22 @@ export function UrbanGaonEnquiryModal({
               <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
                 <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
                 <span>{error}</span>
+              </div>
+            )}
+
+            {isSuccess && !dispatchedEmails && initialLead && (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between gap-3 animate-in fade-in">
+                <div className="flex items-center gap-2 font-bold text-sm text-emerald-700">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                  <span>Lead Enquiry Profile Updated & Synced in Real Time!</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer"
+                >
+                  Done
+                </button>
               </div>
             )}
 
@@ -1273,7 +1628,9 @@ export function UrbanGaonEnquiryModal({
             {/* Actions Button */}
             <div className="pt-2 flex items-center justify-between">
               <span className="text-[11px] text-slate-400">
-                ⚡ Automatically sends customer welcome email + internal company notification on submit.
+                {initialLead
+                  ? "⚡ Changes save directly to the CRM database and sync in real time across Leads & Pipeline."
+                  : "⚡ Automatically sends customer welcome email + internal company notification on submit."}
               </span>
 
               <div className="flex items-center gap-3">
@@ -1296,7 +1653,11 @@ export function UrbanGaonEnquiryModal({
                     <>
                       <Send className="w-4 h-4" />
                       <span>
-                        {formType === "customer" ? "Register & Save Customer" : "Submit Customer Enquiry"}
+                        {initialLead
+                          ? "Save & Sync Lead Profile"
+                          : formType === "customer"
+                          ? "Register & Save Customer"
+                          : "Submit Customer Enquiry"}
                       </span>
                     </>
                   )}
