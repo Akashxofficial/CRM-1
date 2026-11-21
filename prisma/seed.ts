@@ -217,7 +217,7 @@ async function main() {
     { towerId: towerB.id, projectId: project1.id, unitNumber: "B-202", floor: 2, type: "3BHK", areaSqft: 1600, carpetAreaSqft: 1280, facing: "West", baseRate: 8500, plcCharges: 100000, parkingCharges: 300000, status: "AVAILABLE" },
     { towerId: towerB.id, projectId: project1.id, unitNumber: "B-301", floor: 3, type: "2BHK", areaSqft: 1200, carpetAreaSqft: 950, facing: "South", baseRate: 8600, plcCharges: 100000, parkingCharges: 300000, status: "HELD" },
     { towerId: towerB.id, projectId: project1.id, unitNumber: "B-302", floor: 3, type: "3BHK", areaSqft: 1600, carpetAreaSqft: 1280, facing: "West", baseRate: 8600, plcCharges: 100000, parkingCharges: 300000, status: "AVAILABLE" },
-    
+
     // Tower Meadows (Project 2)
     { towerId: towerM.id, projectId: project2.id, unitNumber: "M-101", floor: 1, type: "3BHK", areaSqft: 1850, carpetAreaSqft: 1480, facing: "East", baseRate: 9200, plcCharges: 250000, parkingCharges: 400000, status: "SOLD" },
     { towerId: towerM.id, projectId: project2.id, unitNumber: "M-102", floor: 1, type: "3BHK", areaSqft: 1850, carpetAreaSqft: 1480, facing: "North", baseRate: 9200, plcCharges: 250000, parkingCharges: 400000, status: "AVAILABLE" },
@@ -269,7 +269,7 @@ async function main() {
       unitNumber: "A-102",
     },
     {
-      name: "Deepika Padukone",
+      name: "Deepika",
       phone: "+91 98450 44556",
       email: "deepika.p@creative.in",
       source: "Referral",
@@ -521,7 +521,7 @@ async function main() {
       status: "CONFIRMED",
     },
     {
-      leadName: "Deepika Padukone",
+      leadName: "Deepika",
       unitNumber: "A-301",
       bookingNumber: "SKH-2026-002",
       agreementValue: 11325000,

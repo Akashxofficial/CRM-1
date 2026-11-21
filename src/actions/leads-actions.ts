@@ -26,119 +26,119 @@ export async function getLeads(filters?: {
     if (user.role === "SALES_AGENT") {
       where.OR = [
         { assignedToId: user.id },
-      { assignedToId: null },
-    ];
-  }
-
-  if (filters?.projectId && filters.projectId !== "ALL") {
-    where.projectId = filters.projectId;
-  }
-  if (filters?.status && filters.status !== "ALL") {
-    where.status = filters.status;
-  }
-  if (filters?.source && filters.source !== "ALL") {
-    where.source = filters.source;
-  }
-  if (filters?.assignedToId && filters.assignedToId !== "ALL") {
-    where.assignedToId = filters.assignedToId;
-  }
-  if (filters?.search) {
-    where.OR = [
-      { name: { contains: filters.search } },
-      { phone: { contains: filters.search } },
-      { email: { contains: filters.search } },
-    ];
-  }
-
-  try {
-    // Skip DB query if organizationId is not a valid MongoDB ObjectId
-    if (!isValidObjectId(user.id)) {
-      console.warn("Skipping getLeads DB query — invalid userId in session:", user.id);
-      throw new Error("Invalid session");
+        { assignedToId: null },
+      ];
     }
 
-    const leads = await prisma.lead.findMany({
-      where,
-      include: {
-        project: true,
-        assignedTo: true,
-        interestedUnit: {
-          include: { tower: true },
+    if (filters?.projectId && filters.projectId !== "ALL") {
+      where.projectId = filters.projectId;
+    }
+    if (filters?.status && filters.status !== "ALL") {
+      where.status = filters.status;
+    }
+    if (filters?.source && filters.source !== "ALL") {
+      where.source = filters.source;
+    }
+    if (filters?.assignedToId && filters.assignedToId !== "ALL") {
+      where.assignedToId = filters.assignedToId;
+    }
+    if (filters?.search) {
+      where.OR = [
+        { name: { contains: filters.search } },
+        { phone: { contains: filters.search } },
+        { email: { contains: filters.search } },
+      ];
+    }
+
+    try {
+      // Skip DB query if organizationId is not a valid MongoDB ObjectId
+      if (!isValidObjectId(user.id)) {
+        console.warn("Skipping getLeads DB query — invalid userId in session:", user.id);
+        throw new Error("Invalid session");
+      }
+
+      const leads = await prisma.lead.findMany({
+        where,
+        include: {
+          project: true,
+          assignedTo: true,
+          interestedUnit: {
+            include: { tower: true },
+          },
+          activities: {
+            include: { performedBy: true },
+            orderBy: { createdAt: "desc" },
+          },
+          tasks: {
+            include: { assignedTo: true },
+            orderBy: { dueDate: "asc" },
+          },
+          booking: {
+            include: { unit: true },
+          },
         },
-        activities: {
-          include: { performedBy: true },
-          orderBy: { createdAt: "desc" },
-        },
-        tasks: {
-          include: { assignedTo: true },
-          orderBy: { dueDate: "asc" },
-        },
-        booking: {
-          include: { unit: true },
-        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (leads.length > 0) return leads;
+    } catch (error) {
+      console.warn("Database getLeads fallback:", error);
+    }
+
+    // Fallback demo leads
+    return [
+      {
+        id: "l-1",
+        name: "Amitabh Sen",
+        phone: "+91 98450 11223",
+        email: "amitabh.sen@techcorp.com",
+        source: "Website",
+        status: "BOOKED",
+        interestedType: "3BHK",
+        budgetMin: 13000000,
+        budgetMax: 16000000,
+        priority: "HOT",
+        projectId: "demo-proj-1",
+        project: { name: "UrbanGaon One" },
+        assignedTo: { name: "Rahul Verma (Senior Sales Agent)" },
+        activities: [],
+        tasks: [],
       },
-      orderBy: { createdAt: "desc" },
-    });
-
-    if (leads.length > 0) return leads;
-  } catch (error) {
-    console.warn("Database getLeads fallback:", error);
-  }
-
-  // Fallback demo leads
-  return [
-    {
-      id: "l-1",
-      name: "Amitabh Sen",
-      phone: "+91 98450 11223",
-      email: "amitabh.sen@techcorp.com",
-      source: "Website",
-      status: "BOOKED",
-      interestedType: "3BHK",
-      budgetMin: 13000000,
-      budgetMax: 16000000,
-      priority: "HOT",
-      projectId: "demo-proj-1",
-      project: { name: "UrbanGaon One" },
-      assignedTo: { name: "Rahul Verma (Senior Sales Agent)" },
-      activities: [],
-      tasks: [],
-    },
-    {
-      id: "l-2",
-      name: "Siddharth Rao",
-      phone: "+91 97312 88441",
-      email: "siddharth.rao@fintech.io",
-      source: "Google Ads",
-      status: "NEGOTIATION",
-      interestedType: "3BHK",
-      budgetMin: 14000000,
-      budgetMax: 16000000,
-      priority: "HOT",
-      projectId: "demo-proj-1",
-      project: { name: "UrbanGaon One" },
-      assignedTo: { name: "Rahul Verma (Senior Sales Agent)" },
-      activities: [],
-      tasks: [],
-    },
-    {
-      id: "l-3",
-      name: "Deepika Padukone",
-      phone: "+91 98450 44556",
-      email: "deepika.p@creative.in",
-      source: "Referral",
-      status: "BOOKED",
-      interestedType: "2BHK",
-      budgetMin: 10000000,
-      budgetMax: 12000000,
-      priority: "HIGH",
-      projectId: "demo-proj-1",
-      project: { name: "UrbanGaon One" },
-      assignedTo: { name: "Rahul Verma (Senior Sales Agent)" },
-      activities: [],
-      tasks: [],
-    },
-  ];
+      {
+        id: "l-2",
+        name: "Siddharth Rao",
+        phone: "+91 97312 88441",
+        email: "siddharth.rao@fintech.io",
+        source: "Google Ads",
+        status: "NEGOTIATION",
+        interestedType: "3BHK",
+        budgetMin: 14000000,
+        budgetMax: 16000000,
+        priority: "HOT",
+        projectId: "demo-proj-1",
+        project: { name: "UrbanGaon One" },
+        assignedTo: { name: "Rahul Verma (Senior Sales Agent)" },
+        activities: [],
+        tasks: [],
+      },
+      {
+        id: "l-3",
+        name: "Deepika ",
+        phone: "+91 98450 44556",
+        email: "deepika.p@creative.in",
+        source: "Referral",
+        status: "BOOKED",
+        interestedType: "2BHK",
+        budgetMin: 10000000,
+        budgetMax: 12000000,
+        priority: "HIGH",
+        projectId: "demo-proj-1",
+        project: { name: "UrbanGaon One" },
+        assignedTo: { name: "Rahul Verma (Senior Sales Agent)" },
+        activities: [],
+        tasks: [],
+      },
+    ];
   }, 20_000);
 }
 
