@@ -169,7 +169,10 @@ export function UrbanGaonEnquiryModal({
     (userRole || "").toUpperCase()
   );
   const [isSuperAdminUnlocked, setIsSuperAdminUnlocked] = useState(false);
-  const isFrozen = Boolean(initialLead) && !isSuperAdminUnlocked;
+  const [lockedFields, setLockedFields] = useState<Set<string>>(new Set());
+  const isFieldLocked = (fieldKey: string) =>
+    Boolean(initialLead) && !isSuperAdminUnlocked && lockedFields.has(fieldKey);
+  const hasLockedFields = Boolean(initialLead) && !isSuperAdminUnlocked && lockedFields.size > 0;
 
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -254,6 +257,7 @@ export function UrbanGaonEnquiryModal({
     setPreviewEmailTab(null);
 
     if (!initialLead) {
+      setLockedFields(new Set());
       setSalutation("Mr.");
       setFirstName("");
       setMiddleName("");
@@ -294,12 +298,16 @@ export function UrbanGaonEnquiryModal({
       return;
     }
 
+    // Track which specific fields already have lead-filled data (only these freeze; empty fields remain editable by Sales Team)
+    const locked = new Set<string>();
+
     // 1. Parse Salutation, First, Middle, Last Name
     const rawName = (initialLead.name || "").trim();
     const salMatch = rawName.match(/^(Mr\.|Ms\.|Mrs\.)\s+/i);
     if (salMatch) {
       const normalized = salMatch[1].charAt(0).toUpperCase() + salMatch[1].slice(1).toLowerCase();
       setSalutation((normalized as "Mr." | "Ms." | "Mrs.") || "Mr.");
+      locked.add("salutation");
     } else {
       setSalutation("Mr.");
     }
@@ -309,14 +317,20 @@ export function UrbanGaonEnquiryModal({
       setFirstName(nameParts[0]);
       setMiddleName("");
       setLastName("");
+      locked.add("firstName");
     } else if (nameParts.length === 2) {
       setFirstName(nameParts[0]);
       setMiddleName("");
       setLastName(nameParts[1]);
+      locked.add("firstName");
+      locked.add("lastName");
     } else if (nameParts.length >= 3) {
       setFirstName(nameParts[0]);
       setMiddleName(nameParts.slice(1, -1).join(" "));
       setLastName(nameParts[nameParts.length - 1]);
+      locked.add("firstName");
+      locked.add("middleName");
+      locked.add("lastName");
     } else {
       setFirstName("");
       setMiddleName("");
@@ -347,19 +361,29 @@ export function UrbanGaonEnquiryModal({
     } else {
       setMobile(localDigits.slice(0, 10));
     }
+    if (localDigits.length > 0) {
+      locked.add("mobile");
+      locked.add("country");
+    }
 
     // 3. Email
     setEmail(initialLead.email || "");
+    if ((initialLead.email || "").trim()) {
+      locked.add("email");
+    }
 
     // 4. Budget Range
     const bMax = Number(initialLead.budgetMax || 0);
     const bMin = Number(initialLead.budgetMin || 0);
     if (bMax > 10000000 || bMin >= 10000000) {
       setBudgetRange(">₹1 Crore");
+      locked.add("budgetRange");
     } else if (bMax > 5000000 || bMin >= 5000000) {
       setBudgetRange("₹50 Lakhs-₹1 Crore");
+      locked.add("budgetRange");
     } else if (bMax > 0 || bMin > 0) {
       setBudgetRange("<₹50 Lakhs");
+      locked.add("budgetRange");
     } else {
       setBudgetRange("₹50 Lakhs-₹1 Crore");
     }
@@ -368,8 +392,13 @@ export function UrbanGaonEnquiryModal({
     const iType = (initialLead.interestedType || "").toLowerCase();
     if (iType.includes("plot")) {
       setHousingStyle("Plot");
+      locked.add("housingStyle");
     } else if (iType.includes("serviced")) {
       setHousingStyle("Serviced Apartment");
+      locked.add("housingStyle");
+    } else if (iType.trim()) {
+      setHousingStyle("2/3 BHK");
+      locked.add("housingStyle");
     } else {
       setHousingStyle("2/3 BHK");
     }
@@ -378,46 +407,68 @@ export function UrbanGaonEnquiryModal({
     const prio = (initialLead.priority || "").toUpperCase();
     if (prio === "HOT") {
       setPurchaseTimeline("With in 1 Month");
+      locked.add("purchaseTimeline");
     } else if (prio === "HIGH" || prio === "WARM") {
       setPurchaseTimeline("1-3 Months");
-    } else {
+      locked.add("purchaseTimeline");
+    } else if (prio) {
       setPurchaseTimeline("6-12 Months");
+      locked.add("purchaseTimeline");
+    } else {
+      setPurchaseTimeline("1-3 Months");
     }
 
     // 7. Source of Enquiry Mapping
-    const rawSrc = (initialLead.source || "Website").trim();
+    const rawSrc = (initialLead.source || "").trim();
     const srcLower = rawSrc.toLowerCase();
     setChannelPartnerName("");
     setEmpId("");
     setReferralDetails("");
     setOtherSource("");
 
-    if (srcLower.includes("channel partner")) {
-      setSourceOption("Channel Partner");
-      const parts = rawSrc.split(":");
-      if (parts[1]) setChannelPartnerName(parts.slice(1).join(":").trim());
-    } else if (srcLower.includes("employee referral")) {
-      setSourceOption("Employee Referral");
-      const idMatch = rawSrc.match(/ID:\s*([^)]+)/i);
-      if (idMatch) setEmpId(idMatch[1].trim());
-    } else if (srcLower.includes("referral")) {
-      setSourceOption("Referral from friend/family/ Existing Customer");
-      const parts = rawSrc.split(":");
-      if (parts[1]) setReferralDetails(parts.slice(1).join(":").trim());
-    } else if (srcLower.includes("portal") || srcLower.includes("magic") || srcLower.includes("99acres")) {
-      setSourceOption("Real estate portal (e.g., Magic Bricks, 99acres)");
-    } else if (srcLower.includes("newspaper") || srcLower.includes("magazine")) {
-      setSourceOption("Newspaper/magazine ad");
-    } else if (srcLower.includes("hoarding") || srcLower.includes("billboard")) {
-      setSourceOption("Hoarding/billboard");
-    } else if (srcLower.includes("whatsapp") || srcLower.includes("sms") || srcLower.includes("email")) {
-      setSourceOption("Email/SMS/ Whats app campaign");
-    } else if (srcLower.includes("event") || srcLower.includes("exhibition") || srcLower.includes("walk")) {
-      setSourceOption("Event/Exhibition");
-    } else if (srcLower.startsWith("other")) {
-      setSourceOption("Other");
-      const parts = rawSrc.split(":");
-      if (parts[1]) setOtherSource(parts.slice(1).join(":").trim());
+    if (rawSrc) {
+      locked.add("sourceOption");
+      if (srcLower.includes("channel partner")) {
+        setSourceOption("Channel Partner");
+        const parts = rawSrc.split(":");
+        if (parts[1]?.trim()) {
+          setChannelPartnerName(parts.slice(1).join(":").trim());
+          locked.add("channelPartnerName");
+        }
+      } else if (srcLower.includes("employee referral")) {
+        setSourceOption("Employee Referral");
+        const idMatch = rawSrc.match(/ID:\s*([^)]+)/i);
+        if (idMatch?.[1]?.trim()) {
+          setEmpId(idMatch[1].trim());
+          locked.add("empId");
+        }
+      } else if (srcLower.includes("referral")) {
+        setSourceOption("Referral from friend/family/ Existing Customer");
+        const parts = rawSrc.split(":");
+        if (parts[1]?.trim()) {
+          setReferralDetails(parts.slice(1).join(":").trim());
+          locked.add("referralDetails");
+        }
+      } else if (srcLower.includes("portal") || srcLower.includes("magic") || srcLower.includes("99acres")) {
+        setSourceOption("Real estate portal (e.g., Magic Bricks, 99acres)");
+      } else if (srcLower.includes("newspaper") || srcLower.includes("magazine")) {
+        setSourceOption("Newspaper/magazine ad");
+      } else if (srcLower.includes("hoarding") || srcLower.includes("billboard")) {
+        setSourceOption("Hoarding/billboard");
+      } else if (srcLower.includes("whatsapp") || srcLower.includes("sms") || srcLower.includes("email")) {
+        setSourceOption("Email/SMS/ Whats app campaign");
+      } else if (srcLower.includes("event") || srcLower.includes("exhibition") || srcLower.includes("walk")) {
+        setSourceOption("Event/Exhibition");
+      } else if (srcLower.startsWith("other")) {
+        setSourceOption("Other");
+        const parts = rawSrc.split(":");
+        if (parts[1]?.trim()) {
+          setOtherSource(parts.slice(1).join(":").trim());
+          locked.add("otherSource");
+        }
+      } else {
+        setSourceOption("Company website / social media / online search");
+      }
     } else {
       setSourceOption("Company website / social media / online search");
     }
@@ -427,13 +478,19 @@ export function UrbanGaonEnquiryModal({
       projects.find((p) => p.id === initialLead.projectId) ||
       projects.find((p) => p.name?.toLowerCase() === initialLead.project?.name?.toLowerCase());
     setProjectId(matchedProj?.id || initialLead.projectId || projects[0]?.id || "demo-proj-1");
+    if (matchedProj?.id || initialLead.projectId || initialLead.project?.name) {
+      locked.add("projectId");
+    }
 
     const matchedAgent =
       agents.find((a) => a.id === initialLead.assignedToId) ||
       agents.find((a) => a.name?.toLowerCase() === initialLead.assignedTo?.name?.toLowerCase());
     setAssignedToId(matchedAgent?.id || initialLead.assignedToId || "");
+    if (matchedAgent?.id || initialLead.assignedToId || initialLead.assignedTo?.name) {
+      locked.add("assignedToId");
+    }
 
-    // 9. Restore Extended Form Details from Latest Structured Activity Note (if previously saved)
+    // 9. Restore Extended Form Details from Latest Structured Activity Note (only freeze fields that were actually filled)
     setAddress("");
     setCity("Jaipur");
     setState("Rajasthan");
@@ -462,48 +519,103 @@ export function UrbanGaonEnquiryModal({
       const corrMatch = n.match(/- Correspondence:\s*(.*)/);
       if (corrMatch) {
         const [addrPart, pinPart] = corrMatch[1].split(" - ");
-        if (pinPart) setPinCode(pinPart.trim());
+        if (pinPart?.trim()) {
+          setPinCode(pinPart.trim());
+          locked.add("pinCode");
+        }
         const segs = (addrPart || "").split(",").map((s) => s.trim());
         if (segs.length >= 4) {
-          setAddress(segs.slice(0, -3).join(", "));
-          setCity(segs[segs.length - 3] || "Jaipur");
-          setState(segs[segs.length - 2] || "Rajasthan");
+          const parsedAddr = segs.slice(0, -3).join(", ").trim();
+          const parsedCity = segs[segs.length - 3]?.trim();
+          const parsedState = segs[segs.length - 2]?.trim();
+          if (parsedAddr) {
+            setAddress(parsedAddr);
+            locked.add("address");
+          }
+          if (parsedCity) {
+            setCity(parsedCity);
+            locked.add("city");
+          }
+          if (parsedState) {
+            setState(parsedState);
+            locked.add("state");
+          }
         } else if (segs[0]) {
           setAddress(segs[0]);
+          locked.add("address");
         }
       }
       const profMatch = n.match(/- Profile:\s*([^|]+)\|\s*([^@]+)@\s*([^(|]+)(?:\(([^)]*)\))?\s*\|\s*Income:\s*(.*)/);
       if (profMatch) {
-        if (profMatch[1]?.trim()) setCustomerProfile(profMatch[1].trim());
-        if (profMatch[2]?.trim()) setDesignation(profMatch[2].trim());
-        if (profMatch[3]?.trim()) setCompanyName(profMatch[3].trim());
-        if (profMatch[4]?.trim()) setDepartment(profMatch[4].trim());
-        if (profMatch[5]?.trim() && profMatch[5].trim() !== "N/A") setAnnualIncome(profMatch[5].trim());
+        const pProf = profMatch[1]?.trim();
+        const pDes = profMatch[2]?.trim();
+        const pComp = profMatch[3]?.trim();
+        const pDept = profMatch[4]?.trim();
+        const pInc = profMatch[5]?.trim();
+        if (pProf && pProf !== "-None-") {
+          setCustomerProfile(pProf);
+          locked.add("customerProfile");
+        }
+        if (pDes && pDes !== "-None-") {
+          setDesignation(pDes);
+          locked.add("designation");
+        }
+        if (pComp) {
+          setCompanyName(pComp);
+          locked.add("companyName");
+        }
+        if (pDept) {
+          setDepartment(pDept);
+          locked.add("department");
+        }
+        if (pInc && pInc !== "N/A" && pInc !== "-None-") {
+          setAnnualIncome(pInc);
+          locked.add("annualIncome");
+        }
       }
       const housingMatch = n.match(/Purpose:\s*([^|]+)\|\s*Timeline:\s*([^|]+)/);
       if (housingMatch) {
         const purp = housingMatch[1].trim();
-        if (purp === "Investment" || purp === "End Use") setPurposeOfPurchase(purp);
+        if (purp === "Investment" || purp === "End Use") {
+          setPurposeOfPurchase(purp);
+          locked.add("purposeOfPurchase");
+        }
         const tl = housingMatch[2].trim();
         if (tl === "With in 1 Month" || tl === "1-3 Months" || tl === "6-12 Months") {
           setPurchaseTimeline(tl);
+          locked.add("purchaseTimeline");
         }
       }
       const resMatch = n.match(/- Residential Status:\s*([^|]+)\|\s*Living:\s*([^|]+)\|\s*Marital:\s*([^(]+)(?:\((\d+)\s*children\))?/);
       if (resMatch) {
-        if (resMatch[1]?.trim()) setResidentialStatus(resMatch[1].trim());
+        const pRes = resMatch[1]?.trim();
+        if (pRes && pRes !== "-None-") {
+          setResidentialStatus(pRes);
+          locked.add("residentialStatus");
+        }
         const liv = resMatch[2]?.trim();
-        if (liv === "Own" || liv === "Rent") setLivingStatus(liv);
+        if (liv === "Own" || liv === "Rent") {
+          setLivingStatus(liv);
+          locked.add("livingStatus");
+        }
         const mar = resMatch[3]?.trim();
-        if (mar === "Single" || mar === "Married") setMaritalStatus(mar);
-        if (resMatch[4]) setChildrenCount(resMatch[4]);
+        if (mar === "Single" || mar === "Married") {
+          setMaritalStatus(mar);
+          locked.add("maritalStatus");
+        }
+        if (resMatch[4] && Number(resMatch[4]) > 0) {
+          setChildrenCount(resMatch[4]);
+          locked.add("childrenCount");
+        }
       }
     }
+
+    setLockedFields(locked);
   }, [isOpen, initialLead, projects, agents]);
 
   // Real-time Country & Dial Code Auto-Sync Function
   const syncCountryAndDialCode = (countryName: string) => {
-    if (isFrozen) return;
+    if (isFieldLocked("country")) return;
     setCountry(countryName);
     const matched = findCountry(countryName);
 
@@ -515,7 +627,7 @@ export function UrbanGaonEnquiryModal({
   };
 
   const selectCountryItem = (item: CountryData) => {
-    if (isFrozen) return;
+    if (isFieldLocked("country") || isFieldLocked("mobile")) return;
     setCountry(item.name);
     setCountryIso(item.iso);
     setCountryDialCode(item.code);
@@ -538,7 +650,7 @@ export function UrbanGaonEnquiryModal({
 
   // Mobile Real-Time Validation Handler (Strict numeric)
   const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isFrozen) return;
+    if (isFieldLocked("mobile")) return;
     const rawVal = e.target.value;
     const digitsOnly = rawVal.replace(/\D/g, "").slice(0, targetDigitLength);
     setMobile(digitsOnly);
@@ -552,13 +664,13 @@ export function UrbanGaonEnquiryModal({
     (d) => !emailDomainPart || d.toLowerCase().startsWith(emailDomainPart)
   );
   const showEmailSuggestions =
-    !isFrozen &&
+    !isFieldLocked("email") &&
     isEmailFocused &&
     email.length > 0 &&
     (email.includes("@") || emailPrefix.length >= 2);
 
   const applyEmailDomain = (domain: string) => {
-    if (isFrozen) return;
+    if (isFieldLocked("email")) return;
     setEmail(`${emailPrefix}@${domain}`);
     setIsEmailFocused(false);
   };
@@ -604,10 +716,6 @@ export function UrbanGaonEnquiryModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isFrozen) {
-      setError("Synced lead details are frozen. Only SuperAdmin can unlock and edit this profile.");
-      return;
-    }
     setError("");
 
     const fullName = `${salutation} ${firstName} ${middleName ? middleName + " " : ""}${lastName}`.trim();
@@ -777,15 +885,15 @@ export function UrbanGaonEnquiryModal({
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       Auto-Synced • {initialLead.name}
                     </span>
-                    {isFrozen ? (
+                    {hasLockedFields ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                         <Lock className="w-2.5 h-2.5" />
-                        Frozen • SuperAdmin Only
+                        Filled Fields Frozen • Missing Open
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
                         <Unlock className="w-2.5 h-2.5" />
-                        SuperAdmin Edit Mode
+                        SuperAdmin Full Edit Mode
                       </span>
                     )}
                   </>
@@ -979,11 +1087,11 @@ export function UrbanGaonEnquiryModal({
               </div>
             )}
 
-            {/* SuperAdmin Freeze / Lock Security Banner */}
+            {/* SuperAdmin Freeze / Sales Enrichment Security Banner */}
             {initialLead && (
               <div
                 className={`p-3.5 sm:p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                  isFrozen
+                  hasLockedFields
                     ? "bg-amber-50/80 border-amber-200 text-amber-950"
                     : "bg-blue-50/80 border-blue-200 text-blue-950"
                 }`}
@@ -991,23 +1099,23 @@ export function UrbanGaonEnquiryModal({
                 <div className="flex items-start sm:items-center gap-2.5">
                   <div
                     className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      isFrozen ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+                      hasLockedFields ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
                     }`}
                   >
-                    {isFrozen ? <Lock className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
+                    {hasLockedFields ? <Lock className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
                   </div>
                   <div>
                     <div className="text-xs font-bold flex items-center gap-1.5">
-                      {isFrozen
-                        ? "Synced Lead Details Frozen (Read-Only)"
-                        : "SuperAdmin Edit Mode Active"}
+                      {hasLockedFields
+                        ? "Lead-Filled Details Frozen • Unfilled Fields Open for Sales Team"
+                        : "SuperAdmin Full Edit Mode Active"}
                     </div>
                     <p className="text-[11px] opacity-80 mt-0.5">
-                      {isFrozen
+                      {hasLockedFields
                         ? isSuperAdmin
-                          ? "All synced details are locked to prevent accidental changes. Use your SuperAdmin privilege to unlock if modifications are required."
-                          : "All synced details are locked and cannot be edited. Modification rights are restricted exclusively to SuperAdmin."
-                        : "You have unlocked this synced profile using SuperAdmin privileges. Save your changes or re-lock the form when finished."}
+                          ? "Details already synced from the lead are frozen (shaded). Any empty fields can be filled by the sales team, or unlock all fields with your SuperAdmin right."
+                          : "Details already filled by the lead are frozen and locked (SuperAdmin only). You can fill in any remaining empty details and save them to the CRM."
+                        : "All fields are unlocked via SuperAdmin privilege. Save your changes or re-lock filled fields when finished."}
                     </p>
                   </div>
                 </div>
@@ -1020,20 +1128,20 @@ export function UrbanGaonEnquiryModal({
                       setError("");
                     }}
                     className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer flex-shrink-0 self-start sm:self-center ${
-                      isFrozen
+                      hasLockedFields
                         ? "bg-slate-900 hover:bg-slate-800 text-white shadow-xs"
                         : "bg-white hover:bg-slate-50 text-slate-800 border border-slate-300"
                     }`}
                   >
-                    {isFrozen ? (
+                    {hasLockedFields ? (
                       <>
                         <Unlock className="w-3.5 h-3.5" />
-                        <span>Unlock Edit (SuperAdmin)</span>
+                        <span>Unlock All (SuperAdmin)</span>
                       </>
                     ) : (
                       <>
                         <Lock className="w-3.5 h-3.5" />
-                        <span>Freeze Form</span>
+                        <span>Freeze Filled Fields</span>
                       </>
                     )}
                   </button>
@@ -1042,10 +1150,7 @@ export function UrbanGaonEnquiryModal({
             )}
 
             {/* 1. PERSONAL / CONTACT DETAILS */}
-            <fieldset
-              disabled={isFrozen}
-              className="space-y-6 border-0 p-0 m-0 min-w-0 [&_input:disabled]:bg-slate-50 [&_input:disabled]:text-slate-700 [&_input:disabled]:cursor-not-allowed [&_select:disabled]:bg-slate-50 [&_select:disabled]:text-slate-700 [&_select:disabled]:cursor-not-allowed [&_button:disabled]:cursor-not-allowed"
-            >
+            <div className="space-y-6 [&_input:disabled]:bg-slate-100/90 [&_input:disabled]:text-slate-600 [&_input:disabled]:cursor-not-allowed [&_select:disabled]:bg-slate-100/90 [&_select:disabled]:text-slate-600 [&_select:disabled]:cursor-not-allowed [&_button:disabled]:cursor-not-allowed [&_button:disabled]:opacity-60">
             <div className="space-y-4">
               {/* Name Row */}
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
@@ -1055,6 +1160,7 @@ export function UrbanGaonEnquiryModal({
                   </label>
                   <select
                     value={salutation}
+                    disabled={isFieldLocked("salutation")}
                     onChange={(e: any) => setSalutation(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
                   >
@@ -1069,6 +1175,7 @@ export function UrbanGaonEnquiryModal({
                   <input
                     type="text"
                     required
+                    disabled={isFieldLocked("firstName")}
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="e.g. Rajesh"
@@ -1080,6 +1187,7 @@ export function UrbanGaonEnquiryModal({
                   <label className="block text-[10px] text-slate-400 mb-1">Middle Name</label>
                   <input
                     type="text"
+                    disabled={isFieldLocked("middleName")}
                     value={middleName}
                     onChange={(e) => setMiddleName(e.target.value)}
                     placeholder="e.g. Kumar"
@@ -1092,6 +1200,7 @@ export function UrbanGaonEnquiryModal({
                   <input
                     type="text"
                     required
+                    disabled={isFieldLocked("lastName")}
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="e.g. Sharma"
@@ -1107,6 +1216,7 @@ export function UrbanGaonEnquiryModal({
                 </label>
                 <input
                   type="text"
+                  disabled={isFieldLocked("address")}
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="House / Flat No., Street, Landmark..."
@@ -1120,6 +1230,7 @@ export function UrbanGaonEnquiryModal({
                   <label className="block text-[10px] text-slate-400 mb-1">City</label>
                   <input
                     type="text"
+                    disabled={isFieldLocked("city")}
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
@@ -1129,6 +1240,7 @@ export function UrbanGaonEnquiryModal({
                   <label className="block text-[10px] text-slate-400 mb-1">State</label>
                   <input
                     type="text"
+                    disabled={isFieldLocked("state")}
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
@@ -1151,6 +1263,7 @@ export function UrbanGaonEnquiryModal({
                     <input
                       type="text"
                       list="countries-datalist"
+                      disabled={isFieldLocked("country")}
                       value={country}
                       onChange={(e) => syncCountryAndDialCode(e.target.value)}
                       placeholder="e.g. India, UAE, USA"
@@ -1170,6 +1283,7 @@ export function UrbanGaonEnquiryModal({
                   <label className="block text-[10px] text-slate-400 mb-1">Pin</label>
                   <input
                     type="text"
+                    disabled={isFieldLocked("pinCode")}
                     value={pinCode}
                     onChange={(e) => setPinCode(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B8CFF]"
@@ -1207,6 +1321,7 @@ export function UrbanGaonEnquiryModal({
                     <div className="relative">
                       <button
                         type="button"
+                        disabled={isFieldLocked("mobile") || isFieldLocked("country")}
                         onClick={() => setIsCountryPickerOpen(!isCountryPickerOpen)}
                         className="px-3 py-2 rounded-l-xl bg-[#F8FAFC] hover:bg-slate-100 border border-r-0 border-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition select-none"
                       >
@@ -1256,6 +1371,7 @@ export function UrbanGaonEnquiryModal({
                     <input
                       type="tel"
                       required
+                      disabled={isFieldLocked("mobile")}
                       inputMode="numeric"
                       value={mobile}
                       onChange={handleMobileChange}
@@ -1289,6 +1405,7 @@ export function UrbanGaonEnquiryModal({
                   <div className="relative">
                     <input
                       type="email"
+                      disabled={isFieldLocked("email")}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       onFocus={() => setIsEmailFocused(true)}
@@ -1335,6 +1452,7 @@ export function UrbanGaonEnquiryModal({
                       <button
                         key={dom}
                         type="button"
+                        disabled={isFieldLocked("email")}
                         onClick={() => applyEmailDomain(dom)}
                         className="px-2 py-0.5 rounded-md bg-[#F8FAFC] hover:bg-[#F0F6FF] hover:text-[#3B8CFF] text-[10px] font-semibold text-slate-600 border border-slate-200 transition"
                       >
@@ -1353,6 +1471,7 @@ export function UrbanGaonEnquiryModal({
                 <label className="block text-[11px] font-bold text-slate-700">Date of Birth:</label>
                 <input
                   type="date"
+                  disabled={isFieldLocked("dob")}
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}
                   className="w-full px-2 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs"
@@ -1368,6 +1487,7 @@ export function UrbanGaonEnquiryModal({
                     <input
                       type="radio"
                       name="marital"
+                      disabled={isFieldLocked("maritalStatus")}
                       checked={maritalStatus === "Single"}
                       onChange={() => setMaritalStatus("Single")}
                       className="text-[#3B8CFF]"
@@ -1378,6 +1498,7 @@ export function UrbanGaonEnquiryModal({
                     <input
                       type="radio"
                       name="marital"
+                      disabled={isFieldLocked("maritalStatus")}
                       checked={maritalStatus === "Married"}
                       onChange={() => setMaritalStatus("Married")}
                       className="text-[#3B8CFF]"
@@ -1388,6 +1509,7 @@ export function UrbanGaonEnquiryModal({
                 {maritalStatus === "Married" && (
                   <input
                     type="text"
+                    disabled={isFieldLocked("childrenCount")}
                     value={childrenCount}
                     onChange={(e) => setChildrenCount(e.target.value)}
                     placeholder="If married, No. of Children..."
@@ -1400,6 +1522,7 @@ export function UrbanGaonEnquiryModal({
               <div className="p-3.5 rounded-2xl border border-slate-200 bg-[#F8FAFC] space-y-1.5">
                 <label className="block text-[11px] font-bold text-slate-700">Residential Status</label>
                 <select
+                  disabled={isFieldLocked("residentialStatus")}
                   value={residentialStatus}
                   onChange={(e) => setResidentialStatus(e.target.value)}
                   className="w-full px-2.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer"
@@ -1420,6 +1543,7 @@ export function UrbanGaonEnquiryModal({
                       <input
                         type="radio"
                         name="purpose"
+                        disabled={isFieldLocked("purposeOfPurchase")}
                         checked={purposeOfPurchase === p}
                         onChange={() => setPurposeOfPurchase(p as any)}
                         className="text-[#3B8CFF]"
@@ -1436,6 +1560,7 @@ export function UrbanGaonEnquiryModal({
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 mb-1.5">Customer Profile:</label>
                 <select
+                  disabled={isFieldLocked("customerProfile")}
                   value={customerProfile}
                   onChange={(e) => setCustomerProfile(e.target.value)}
                   className="w-full sm:max-w-md px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] text-xs cursor-pointer"
@@ -1456,6 +1581,7 @@ export function UrbanGaonEnquiryModal({
                   <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Company Name</label>
                   <input
                     type="text"
+                    disabled={isFieldLocked("companyName")}
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     placeholder="e.g. Infosys / Self-Practicing"
@@ -1467,6 +1593,7 @@ export function UrbanGaonEnquiryModal({
                 <div>
                   <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Industry Type</label>
                   <select
+                    disabled={isFieldLocked("industryType")}
                     value={industryType}
                     onChange={(e) => setIndustryType(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer truncate"
@@ -1483,6 +1610,7 @@ export function UrbanGaonEnquiryModal({
                 <div>
                   <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Designation</label>
                   <select
+                    disabled={isFieldLocked("designation")}
                     value={designation}
                     onChange={(e) => setDesignation(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] cursor-pointer truncate"
@@ -1500,6 +1628,7 @@ export function UrbanGaonEnquiryModal({
                   <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Department</label>
                   <input
                     type="text"
+                    disabled={isFieldLocked("department")}
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
                     placeholder="e.g. Engineering / Sales"
@@ -1511,6 +1640,7 @@ export function UrbanGaonEnquiryModal({
                 <div>
                   <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Annual Income</label>
                   <select
+                    disabled={isFieldLocked("annualIncome")}
                     value={annualIncome}
                     onChange={(e) => setAnnualIncome(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#3B8CFF] text-xs cursor-pointer truncate"
@@ -1548,6 +1678,7 @@ export function UrbanGaonEnquiryModal({
                     <input
                       type="radio"
                       name="leadSource"
+                      disabled={isFieldLocked("sourceOption")}
                       checked={sourceOption.startsWith(src)}
                       onChange={() => setSourceOption(src)}
                       className="mt-0.5 text-[#3B8CFF]"
@@ -1563,6 +1694,7 @@ export function UrbanGaonEnquiryModal({
                   <label className="block text-[10px] text-slate-500 mb-1">Channel Partner Name * (triggers Draft-6 email)</label>
                   <input
                     type="text"
+                    disabled={isFieldLocked("channelPartnerName")}
                     value={channelPartnerName}
                     onChange={(e) => setChannelPartnerName(e.target.value)}
                     placeholder="e.g. Horizon Realty Partners"
@@ -1575,6 +1707,7 @@ export function UrbanGaonEnquiryModal({
                   <label className="block text-[10px] text-slate-500 mb-1">Employee Referral Emp ID * (triggers Draft-4 email)</label>
                   <input
                     type="text"
+                    disabled={isFieldLocked("empId")}
                     value={empId}
                     onChange={(e) => setEmpId(e.target.value)}
                     placeholder="e.g. EMP-9204"
@@ -1587,6 +1720,7 @@ export function UrbanGaonEnquiryModal({
                   <label className="block text-[10px] text-slate-500 mb-1">Referral details / Existing Unit / Vendor Name * (triggers Draft-3 email)</label>
                   <input
                     type="text"
+                    disabled={isFieldLocked("referralDetails")}
                     value={referralDetails}
                     onChange={(e) => setReferralDetails(e.target.value)}
                     placeholder="Referral from friend/family/ Existing Customer unit no. Name..."
@@ -1599,6 +1733,7 @@ export function UrbanGaonEnquiryModal({
                   <label className="block text-[10px] text-slate-500 mb-1">Other source details</label>
                   <input
                     type="text"
+                    disabled={isFieldLocked("otherSource")}
                     value={otherSource}
                     onChange={(e) => setOtherSource(e.target.value)}
                     placeholder="Other please specify..."
@@ -1619,6 +1754,7 @@ export function UrbanGaonEnquiryModal({
                       <input
                         type="radio"
                         name="livingStatus"
+                        disabled={isFieldLocked("livingStatus")}
                         checked={livingStatus === s}
                         onChange={() => setLivingStatus(s as any)}
                         className="text-[#3B8CFF]"
@@ -1638,6 +1774,7 @@ export function UrbanGaonEnquiryModal({
                       <input
                         type="radio"
                         name="housingStyle"
+                        disabled={isFieldLocked("housingStyle")}
                         checked={housingStyle === h}
                         onChange={() => setHousingStyle(h as any)}
                         className="text-[#3B8CFF]"
@@ -1657,6 +1794,7 @@ export function UrbanGaonEnquiryModal({
                       <input
                         type="radio"
                         name="timeline"
+                        disabled={isFieldLocked("purchaseTimeline")}
                         checked={purchaseTimeline === t}
                         onChange={() => setPurchaseTimeline(t as any)}
                         className="text-[#3B8CFF]"
@@ -1676,6 +1814,7 @@ export function UrbanGaonEnquiryModal({
                       <input
                         type="radio"
                         name="budget"
+                        disabled={isFieldLocked("budgetRange")}
                         checked={budgetRange === b}
                         onChange={() => setBudgetRange(b as any)}
                         className="text-[#3B8CFF]"
@@ -1692,6 +1831,7 @@ export function UrbanGaonEnquiryModal({
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 mb-1">Target Project</label>
                 <select
+                  disabled={isFieldLocked("projectId")}
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 font-semibold focus:outline-none"
@@ -1707,6 +1847,7 @@ export function UrbanGaonEnquiryModal({
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 mb-1">Assign Sales Executive</label>
                 <select
+                  disabled={isFieldLocked("assignedToId")}
                   value={assignedToId}
                   onChange={(e) => setAssignedToId(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none"
@@ -1721,7 +1862,7 @@ export function UrbanGaonEnquiryModal({
               </div>
             </div>
 
-            </fieldset>
+            </div>
 
             {/* Official Footer matching PDF */}
             <div className="pt-4 border-t border-slate-200 text-center text-[10px] text-slate-400 leading-relaxed">
@@ -1731,11 +1872,11 @@ export function UrbanGaonEnquiryModal({
             {/* Actions Button */}
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <span className="text-[11px] text-slate-400 flex items-center gap-1.5">
-                {isFrozen ? (
+                {hasLockedFields ? (
                   <>
                     <Lock className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                     <span>
-                      Synced lead fields are frozen. Modification rights are restricted to SuperAdmin only.
+                      Lead-filled fields are frozen (SuperAdmin only). Unfilled fields can be completed and saved by the sales team.
                     </span>
                   </>
                 ) : initialLead ? (
@@ -1751,45 +1892,31 @@ export function UrbanGaonEnquiryModal({
                   onClick={onClose}
                   className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold transition cursor-pointer"
                 >
-                  {isFrozen ? "Close" : "Cancel"}
+                  Cancel
                 </button>
 
-                {isFrozen ? (
-                  isSuperAdmin && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsSuperAdminUnlocked(true);
-                        setError("");
-                      }}
-                      className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold shadow-sm flex items-center gap-2 transition cursor-pointer"
-                    >
-                      <Unlock className="w-4 h-4" />
-                      <span>Unlock Edit (SuperAdmin)</span>
-                    </button>
-                  )
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={isPending || mobile.length !== targetDigitLength}
-                    className="px-6 py-2.5 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-bold shadow-md shadow-[#3B8CFF]/25 flex items-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    {isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        <span>
-                          {initialLead
-                            ? "Save & Sync Lead Profile"
-                            : formType === "customer"
-                            ? "Register & Save Customer"
-                            : "Submit Customer Enquiry"}
-                        </span>
-                      </>
-                    )}
-                  </button>
-                )}
+                <button
+                  type="submit"
+                  disabled={isPending || mobile.length !== targetDigitLength}
+                  className="px-6 py-2.5 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-bold shadow-md shadow-[#3B8CFF]/25 flex items-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>
+                        {initialLead
+                          ? hasLockedFields
+                            ? "Save Missing Details"
+                            : "Save & Sync Lead Profile"
+                          : formType === "customer"
+                          ? "Register & Save Customer"
+                          : "Submit Customer Enquiry"}
+                      </span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </form>

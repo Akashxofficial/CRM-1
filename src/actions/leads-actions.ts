@@ -336,16 +336,13 @@ export async function updateLeadAction(
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
-  // Strict server-side RBAC enforcement: Only SuperAdmin / Admin can edit synced lead details
+  // Server-side RBAC:
+  // - SuperAdmin / Admin can edit ANY field (including already-filled synced fields).
+  // - Sales Team can fill ONLY missing/unfilled details and enrich LeadActivity;
+  //   already-filled synced fields on targetLead remain strictly immutable.
   const isSuperAdmin = ["SUPERADMIN", "SUPER_ADMIN", "ADMIN"].includes(
     (user.role || "").toUpperCase()
   );
-  if (!isSuperAdmin) {
-    return {
-      success: false,
-      error: "Access Denied: Only SuperAdmin is authorized to modify synced lead details.",
-    };
-  }
 
   let updatedLead: any = {
     id: leadId,
@@ -388,18 +385,34 @@ export async function updateLeadAction(
 
       updatedLead = await prisma.lead.update({
         where: { id: targetLead.id },
-        data: {
-          name: data.name,
-          phone: data.phone,
-          email: data.email,
-          source: data.source || targetLead.source,
-          interestedType: data.interestedType ?? targetLead.interestedType,
-          budgetMin: data.budgetMin ?? targetLead.budgetMin,
-          budgetMax: data.budgetMax ?? targetLead.budgetMax,
-          priority: data.priority ?? targetLead.priority,
-          ...(validProjectId ? { projectId: validProjectId } : {}),
-          ...(validAssignedToId !== undefined ? { assignedToId: validAssignedToId } : {}),
-        },
+        data: isSuperAdmin
+          ? {
+            name: data.name,
+            phone: data.phone,
+            email: data.email,
+            source: data.source || targetLead.source,
+            interestedType: data.interestedType ?? targetLead.interestedType,
+            budgetMin: data.budgetMin ?? targetLead.budgetMin,
+            budgetMax: data.budgetMax ?? targetLead.budgetMax,
+            priority: data.priority ?? targetLead.priority,
+            ...(validProjectId ? { projectId: validProjectId } : {}),
+            ...(validAssignedToId !== undefined ? { assignedToId: validAssignedToId } : {}),
+          }
+          : {
+            // Non-SuperAdmin (Sales Team): preserve all already-filled fields, only populate empty ones
+            name: targetLead.name || data.name,
+            phone: targetLead.phone || data.phone,
+            email: targetLead.email || data.email,
+            source: targetLead.source || data.source,
+            interestedType: targetLead.interestedType || data.interestedType,
+            budgetMin: targetLead.budgetMin ?? data.budgetMin,
+            budgetMax: targetLead.budgetMax ?? data.budgetMax,
+            priority: targetLead.priority || data.priority,
+            ...(!targetLead.projectId && validProjectId ? { projectId: validProjectId } : {}),
+            ...(!targetLead.assignedToId && validAssignedToId !== undefined
+              ? { assignedToId: validAssignedToId }
+              : {}),
+          },
         include: {
           project: true,
           assignedTo: true,
