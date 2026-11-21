@@ -46,17 +46,8 @@ export function CustomersView({
   bookings = [],
   userRole,
 }: Props) {
-  // We can default to the detailed customer view (matching screenshot) while allowing user to toggle to the directory
-  const [selectedCustomer, setSelectedCustomer] = useState<any | null>({
-    id: "cust-pratik",
-    name: "Pratik Gowardhane",
-    phone: "7045901129",
-    email: "pratik291190@gmail.com",
-    project: { name: "Vastu CRM" },
-    interestedUnit: { unitNumber: "Plot 7" },
-    interestedType: "Plot",
-    budgetMax: 5000000,
-  });
+  // Default to the All Customers Directory; open CustomerProfileDetailView only when a customer is selected
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
 
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [selectedProjectId, setSelectedProjectId] = useState("ALL");
