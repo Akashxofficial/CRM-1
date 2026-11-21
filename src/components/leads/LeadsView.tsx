@@ -733,6 +733,7 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
         projects={projects}
         agents={users}
         initialLead={selectedFormLead}
+        userRole={userRole}
         onLeadSaved={handleLeadSaved}
         onOpenPipeline={
           selectedFormLead

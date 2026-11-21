@@ -21,6 +21,9 @@ import {
   ChevronDown,
   Globe,
   Search,
+  Lock,
+  Unlock,
+  ShieldCheck,
 } from "lucide-react";
 
 interface Props {
@@ -32,6 +35,7 @@ interface Props {
   onLeadSaved?: (lead: any) => void;
   onOpenPipeline?: () => void;
   initialLead?: any | null;
+  userRole?: string;
   formType?: "lead" | "customer";
   title?: string;
 }
@@ -157,9 +161,16 @@ export function UrbanGaonEnquiryModal({
   onLeadSaved,
   onOpenPipeline,
   initialLead = null,
+  userRole = "",
   formType = "lead",
   title,
 }: Props) {
+  const isSuperAdmin = ["SUPERADMIN", "SUPER_ADMIN", "ADMIN"].includes(
+    (userRole || "").toUpperCase()
+  );
+  const [isSuperAdminUnlocked, setIsSuperAdminUnlocked] = useState(false);
+  const isFrozen = Boolean(initialLead) && !isSuperAdminUnlocked;
+
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
@@ -236,6 +247,7 @@ export function UrbanGaonEnquiryModal({
   useEffect(() => {
     if (!isOpen) return;
 
+    setIsSuperAdminUnlocked(false);
     setError("");
     setIsSuccess(false);
     setDispatchedEmails(null);
@@ -491,6 +503,7 @@ export function UrbanGaonEnquiryModal({
 
   // Real-time Country & Dial Code Auto-Sync Function
   const syncCountryAndDialCode = (countryName: string) => {
+    if (isFrozen) return;
     setCountry(countryName);
     const matched = findCountry(countryName);
 
@@ -502,6 +515,7 @@ export function UrbanGaonEnquiryModal({
   };
 
   const selectCountryItem = (item: CountryData) => {
+    if (isFrozen) return;
     setCountry(item.name);
     setCountryIso(item.iso);
     setCountryDialCode(item.code);
@@ -524,6 +538,7 @@ export function UrbanGaonEnquiryModal({
 
   // Mobile Real-Time Validation Handler (Strict numeric)
   const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isFrozen) return;
     const rawVal = e.target.value;
     const digitsOnly = rawVal.replace(/\D/g, "").slice(0, targetDigitLength);
     setMobile(digitsOnly);
@@ -537,11 +552,13 @@ export function UrbanGaonEnquiryModal({
     (d) => !emailDomainPart || d.toLowerCase().startsWith(emailDomainPart)
   );
   const showEmailSuggestions =
+    !isFrozen &&
     isEmailFocused &&
     email.length > 0 &&
     (email.includes("@") || emailPrefix.length >= 2);
 
   const applyEmailDomain = (domain: string) => {
+    if (isFrozen) return;
     setEmail(`${emailPrefix}@${domain}`);
     setIsEmailFocused(false);
   };
@@ -587,6 +604,10 @@ export function UrbanGaonEnquiryModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isFrozen) {
+      setError("Synced lead details are frozen. Only SuperAdmin can unlock and edit this profile.");
+      return;
+    }
     setError("");
 
     const fullName = `${salutation} ${firstName} ${middleName ? middleName + " " : ""}${lastName}`.trim();
@@ -690,11 +711,12 @@ export function UrbanGaonEnquiryModal({
             ],
           };
           setIsSuccess(true);
+          setIsSuperAdminUnlocked(false);
           setDispatchedEmails(null);
           if (onLeadSaved) onLeadSaved(syncedLead);
           if (onSuccess) onSuccess();
         } else {
-          setError("Failed to update lead. Please check your inputs.");
+          setError((res as any).error || "Failed to update lead. Only SuperAdmin can edit synced lead details.");
         }
         return;
       }
@@ -750,10 +772,23 @@ export function UrbanGaonEnquiryModal({
                   {title || (formType === "customer" ? "UrbanGaon Customer Registration Form" : "UrbanGaon Customer Enquiry Form")}
                 </h2>
                 {initialLead && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Auto-Synced • {initialLead.name}
-                  </span>
+                  <>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Auto-Synced • {initialLead.name}
+                    </span>
+                    {isFrozen ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                        <Lock className="w-2.5 h-2.5" />
+                        Frozen • SuperAdmin Only
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        <Unlock className="w-2.5 h-2.5" />
+                        SuperAdmin Edit Mode
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
               <p className="text-xs text-slate-500">
@@ -944,7 +979,73 @@ export function UrbanGaonEnquiryModal({
               </div>
             )}
 
+            {/* SuperAdmin Freeze / Lock Security Banner */}
+            {initialLead && (
+              <div
+                className={`p-3.5 sm:p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                  isFrozen
+                    ? "bg-amber-50/80 border-amber-200 text-amber-950"
+                    : "bg-blue-50/80 border-blue-200 text-blue-950"
+                }`}
+              >
+                <div className="flex items-start sm:items-center gap-2.5">
+                  <div
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      isFrozen ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+                    }`}
+                  >
+                    {isFrozen ? <Lock className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold flex items-center gap-1.5">
+                      {isFrozen
+                        ? "Synced Lead Details Frozen (Read-Only)"
+                        : "SuperAdmin Edit Mode Active"}
+                    </div>
+                    <p className="text-[11px] opacity-80 mt-0.5">
+                      {isFrozen
+                        ? isSuperAdmin
+                          ? "All synced details are locked to prevent accidental changes. Use your SuperAdmin privilege to unlock if modifications are required."
+                          : "All synced details are locked and cannot be edited. Modification rights are restricted exclusively to SuperAdmin."
+                        : "You have unlocked this synced profile using SuperAdmin privileges. Save your changes or re-lock the form when finished."}
+                    </p>
+                  </div>
+                </div>
+
+                {isSuperAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSuperAdminUnlocked((prev) => !prev);
+                      setError("");
+                    }}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer flex-shrink-0 self-start sm:self-center ${
+                      isFrozen
+                        ? "bg-slate-900 hover:bg-slate-800 text-white shadow-xs"
+                        : "bg-white hover:bg-slate-50 text-slate-800 border border-slate-300"
+                    }`}
+                  >
+                    {isFrozen ? (
+                      <>
+                        <Unlock className="w-3.5 h-3.5" />
+                        <span>Unlock Edit (SuperAdmin)</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>Freeze Form</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* 1. PERSONAL / CONTACT DETAILS */}
+            <fieldset
+              disabled={isFrozen}
+              className="space-y-6 border-0 p-0 m-0 min-w-0 [&_input:disabled]:bg-slate-50 [&_input:disabled]:text-slate-700 [&_input:disabled]:cursor-not-allowed [&_select:disabled]:bg-slate-50 [&_select:disabled]:text-slate-700 [&_select:disabled]:cursor-not-allowed [&_button:disabled]:cursor-not-allowed"
+            >
             <div className="space-y-4">
               {/* Name Row */}
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
@@ -1620,48 +1721,75 @@ export function UrbanGaonEnquiryModal({
               </div>
             </div>
 
+            </fieldset>
+
             {/* Official Footer matching PDF */}
             <div className="pt-4 border-t border-slate-200 text-center text-[10px] text-slate-400 leading-relaxed">
               <strong>UrbanGaon</strong>, 2nd Floor, 74A, Sawai Pratap Singh Road, Near CM House, Opp. Loharu House, Gaurav Nagar, Civil lines, Jaipur, PIN: 302006, Rajasthan, India.
             </div>
 
             {/* Actions Button */}
-            <div className="pt-2 flex items-center justify-between">
-              <span className="text-[11px] text-slate-400">
-                {initialLead
-                  ? "⚡ Changes save directly to the CRM database and sync in real time across Leads & Pipeline."
-                  : "⚡ Automatically sends customer welcome email + internal company notification on submit."}
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span className="text-[11px] text-slate-400 flex items-center gap-1.5">
+                {isFrozen ? (
+                  <>
+                    <Lock className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                    <span>
+                      Synced lead fields are frozen. Modification rights are restricted to SuperAdmin only.
+                    </span>
+                  </>
+                ) : initialLead ? (
+                  "⚡ SuperAdmin Mode: Changes save directly to MongoDB and sync in real time across Leads & Pipeline."
+                ) : (
+                  "⚡ Automatically sends customer welcome email + internal company notification on submit."
+                )}
               </span>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 self-end sm:self-auto">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold transition"
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold transition cursor-pointer"
                 >
-                  Cancel
+                  {isFrozen ? "Close" : "Cancel"}
                 </button>
 
-                <button
-                  type="submit"
-                  disabled={isPending || mobile.length !== targetDigitLength}
-                  className="px-6 py-2.5 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-bold shadow-md shadow-[#3B8CFF]/25 flex items-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      <span>
-                        {initialLead
-                          ? "Save & Sync Lead Profile"
-                          : formType === "customer"
-                          ? "Register & Save Customer"
-                          : "Submit Customer Enquiry"}
-                      </span>
-                    </>
-                  )}
-                </button>
+                {isFrozen ? (
+                  isSuperAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSuperAdminUnlocked(true);
+                        setError("");
+                      }}
+                      className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold shadow-sm flex items-center gap-2 transition cursor-pointer"
+                    >
+                      <Unlock className="w-4 h-4" />
+                      <span>Unlock Edit (SuperAdmin)</span>
+                    </button>
+                  )
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isPending || mobile.length !== targetDigitLength}
+                    className="px-6 py-2.5 rounded-xl bg-[#3B8CFF] hover:bg-[#2570E8] text-white font-bold shadow-md shadow-[#3B8CFF]/25 flex items-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>
+                          {initialLead
+                            ? "Save & Sync Lead Profile"
+                            : formType === "customer"
+                            ? "Register & Save Customer"
+                            : "Submit Customer Enquiry"}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           </form>

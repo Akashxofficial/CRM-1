@@ -336,6 +336,17 @@ export async function updateLeadAction(
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
+  // Strict server-side RBAC enforcement: Only SuperAdmin / Admin can edit synced lead details
+  const isSuperAdmin = ["SUPERADMIN", "SUPER_ADMIN", "ADMIN"].includes(
+    (user.role || "").toUpperCase()
+  );
+  if (!isSuperAdmin) {
+    return {
+      success: false,
+      error: "Access Denied: Only SuperAdmin is authorized to modify synced lead details.",
+    };
+  }
+
   let updatedLead: any = {
     id: leadId,
     name: data.name,
