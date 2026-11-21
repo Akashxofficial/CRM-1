@@ -219,22 +219,20 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
           <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200">
             <button
               onClick={() => setViewMode("table")}
-              className={`p-1.5 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-                viewMode === "table"
-                  ? "bg-white text-slate-900 shadow-2xs"
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
+              className={`p-1.5 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${viewMode === "table"
+                ? "bg-white text-slate-900 shadow-2xs"
+                : "text-slate-500 hover:text-slate-800"
+                }`}
             >
               <List className="w-3.5 h-3.5" />
               <span>Table</span>
             </button>
             <button
               onClick={() => setViewMode("kanban")}
-              className={`p-1.5 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-                viewMode === "kanban"
-                  ? "bg-white text-slate-900 shadow-2xs"
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
+              className={`p-1.5 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${viewMode === "kanban"
+                ? "bg-white text-slate-900 shadow-2xs"
+                : "text-slate-500 hover:text-slate-800"
+                }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
               <span>Kanban</span>
@@ -321,21 +319,20 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
           </div>
         </div>
       </div>
+      //
 
       {/* Quick Stage Filter Tabs */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 touch-pan-x scrollbar-none">
         <button
           onClick={() => setSelectedStageTab("ALL")}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-xl whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${
-            selectedStageTab === "ALL"
-              ? "bg-[#3B8CFF] text-white shadow-2xs"
-              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-          }`}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-xl whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${selectedStageTab === "ALL"
+            ? "bg-[#3B8CFF] text-white shadow-2xs"
+            : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+            }`}
         >
           <span>All Leads</span>
-          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-            selectedStageTab === "ALL" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
-          }`}>
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${selectedStageTab === "ALL" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
+            }`}>
             {totalLeads}
           </span>
         </button>
@@ -348,16 +345,14 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
             <button
               key={stage.key}
               onClick={() => setSelectedStageTab(stage.key)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-xl whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${
-                isActive
-                  ? "bg-slate-900 text-white shadow-2xs"
-                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-              }`}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${isActive
+                ? "bg-slate-900 text-white shadow-2xs"
+                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                }`}
             >
               <span>{stage.label}</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
-              }`}>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
+                }`}>
                 {count}
               </span>
             </button>
