@@ -107,9 +107,9 @@ export function AdminDashboardView({ data }: Props) {
         </span>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
           {/* Booked Value */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs min-w-0">
             <span className="text-xs font-medium text-slate-500">Booked Value</span>
-            <div className="mt-2 text-2xl sm:text-3xl font-bold text-emerald-500 tracking-tight font-heading">
+            <div className="mt-2 text-lg sm:text-2xl lg:text-3xl font-bold text-emerald-500 tracking-tight font-heading truncate">
               {formatCurrency(metrics.totalSalesValue)}
             </div>
             <p className="mt-1 text-xs text-slate-400">
@@ -118,9 +118,9 @@ export function AdminDashboardView({ data }: Props) {
           </div>
 
           {/* Pipeline Value */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs min-w-0">
             <span className="text-xs font-medium text-slate-500">Pipeline Value</span>
-            <div className="mt-2 text-2xl sm:text-3xl font-bold text-[#3B8CFF] tracking-tight font-heading">
+            <div className="mt-2 text-lg sm:text-2xl lg:text-3xl font-bold text-[#3B8CFF] tracking-tight font-heading truncate">
               {formatCurrency(metrics.pipelineValue)}
             </div>
             <p className="mt-1 text-xs text-slate-400">
@@ -129,9 +129,9 @@ export function AdminDashboardView({ data }: Props) {
           </div>
 
           {/* Conversion */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs min-w-0">
             <span className="text-xs font-medium text-slate-500">Conversion</span>
-            <div className="mt-2 text-2xl sm:text-3xl font-bold text-amber-500 tracking-tight font-heading">
+            <div className="mt-2 text-lg sm:text-2xl lg:text-3xl font-bold text-amber-500 tracking-tight font-heading truncate">
               {metrics.conversionRate}%
             </div>
             <p className="mt-1 text-xs text-slate-400">
@@ -140,9 +140,9 @@ export function AdminDashboardView({ data }: Props) {
           </div>
 
           {/* Avg Ticket Size */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs min-w-0">
             <span className="text-xs font-medium text-slate-500">Avg Ticket Size</span>
-            <div className="mt-2 text-2xl sm:text-3xl font-bold text-sky-500 tracking-tight font-heading">
+            <div className="mt-2 text-lg sm:text-2xl lg:text-3xl font-bold text-sky-500 tracking-tight font-heading truncate">
               {formatCurrency(metrics.avgTicketSize)}
             </div>
             <p className="mt-1 text-xs text-slate-400">per booking</p>
@@ -190,33 +190,33 @@ export function AdminDashboardView({ data }: Props) {
       {/* SECTION 3: QUICK METRICS ROW */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
         {/* Total Leads */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs min-w-0">
           <span className="text-xs font-medium text-slate-500">Total Leads</span>
-          <div className="mt-2 text-2xl sm:text-3xl font-bold text-[#3B8CFF] tracking-tight font-heading">
+          <div className="mt-2 text-xl sm:text-2xl lg:text-3xl font-bold text-[#3B8CFF] tracking-tight font-heading truncate">
             {metrics.totalLeads}
           </div>
         </div>
 
         {/* Booked */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs min-w-0">
           <span className="text-xs font-medium text-slate-500">Booked</span>
-          <div className="mt-2 text-2xl sm:text-3xl font-bold text-emerald-500 tracking-tight font-heading">
+          <div className="mt-2 text-xl sm:text-2xl lg:text-3xl font-bold text-emerald-500 tracking-tight font-heading truncate">
             {metrics.bookedUnits}
           </div>
         </div>
 
         {/* Total Units */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs min-w-0">
           <span className="text-xs font-medium text-slate-500">Total Units</span>
-          <div className="mt-2 text-2xl sm:text-3xl font-bold text-amber-500 tracking-tight font-heading">
+          <div className="mt-2 text-xl sm:text-2xl lg:text-3xl font-bold text-amber-500 tracking-tight font-heading truncate">
             {metrics.totalUnits}
           </div>
         </div>
 
         {/* Units Sold */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs min-w-0">
           <span className="text-xs font-medium text-slate-500">Units Sold</span>
-          <div className="mt-2 text-2xl sm:text-3xl font-bold text-sky-500 tracking-tight font-heading">
+          <div className="mt-2 text-xl sm:text-2xl lg:text-3xl font-bold text-sky-500 tracking-tight font-heading truncate">
             {metrics.soldUnits}
           </div>
         </div>

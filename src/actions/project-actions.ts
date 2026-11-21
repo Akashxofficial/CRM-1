@@ -38,8 +38,8 @@ export async function getProjects() {
         });
 
         if (projects.length > 0) return projects;
-      } catch (error) {
-        console.warn("Database projects fetch skipped:", error);
+      } catch (error: any) {
+        console.warn("⚠️ Database projects fetch skipped (" + (error?.message?.split("\n")?.[0] || "Connection failed") + "), using fallback.");
       }
     } else {
       console.warn("Skipping DB query — invalid organizationId in session:", user.organizationId);

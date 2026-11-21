@@ -22,14 +22,14 @@ export function Navbar({ user, projects, onToggleMobileMenu }: Props) {
 
   return (
     <>
-      <header className="h-16 bg-white border-b border-slate-200/90 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
+      <header className="h-16 bg-white border-b border-slate-200/90 px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
         {/* Left: Mobile Hamburger & Search */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Hamburger Menu on Mobile */}
           <button
             type="button"
             onClick={onToggleMobileMenu}
-            className="p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl lg:hidden transition"
+            className="p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl lg:hidden transition cursor-pointer"
             aria-label="Open Navigation Menu"
           >
             <Menu className="w-5 h-5" />
@@ -41,14 +41,15 @@ export function Navbar({ user, projects, onToggleMobileMenu }: Props) {
             <span>Projects: {projects.length}</span>
           </div>
 
-          {/* Search Trigger */}
+          {/* Search Trigger (Icon on extra small screens, bar on sm+) */}
           <button
             onClick={() => setSearchModalOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 bg-[#F8FAFC] hover:bg-slate-100 rounded-xl border border-slate-200 transition w-36 sm:w-56 md:w-64 justify-between"
+            className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 text-xs text-slate-400 bg-[#F8FAFC] hover:bg-slate-100 rounded-xl border border-slate-200 transition sm:w-52 md:w-64 justify-center sm:justify-between cursor-pointer"
+            title="Search CRM (⌘K)"
           >
             <div className="flex items-center gap-2 truncate">
-              <Search className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-              <span className="truncate">Search CRM...</span>
+              <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <span className="hidden sm:inline truncate">Search CRM...</span>
             </div>
             <kbd className="hidden sm:inline-block text-[10px] px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-500 font-mono shadow-2xs">
               ⌘K
@@ -57,39 +58,42 @@ export function Navbar({ user, projects, onToggleMobileMenu }: Props) {
         </div>
 
         {/* Right: Quick Actions, Role Badge & Notifications */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2.5">
           {/* Quick Action Button: New Customer */}
           <button
             type="button"
             onClick={() => setNewCustomerModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl shadow-xs transition cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl shadow-xs transition cursor-pointer"
+            title="New Customer"
           >
             <UserPlus className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">New Customer</span>
-            <span className="sm:hidden">Customer</span>
+            <span className="hidden md:inline">New Customer</span>
+            <span className="hidden sm:inline md:hidden">Customer</span>
           </button>
 
           {/* Quick Action Button: Opens Official UrbanGaon Lead Enquiry Form */}
           <button
             type="button"
             onClick={() => setNewLeadModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 text-xs font-semibold bg-[#3B8CFF] hover:bg-[#2570E8] active:scale-95 text-white rounded-xl shadow-xs transition cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold bg-[#3B8CFF] hover:bg-[#2570E8] active:scale-95 text-white rounded-xl shadow-xs transition cursor-pointer"
+            title="New Lead"
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">New Lead</span>
-            <span className="sm:hidden">Lead</span>
+            <span className="hidden md:inline">New Lead</span>
+            <span className="hidden sm:inline md:hidden">Lead</span>
           </button>
 
           {/* Role Persona Switcher Pill */}
           <button
             onClick={() => setRoleModalOpen(true)}
-            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 bg-[#F8FAFC] hover:bg-slate-100 transition cursor-pointer"
+            className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-xl border border-slate-200 bg-[#F8FAFC] hover:bg-slate-100 transition cursor-pointer"
+            title={`Current Role: ${roleBadge.label}`}
           >
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
             <span className="text-xs font-medium text-slate-600 hidden md:inline">
               Role: <strong className="text-slate-900">{roleBadge.label}</strong>
             </span>
-            <span className="text-xs font-semibold text-slate-900 md:hidden">
+            <span className="text-xs font-semibold text-slate-900 hidden sm:inline md:hidden">
               {roleBadge.label.split(" ")[0]}
             </span>
             <Sparkles className="w-3.5 h-3.5 text-[#3B8CFF] flex-shrink-0" />
@@ -97,9 +101,9 @@ export function Navbar({ user, projects, onToggleMobileMenu }: Props) {
 
           {/* Notification Icon */}
           <div className="relative">
-            <button className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition cursor-pointer">
+            <button className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition cursor-pointer">
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#3B8CFF]" />
+              <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 h-2 rounded-full bg-[#3B8CFF]" />
             </button>
           </div>
         </div>

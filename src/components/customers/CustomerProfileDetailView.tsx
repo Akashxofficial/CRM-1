@@ -309,16 +309,16 @@ export function CustomerProfileDetailView({
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
-          className="w-8 h-8 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-500 hover:text-slate-900 transition shadow-2xs cursor-pointer"
+          className="w-8 h-8 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-500 hover:text-slate-900 transition shadow-2xs cursor-pointer flex-shrink-0"
           aria-label="Go Back"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight leading-none font-heading">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-none font-heading truncate">
             {customer.name}
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 mt-1 truncate">
             {customer.project} • {customer.unit}
           </p>
         </div>
@@ -384,22 +384,22 @@ export function CustomerProfileDetailView({
             <h2 className="text-sm font-bold text-slate-900 font-heading">Payment Plan</h2>
 
             {/* Total Plan / Collected / Balance Bar */}
-            <div className="grid grid-cols-3 gap-2 py-3 px-4 rounded-xl bg-slate-50 border border-slate-100 text-center">
-              <div>
-                <span className="text-[11px] text-slate-500 font-medium block">Total Plan</span>
-                <span className="text-sm sm:text-base font-black text-slate-900 block mt-0.5">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2.5 sm:px-4 rounded-xl bg-slate-50 border border-slate-100 text-center">
+              <div className="min-w-0">
+                <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium block truncate">Total Plan</span>
+                <span className="text-xs sm:text-sm md:text-base font-black text-slate-900 block mt-0.5 truncate">
                   {formatCurrency(totalPlan)}
                 </span>
               </div>
-              <div>
-                <span className="text-[11px] text-slate-500 font-medium block">Collected</span>
-                <span className="text-sm sm:text-base font-black text-emerald-600 block mt-0.5">
+              <div className="min-w-0">
+                <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium block truncate">Collected</span>
+                <span className="text-xs sm:text-sm md:text-base font-black text-emerald-600 block mt-0.5 truncate">
                   {formatCurrency(totalCollected)}
                 </span>
               </div>
-              <div>
-                <span className="text-[11px] text-slate-500 font-medium block">Balance</span>
-                <span className="text-sm sm:text-base font-black text-rose-600 block mt-0.5">
+              <div className="min-w-0">
+                <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium block truncate">Balance</span>
+                <span className="text-xs sm:text-sm md:text-base font-black text-rose-600 block mt-0.5 truncate">
                   {formatCurrency(totalBalance)}
                 </span>
               </div>
@@ -470,7 +470,7 @@ export function CustomerProfileDetailView({
                   </div>
 
                   {/* Right: Actions */}
-                  <div className="flex items-center gap-1.5 self-end sm:self-center">
+                  <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap self-start sm:self-center pl-7 sm:pl-0">
                     <ChevronRight className="w-3.5 h-3.5 text-slate-300 hidden sm:inline-block" />
 
                     {/* Pay button */}
@@ -528,7 +528,7 @@ export function CustomerProfileDetailView({
             </div>
 
             {/* Bottom Actions: Add Demand Letter & Generate Plan */}
-            <div className="pt-2 flex items-center gap-6 text-xs font-semibold text-[#3B8CFF]">
+            <div className="pt-2 flex flex-wrap items-center gap-3 sm:gap-6 text-xs font-semibold text-[#3B8CFF]">
               <button
                 type="button"
                 onClick={() => setIsAddingMilestone(true)}
@@ -739,8 +739,8 @@ export function CustomerProfileDetailView({
 
       {/* Edit Customer Details Modal */}
       {isEditingCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200 animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 max-w-md w-full shadow-2xl border border-slate-200 animate-in zoom-in-95 max-h-[calc(100dvh-2rem)] overflow-y-auto">
             <h3 className="text-base font-bold text-slate-900 mb-4">Edit Customer Details</h3>
             <form onSubmit={handleSaveCustomerDetails} className="space-y-3.5">
               <div>
@@ -795,8 +795,8 @@ export function CustomerProfileDetailView({
 
       {/* Edit Billing Recipients Modal */}
       {isEditingBilling && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200 animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 max-w-md w-full shadow-2xl border border-slate-200 animate-in zoom-in-95 max-h-[calc(100dvh-2rem)] overflow-y-auto">
             <h3 className="text-base font-bold text-slate-900 mb-4">Edit Billing Recipients</h3>
             <form onSubmit={handleSaveBillingDetails} className="space-y-3.5">
               <div>
@@ -831,8 +831,8 @@ export function CustomerProfileDetailView({
 
       {/* Add Milestone Modal */}
       {isAddingMilestone && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200 animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 max-w-md w-full shadow-2xl border border-slate-200 animate-in zoom-in-95 max-h-[calc(100dvh-2rem)] overflow-y-auto">
             <h3 className="text-base font-bold text-slate-900 mb-4">Add Payment Demand Milestone</h3>
             <form
               onSubmit={(e) => {
@@ -899,8 +899,8 @@ export function CustomerProfileDetailView({
 
       {/* Record Payment Modal */}
       {payingMilestone && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200 animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 max-w-md w-full shadow-2xl border border-slate-200 animate-in zoom-in-95 max-h-[calc(100dvh-2rem)] overflow-y-auto">
             <h3 className="text-base font-bold text-slate-900 mb-1">Record Collection Payment</h3>
             <p className="text-xs text-slate-500 mb-4">
               Milestone: <strong>{payingMilestone.title}</strong> (Total: {formatCurrency(payingMilestone.amount)})
@@ -970,8 +970,8 @@ export function CustomerProfileDetailView({
 
       {/* Cost Sheet Creator Modal */}
       {isCostSheetModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl border border-slate-200 animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 max-w-lg w-full shadow-2xl border border-slate-200 animate-in zoom-in-95 max-h-[calc(100dvh-2rem)] overflow-y-auto">
             <h3 className="text-base font-bold text-slate-900 mb-1 font-heading">
               Unit & Cost Sheet Breakup
             </h3>

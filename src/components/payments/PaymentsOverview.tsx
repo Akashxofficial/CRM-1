@@ -168,7 +168,7 @@ export function PaymentsOverview({
 
   return (
     <div
-      className="min-h-screen bg-[#F8FAFC] p-6 space-y-5"
+      className="min-h-screen bg-[#F8FAFC] p-3.5 sm:p-5 lg:p-6 space-y-5 pb-safe"
       style={{
         fontFamily:
           "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
@@ -366,12 +366,12 @@ export function PaymentsOverview({
               return (
                 <div
                   key={schedule.id}
-                  className={`px-5 py-3 flex items-center justify-between gap-4 transition hover:bg-slate-50/70 ${
+                  className={`px-4 sm:px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 transition hover:bg-slate-50/70 ${
                     isSelected ? "bg-indigo-50/30" : ""
                   }`}
                 >
                   {/* Left Column: Checkbox + Customer + Subtitle */}
-                  <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="flex items-center gap-3.5 min-w-0 w-full sm:w-auto">
                     <input
                       type="checkbox"
                       checked={isSelected}
@@ -379,7 +379,7 @@ export function PaymentsOverview({
                       className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer flex-shrink-0"
                     />
 
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       {/* Row 1: Name + Badges */}
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs font-semibold text-slate-900 leading-none">
@@ -420,7 +420,7 @@ export function PaymentsOverview({
                   </div>
 
                   {/* Right Column: Amount + Due Date + Icons + Action Buttons */}
-                  <div className="flex items-center gap-3.5 flex-shrink-0">
+                  <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-3.5 flex-wrap w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-0 border-slate-100">
                     {/* Amount & Due Date */}
                     <div className="text-right">
                       <div className="text-xs font-bold text-slate-900 leading-none">

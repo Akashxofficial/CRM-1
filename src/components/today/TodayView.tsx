@@ -34,27 +34,27 @@ export function TodayView({ userName = "Demo", tasks = [] }: Props) {
         {/* Left Column (2 Cols) */}
         <div className="lg:col-span-2 space-y-6">
           {/* 3 Quick Cards: Overdue, Today, Upcoming */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
             {/* Overdue */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
-              <span className="text-xs font-medium text-slate-500">Overdue</span>
-              <div className="mt-2 text-2xl sm:text-3xl font-bold text-rose-500 tracking-tight font-heading">
+            <div className="p-3 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs min-w-0">
+              <span className="text-xs font-medium text-slate-500 block truncate">Overdue</span>
+              <div className="mt-2 text-xl sm:text-2xl lg:text-3xl font-bold text-rose-500 tracking-tight font-heading truncate">
                 {overdueCount}
               </div>
             </div>
 
             {/* Today */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
-              <span className="text-xs font-medium text-slate-500">Today</span>
-              <div className="mt-2 text-2xl sm:text-3xl font-bold text-[#3B8CFF] tracking-tight font-heading">
+            <div className="p-3 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs min-w-0">
+              <span className="text-xs font-medium text-slate-500 block truncate">Today</span>
+              <div className="mt-2 text-xl sm:text-2xl lg:text-3xl font-bold text-[#3B8CFF] tracking-tight font-heading truncate">
                 {todayCount}
               </div>
             </div>
 
             {/* Upcoming */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
-              <span className="text-xs font-medium text-slate-500">Upcoming</span>
-              <div className="mt-2 text-2xl sm:text-3xl font-bold text-amber-500 tracking-tight font-heading">
+            <div className="p-3 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs min-w-0">
+              <span className="text-xs font-medium text-slate-500 block truncate">Upcoming</span>
+              <div className="mt-2 text-xl sm:text-2xl lg:text-3xl font-bold text-amber-500 tracking-tight font-heading truncate">
                 {upcomingCount}
               </div>
             </div>

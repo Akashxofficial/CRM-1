@@ -43,7 +43,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row font-sans">
       {/* Left Column: Hero & Product Pillars */}
-      <div className="lg:w-1/2 p-8 lg:p-14 flex flex-col justify-between relative bg-[#131633] text-white">
+      <div className="lg:w-1/2 p-6 sm:p-8 lg:p-14 flex flex-col justify-between relative bg-[#131633] text-white">
         <div>
           {/* Logo */}
           <div className="flex items-center gap-3">
@@ -89,7 +89,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right Column: Clean White Form */}
-      <div className="lg:w-1/2 p-8 lg:p-16 flex flex-col justify-center bg-white">
+      <div className="lg:w-1/2 p-5 sm:p-8 lg:p-16 flex flex-col justify-center bg-white pb-safe">
         <div className="max-w-md w-full mx-auto space-y-6">
           <div>
             <img

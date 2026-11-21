@@ -122,7 +122,7 @@ export function Sidebar({ user, onCloseMobile }: Props) {
   ];
 
   return (
-    <aside className="w-64 h-full bg-white text-slate-700 flex flex-col flex-shrink-0 select-none shadow-sm border-r border-slate-200/90 font-sans">
+    <aside className="w-full h-full bg-white text-slate-700 flex flex-col flex-shrink-0 select-none shadow-sm border-r border-slate-200/90 font-sans">
       {/* Top Header: Organization & Role */}
       <div className="p-4 sm:p-5 flex items-center justify-between border-b border-slate-100 flex-shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -186,7 +186,7 @@ export function Sidebar({ user, onCloseMobile }: Props) {
       </nav>
 
       {/* Bottom Profile & Settings */}
-      <div className="p-3.5 border-t border-slate-100 bg-[#F8FAFC] space-y-2 flex-shrink-0">
+      <div className="p-3.5 border-t border-slate-100 bg-[#F8FAFC] space-y-2 flex-shrink-0 pb-safe">
         <Link
           href="/settings"
           prefetch={true}

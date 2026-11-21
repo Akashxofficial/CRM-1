@@ -36,7 +36,7 @@ export function AppLayoutClient({ user, projects, children }: Props) {
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden bg-[#F8FAFC] text-slate-900 font-sans">
       {/* Desktop Sidebar (hidden on < lg screens) */}
-      <div className="hidden lg:flex flex-shrink-0 h-full">
+      <div className="hidden lg:flex flex-shrink-0 h-full w-64">
         <Sidebar user={user} />
       </div>
 
@@ -63,7 +63,7 @@ export function AppLayoutClient({ user, projects, children }: Props) {
           projects={projects}
           onToggleMobileMenu={() => setMobileMenuOpen((prev) => !prev)}
         />
-        <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 lg:p-8 bg-[#F8FAFC] overscroll-y-contain">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-8 bg-[#F8FAFC] overscroll-y-contain pb-safe">
           <div className="max-w-7xl mx-auto w-full pb-10">{children}</div>
         </main>
       </div>

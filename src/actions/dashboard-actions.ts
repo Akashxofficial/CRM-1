@@ -210,8 +210,8 @@ export async function getDashboardData() {
       userRole: user?.role || "ADMIN",
       userName: user?.name || "Demo",
     };
-  } catch (error) {
-    console.warn("Database unavailable, returning resilient dataset:", error);
+  } catch (error: any) {
+    console.warn("⚠️ Database unavailable (" + (error?.message?.split("\n")?.[0] || "Connection failed") + "), returning resilient dataset.");
     return {
       metrics: {
         totalProjects: 2,

@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UrbanGaon Customer Enquiry Form — Simple Technical & Feature Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  @page {
+    size: 297mm 210mm; /* A4 Landscape */
+    margin: 0;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #0f172a;
+    color: #f8fafc;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .slide {
+    width: 297mm;
+    height: 210mm;
+    page-break-after: always;
+    page-break-inside: avoid;
+    padding: 16mm 22mm 14mm 22mm;
+    position: relative;
+    background: radial-gradient(circle at top right, #1e293b 0%, #0f172a 60%, #020617 100%);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* Slide Header */
+  .slide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 2px solid #334155;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+  }
+
+  .slide-tag {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #f59e0b;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .slide-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.3px;
+  }
+
+  .slide-number {
+    font-size: 12px;
+    font-weight: 700;
+    color: #94a3b8;
+    background: #1e293b;
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid #475569;
+  }
+
+  .slide-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  .slide-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #1e293b;
+    padding-top: 10px;
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  /* Layout Grids */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+  }
+
+  /* Card Containers */
+  .card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(71, 85, 105, 0.4);
+    border-radius: 12px;
+    padding: 16px 18px;
+    backdrop-filter: blur(8px);
+  }
+
+  .card-blue {
+    border-left: 5px solid #38bdf8;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(30, 41, 59, 0.7) 100%);
+  }
+
+  .card-emerald {
+    border-left: 5px solid #10b981;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(30, 41, 59, 0.7) 100%);
+  }
+
+  .card-amber {
+    border-left: 5px solid #f59e0b;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(30, 41, 59, 0.7) 100%);
+  }
+
+  .card-purple {
+    border-left: 5px solid #a855f7;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(30, 41, 59, 0.7) 100%);
+  }
+
+  .card-rose {
+    border-left: 5px solid #f43f5e;
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.08) 0%, rgba(30, 41, 59, 0.7) 100%);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 8px;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    color: #cbd5e1;
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+
+  /* Easy-to-read Steps / Points */
+  .step-box {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+  }
+
+  .step-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .step-text {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.5;
+  }
+
+  .code-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #38bdf8;
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .badge-hot { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.5); }
+  .badge-warm { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.5); }
+  .badge-success { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.5); }
+
+  /* Table */
+  .easy-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .easy-table th {
+    background: #1e293b;
+    color: #f8fafc;
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 700;
+    border: 1px solid #334155;
+  }
+
+  .easy-table td {
+    padding: 9px 14px;
+    border: 1px solid #1e293b;
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.6);
+  }
+
+  .easy-table tr:nth-child(even) td {
+    background: rgba(30, 41, 59, 0.4);
+  }
+</style>
+</head>
+<body>
+
+  <!-- SLIDE 1: Cover Slide -->
+  <div class="slide" style="justify-content: center; text-align: center; background: radial-gradient(circle at center, #1e293b 0%, #0b0f19 85%);">
+    <div style="max-width: 860px; margin: 0 auto;">
+      <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); padding: 6px 18px; border-radius: 9999px; margin-bottom: 22px;">
+        <span style="color: #38bdf8; font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;">Zoho Fusionhawk Technical Walkthrough</span>
+      </div>
+
+      <h1 style="font-size: 38px; font-weight: 800; color: #ffffff; line-height: 1.25; margin-bottom: 14px; letter-spacing: -0.5px;">
+        UrbanGaon Customer Enquiry Form
+      </h1>
+      
+      <p style="font-size: 17px; color: #38bdf8; font-weight: 600; margin-bottom: 20px;">
+        A Simple, Easy-to-Understand Engineering Guide (Features & Implementation)
+      </p>
+
+      <p style="font-size: 13.5px; color: #94a3b8; max-width: 700px; margin: 0 auto 36px auto; line-height: 1.6;">
+        This presentation explains exactly how the UrbanGaon Customer Enquiry Form works: how the flags and country codes auto-sync, how mobile numbers and emails are validated without errors, how leads are auto-scored, and how data connects directly to Zoho CRM.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; text-align: left; max-width: 800px; margin: 0 auto;">
+        <div class="card card-blue" style="padding: 12px 14px;">
+          <div style="font-size: 11px; color: #94a3b8; font-weight: 700;">1. FRONTEND</div>
+          <div style="font-size: 13px; font-weight: 800; color: #ffffff; margin-top: 3px;">Next.js 15 & React 19</div>
+        </div>
+        <div class="card card-emerald" style="padding: 12px 14px;">
+          <div style="font-size: 11px; color: #94a3b8; font-weight: 700;">2. SMART UX</div>
+          <div style="font-size: 13px; font-weight: 800; color: #ffffff; margin-top: 3px;">Auto Flags & Sync</div>
+        </div>
+        <div class="card card-amber" style="padding: 12px 14px;">
+          <div style="font-size: 11px; color: #94a3b8; font-weight: 700;">3. AUTOMATION</div>
+          <div style="font-size: 13px; font-weight: 800; color: #ffffff; margin-top: 3px;">Dual Emails & Print</div>
+        </div>
+        <div class="card card-purple" style="padding: 12px 14px;">
+          <div style="font-size: 11px; color: #94a3b8; font-weight: 700;">4. INTEGRATION</div>
+          <div style="font-size: 13px; font-weight: 800; color: #ffffff; margin-top: 3px;">Zoho CRM 1-to-1</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>UrbanGaon Technologies &bull; Meeting with Zoho Fusionhawk</span>
+      <span>Simple Technical Architecture</span>
+      <span>September 2026</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: What is this form & Why is it special? -->
+  <div class="slide">
+    <div class="slide-header">
+      <div>
+        <div class="slide-tag"><span>📌</span> OVERVIEW & PURPOSE</div>
+        <div class="slide-title">What is this Form and What Makes it Special?</div>
+      </div>
+      <div class="slide-number">Slide 02 / 10</div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-2">
+        <div class="card card-blue">
+          <div class="card-header" style="color: #38bdf8;">🎯 What does this form do?</div>
+          <p class="card-desc">
+            It is the official real estate application used when a customer visits the office, calls, or fills an online inquiry for our luxury project (like <strong>AXIO</strong>).
+          </p>
+          <div class="step-box">
+            <div class="step-title">1. Captures Verified Information</div>
+            <div class="step-text">Gathers Customer Name, Phone, Email, City, Job Designation, and Family details cleanly.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">2. Discovers Customer Needs</div>
+            <div class="step-text">Finds out if they want a <strong>Plot</strong>, <strong>2/3 BHK</strong>, or <strong>Serviced Apartment</strong>, their budget (e.g., 50L - 1Cr), and when they plan to buy.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">3. Connects Everything in Real Time</div>
+            <div class="step-text">Instantly saves the lead to database, sends emails to both customer and manager, and can print an official paper application.</div>
+          </div>
+        </div>
+
+        <div class="card card-emerald">
+          <div class="card-header" style="color: #10b981;">💡 Why is it much better than standard forms?</div>
+          <p class="card-desc">
+            Traditional forms accept wrong phone numbers, misspelled emails, and require manual data re-entry. This engine solves all 3 problems:
+          </p>
+          <div class="step-box">
+            <div class="step-title">✓ Zero Bad Data</div>
+            <div class="step-text">Letters cannot be typed into the phone number box. Dummy numbers like "1234" are immediately stopped.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">✓ One-Click Auto Suggestions</div>
+            <div class="step-text">Country selection automatically changes the flag and dial code (+91). Email domains auto-suggest on typing `@`.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">✓ Dual Purpose: Digital & Paper</div>
+            <div class="step-text">Can be filled digitally by an agent, or printed out as a signed paper form for walk-in clients.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>UrbanGaon Architecture &bull; Executive Overview</span>
+      <span>Slide 2</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: Flags and Country Sync -->
+  <div class="slide">
+    <div class="slide-header">
+      <div>
+        <div class="slide-tag"><span>🇮🇳</span> INTERNATIONAL FLAGS & SYNC</div>
+        <div class="slide-title">How the Flag & Dial Code Auto-Sync Works</div>
+      </div>
+      <div class="slide-number">Slide 03 / 10</div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-3">
+        <div class="card card-amber">
+          <div class="card-header" style="color: #f59e0b;">Step 1: User Selects Country</div>
+          <p class="card-desc">
+            The user types or clicks their country (e.g., <strong>India</strong>, <strong>UAE</strong>, <strong>USA</strong>, or <strong>UK</strong>).
+          </p>
+          <div class="step-box">
+            <div class="step-title">🔍 Smart Search Included</div>
+            <div class="step-text">You can search by country name ("Dubai" or "UAE"), dial code ("+971"), or ISO ("AE"). It matches instantly.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">📋 60+ Pre-Configured Countries</div>
+            <div class="step-text">Every country has its exact dial code and legal phone number length saved.</div>
+          </div>
+        </div>
+
+        <div class="card card-blue">
+          <div class="card-header" style="color: #38bdf8;">Step 2: Flag Updates Instantly</div>
+          <p class="card-desc">
+            The flag icon next to the country and mobile input changes in real time.
+          </p>
+          <div class="step-box">
+            <div class="step-title">🖼️ High-Quality Vector Flags</div>
+            <div class="step-text">Uses clean, crisp vector flag images (<span class="code-pill">&lt;CountryFlag /&gt;</span>) that look sharp on any device.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">🛡️ Never Breaks</div>
+            <div class="step-text">Even if internet connection is slow, it displays a neat flag emoji or 2-letter country badge as fallback.</div>
+          </div>
+        </div>
+
+        <div class="card card-emerald">
+          <div class="card-header" style="color: #10b981;">Step 3: Dial Code & Length Change</div>
+          <p class="card-desc">
+            The phone number box automatically adapts to that country:
+          </p>
+          <div class="step-box">
+            <div class="step-title">📲 Dial Code Auto-Fill</div>
+            <div class="step-text">Selecting <strong>India</strong> sets <span class="code-pill">+91</span>. Selecting <strong>UAE</strong> sets <span class="code-pill">+971</span>.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">📏 Phone Length Auto-Adjusts</div>
+            <div class="step-text">India checks for <strong>10 digits</strong>, UAE checks for <strong>9 digits</strong>, Singapore checks for <strong>8 digits</strong>.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>UrbanGaon Architecture &bull; Flag & Country Engine</span>
+      <span>Slide 3</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: Strict Mobile and Smart Email Validation -->
+  <div class="slide">
+    <div class="slide-header">
+      <div>
+        <div class="slide-tag"><span>🛡️</span> DATA ACCURACY & VALIDATION</div>
+        <div class="slide-title">How We Prevent Fake Phone Numbers and Misspelled Emails</div>
+      </div>
+      <div class="slide-number">Slide 04 / 10</div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-2">
+        <div class="card card-rose">
+          <div class="card-header" style="color: #fb7185;">📱 Strict Mobile Number Verification</div>
+          <p class="card-desc">
+            Prevents agents and users from entering wrong or corrupted contact numbers:
+          </p>
+          <div class="step-box">
+            <div class="step-title">1. No Letters or Symbols Allowed</div>
+            <div class="step-text">If someone tries to type "abc" or "!@#", the form instantly discards them. Only digits 0-9 are allowed.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">2. Live Counter (e.g., "0/10 Digits")</div>
+            <div class="step-text">Displays exactly how many digits have been typed so the user knows when it's complete.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">3. Real Indian Telecom Rule Check</div>
+            <div class="step-text">For India (+91), the number <strong>must start with 6, 7, 8, or 9</strong> (official TRAI telecom series). Starting with 1, 2, or 3 is blocked.</div>
+          </div>
+        </div>
+
+        <div class="card card-purple">
+          <div class="card-header" style="color: #c084fc;">📧 Live Smart Email Domain Suggester</div>
+          <p class="card-desc">
+            Makes typing emails twice as fast and stops typos like "gmai.con":
+          </p>
+          <div class="step-box">
+            <div class="step-title">1. Typeahead Trigger</div>
+            <div class="step-text">As soon as the user enters their name or types <span class="code-pill">@</span>, helpful chips appear below the box.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">2. One-Click Popular Domains</div>
+            <div class="step-text">Chips for <span class="code-pill">gmail.com</span>, <span class="code-pill">yahoo.com</span>, <span class="code-pill">outlook.com</span>, and <span class="code-pill">urbangaon.com</span> appear.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">3. 1-Click Auto-Complete</div>
+            <div class="step-text">Clicking a chip instantly completes the email (e.g. "rajesh" + click "@gmail.com" &rarr; <span class="code-pill">rajesh@gmail.com</span>).</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>UrbanGaon Architecture &bull; Verification & Validation</span>
+      <span>Slide 4</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: Customer Details & Profiling -->
+  <div class="slide">
+    <div class="slide-header">
+      <div>
+        <div class="slide-tag"><span>🏢</span> COMPLETE CUSTOMER PROFILING</div>
+        <div class="slide-title">Capturing Full KYC, Job Profile & Demographics</div>
+      </div>
+      <div class="slide-number">Slide 05 / 10</div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-3">
+        <div class="card card-blue">
+          <div class="card-header" style="color: #38bdf8;">1. Personal & Address</div>
+          <div class="step-box">
+            <div class="step-title">Name Cleanly Split</div>
+            <div class="step-text">Title (Mr./Ms./Mrs.), First Name, Middle Name, and Last Name stored separately for personalized communication.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">Complete Address</div>
+            <div class="step-text">House/Flat No., Street, City (Jaipur), State (Rajasthan), and PIN Code (302006).</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">Family Demographics</div>
+            <div class="step-text">Date of birth, Marital Status (Single/Married), and number of children.</div>
+          </div>
+        </div>
+
+        <div class="card card-emerald">
+          <div class="card-header" style="color: #10b981;">2. Job & Income Profile</div>
+          <div class="step-box">
+            <div class="step-title">50+ Industry Sectors</div>
+            <div class="step-text">Standard options like Banking, IT, Healthcare, Real Estate, Government, Manufacturing, etc.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">Professional Designations</div>
+            <div class="step-text">Options for CEO, Director, VP, Manager, Senior Specialist, Self-Employed, Retired, etc.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">Company Name & Income</div>
+            <div class="step-text">Captures company employer and annual income brackets to understand purchasing power.</div>
+          </div>
+        </div>
+
+        <div class="card card-amber">
+          <div class="card-header" style="color: #f59e0b;">3. Property Preferences</div>
+          <div class="step-box">
+            <div class="step-title">End Use vs Investment</div>
+            <div class="step-text">Know whether customer wants to live there or is investing for rental income.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">Housing Type</div>
+            <div class="step-text">Customer selects: <strong>Plot</strong>, <strong>2/3 BHK Apartment</strong>, or <strong>Serviced Apartment</strong>.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">Current Living Status</div>
+            <div class="step-text">Whether currently living in <strong>Own</strong> house or on <strong>Rent</strong> (high buying urgency).</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>UrbanGaon Architecture &bull; Customer Profiling</span>
+      <span>Slide 5</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: Auto Lead Scoring & Source Attribution -->
+  <div class="slide">
+    <div class="slide-header">
+      <div>
+        <div class="slide-tag"><span>🔥</span> INTELLIGENT LEAD SCORING</div>
+        <div class="slide-title">Automatic Lead Priority (HOT vs WARM) & Channel Attribution</div>
+      </div>
+      <div class="slide-number">Slide 06 / 10</div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-2">
+        <div class="card card-rose">
+          <div class="card-header" style="color: #fb7185;">🔥 Automatic Lead Priority Calculation</div>
+          <p class="card-desc">
+            The sales team doesn't have to guess which lead to call first. The form categorizes them automatically:
+          </p>
+          <div class="step-box">
+            <div class="step-title"><span class="badge badge-hot">HOT LEAD 🔥</span> When Buying "Within 1 Month"</div>
+            <div class="step-text">Customer wants to finalize urgently. Marked as high-priority so agents call within 15 minutes.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title"><span class="badge badge-warm">WARM LEAD ⚡</span> When Buying in "1-3 Months"</div>
+            <div class="step-text">Customer is actively exploring. Enters regular nurture and site-visit scheduling workflow.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">💰 Budget Converted to Clean Numbers</div>
+            <div class="step-text">"₹50L - ₹1 Crore" is automatically converted to <span class="code-pill">min: 50,00,000</span> and <span class="code-pill">max: 1,00,00,000</span> in database so searches and filters work smoothly.</div>
+          </div>
+        </div>
+
+        <div class="card card-blue">
+          <div class="card-header" style="color: #38bdf8;">🤝 Attribution (Where Did the Lead Come From?)</div>
+          <p class="card-desc">
+            Tracks where customers originated to calculate channel partner commissions and marketing ROI:
+          </p>
+          <div class="step-box">
+            <div class="step-title">1. Channel Partner (Property Broker)</div>
+            <div class="step-text">Selecting "Channel Partner" opens a box to type the broker's agency name. Automatically tagged to that partner.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">2. Employee Referral</div>
+            <div class="step-text">Selecting "Employee Referral" captures the Staff Employee ID (<span class="code-pill">empId</span>) for internal reward tracking.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">3. Digital / Direct / Social</div>
+            <div class="step-text">Tags leads arriving from Website, Google Ads, or Social Media campaigns.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>UrbanGaon Architecture &bull; Lead Scoring & Attribution</span>
+      <span>Slide 6</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: Dual Email Engine & In-Modal Previews -->
+  <div class="slide">
+    <div class="slide-header">
+      <div>
+        <div class="slide-tag"><span>✉️</span> INSTANT EMAILS</div>
+        <div class="slide-title">Dual Email Generation & "Preview Emails" Feature</div>
+      </div>
+      <div class="slide-number">Slide 07 / 10</div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-2">
+        <div class="card card-emerald">
+          <div class="card-header" style="color: #10b981;">👁️ "Preview Emails" Button (Before Sending)</div>
+          <p class="card-desc">
+            At top right of the form, clicking <strong>"Preview Emails"</strong> shows the sales agent the exact emails that will be sent:
+          </p>
+          <div class="step-box">
+            <div class="step-title">No Data Loss</div>
+            <div class="step-text">Opens a clean preview modal without clearing or resetting what you typed in the form.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">Two Tabs to Inspect</div>
+            <div class="step-text">
+              &bull; <strong>Customer Tab:</strong> Shows the polite welcome letter the customer will see.<br>
+              &bull; <strong>Company Tab:</strong> Shows the internal alert the sales head will receive.
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-blue">
+          <div class="card-header" style="color: #38bdf8;">📬 What Emails Get Sent Automatically?</div>
+          <p class="card-desc">
+            The moment "Submit" is pressed, two branded HTML emails are dispatched:
+          </p>
+          <div class="step-box">
+            <div class="step-title">1. Customer Welcome Letter</div>
+            <div class="step-text">
+              &bull; Beautiful UrbanGaon branding + AXIO project header.<br>
+              &bull; Acknowledges inquiry & thanks channel partner (if referred).<br>
+              &bull; Includes relationship manager phone & digital brochure link.
+            </div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">2. Internal Sales Alert</div>
+            <div class="step-text">
+              &bull; Contains customer name, phone, city, job, budget, and HOT tag.<br>
+              &bull; Dispatched immediately to sales manager so no lead is delayed.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>UrbanGaon Architecture &bull; Email System</span>
+      <span>Slide 7</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: Native Print to Paper Form -->
+  <div class="slide">
+    <div class="slide-header">
+      <div>
+        <div class="slide-tag"><span>🖨️</span> PRINT CAPABILITY</div>
+        <div class="slide-title">One-Click "Print Form" for Physical Paper Applications</div>
+      </div>
+      <div class="slide-number">Slide 08 / 10</div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-2">
+        <div class="card card-purple">
+          <div class="card-header" style="color: #c084fc;">📄 Why is the "Print Form" Button so Useful?</div>
+          <p class="card-desc">
+            In luxury real estate, many clients visit the sales lounge in person. They need a physical paper application to sign:
+          </p>
+          <div class="step-box">
+            <div class="step-title">One-Click Print</div>
+            <div class="step-text">Clicking <strong>"Print Form"</strong> triggers the printer dialog immediately with zero external plugins.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">Smart Print Layout (@media print)</div>
+            <div class="step-text">Website buttons, close icons, and screen tooltips automatically disappear so only clean document text prints.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">Crisp Black & White Formatting</div>
+            <div class="step-text">Dark background gradients invert to crisp white paper format to save printer ink and print razor sharp.</div>
+          </div>
+        </div>
+
+        <div class="card card-amber">
+          <div class="card-header" style="color: #f59e0b;">✍️ Built-in Legal Verification & Signatures</div>
+          <p class="card-desc">
+            The printed sheet automatically includes official compliance sections:
+          </p>
+          <div class="step-box">
+            <div class="step-title">Official Dual Branding</div>
+            <div class="step-text">Prints with the official UrbanGaon company logo and the AXIO luxury project crest.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">RERA Compliance Declaration</div>
+            <div class="step-text">Includes formal declaration stating the applicant confirms all KYC information is accurate.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">3 Signature Boxes</div>
+            <div class="step-text">
+              1. Applicant / Customer Signature<br>
+              2. Sales Relationship Officer Signature<br>
+              3. Channel Partner Stamp & Date Box
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>UrbanGaon Architecture &bull; Print Engine</span>
+      <span>Slide 8</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: Safe Backend & Database Storage -->
+  <div class="slide">
+    <div class="slide-header">
+      <div>
+        <div class="slide-tag"><span>💾</span> BACKEND & SECURITY</div>
+        <div class="slide-title">How Data is Safely Saved to the Database</div>
+      </div>
+      <div class="slide-number">Slide 09 / 10</div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-2">
+        <div class="card card-emerald">
+          <div class="card-header" style="color: #10b981;">⚡ Next.js 15 Server Action (No Exposed Keys)</div>
+          <p class="card-desc">
+            Built using modern Next.js 15 Server Actions (<span class="code-pill">"use server"</span>):
+          </p>
+          <div class="step-box">
+            <div class="step-title">100% Secure from Hackers</div>
+            <div class="step-text">Database passwords and connection strings remain safely on the secure server. Browser client never sees them.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">Non-Blocking UI (useTransition)</div>
+            <div class="step-text">When you press Submit, the button shows a loading spinner without freezing the browser.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">Multi-Tenant Organization Isolation</div>
+            <div class="step-text">Leads automatically attach to the logged-in organization. Reps cannot see other organizations' private leads.</div>
+          </div>
+        </div>
+
+        <div class="card card-blue">
+          <div class="card-header" style="color: #38bdf8;">🍃 Clean MongoDB Storage (Prisma 6 ORM)</div>
+          <p class="card-desc">
+            Data is organized into clear records inside MongoDB Atlas:
+          </p>
+          <div class="step-box">
+            <div class="step-title">Lead Record Created</div>
+            <div class="step-text">Name, Phone, Email, Source, and Priority ("HOT" / "WARM") saved into main table.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">Structured KYC Notes Block</div>
+            <div class="step-text">Address, Job, Income, Housing choice, and Family details compiled into a clean note block so any sales agent can read the full background in 5 seconds.</div>
+          </div>
+          <div class="step-box">
+            <div class="step-title">Automatic Audit Log</div>
+            <div class="step-text">Records exactly who created the lead and at what time for transparency.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>UrbanGaon Architecture &bull; Backend Architecture</span>
+      <span>Slide 9</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: How it Connects to Zoho CRM -->
+  <div class="slide">
+    <div class="slide-header">
+      <div>
+        <div class="slide-tag"><span>🤝</span> ZOHO CRM INTEGRATION</div>
+        <div class="slide-title">1-to-1 Field Mapping with Zoho CRM Leads Module</div>
+      </div>
+      <div class="slide-number">Slide 10 / 10</div>
+    </div>
+
+    <div class="slide-body">
+      <div class="card card-blue" style="padding: 10px 16px; margin-bottom: 8px;">
+        <div style="font-size: 13.5px; font-weight: 700; color: #38bdf8;">Ready for Immediate Zoho CRM Connection</div>
+        <p style="font-size: 12px; color: #cbd5e1; margin-top: 2px;">
+          Every field in our form directly corresponds to standard fields in Zoho CRM. Zero data transformation or custom code required:
+        </p>
+      </div>
+
+      <table class="easy-table">
+        <thead>
+          <tr>
+            <th>Field in Our Form</th>
+            <th>Field in Zoho CRM (Leads)</th>
+            <th>Type</th>
+            <th>Example Data Passed to Zoho</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>First Name + Last Name</strong></td>
+            <td><span class="code-pill">First_Name</span>, <span class="code-pill">Last_Name</span></td>
+            <td>Text</td>
+            <td><span style="color: #38bdf8; font-weight: 600;">Rajesh Sharma</span></td>
+          </tr>
+          <tr>
+            <td><strong>Country Code + Mobile</strong></td>
+            <td><span class="code-pill">Mobile</span> / <span class="code-pill">Phone</span></td>
+            <td>Phone</td>
+            <td><span style="color: #38bdf8; font-weight: 600;">+91 9876543210</span></td>
+          </tr>
+          <tr>
+            <td><strong>Email Address</strong></td>
+            <td><span class="code-pill">Email</span></td>
+            <td>Email</td>
+            <td><span style="color: #38bdf8; font-weight: 600;">rajesh.sharma@gmail.com</span></td>
+          </tr>
+          <tr>
+            <td><strong>City, State, PIN Code</strong></td>
+            <td><span class="code-pill">City</span>, <span class="code-pill">State</span>, <span class="code-pill">Zip_Code</span></td>
+            <td>Text</td>
+            <td><span style="color: #38bdf8; font-weight: 600;">Jaipur, Rajasthan, 302006</span></td>
+          </tr>
+          <tr>
+            <td><strong>Job Designation</strong></td>
+            <td><span class="code-pill">Designation</span></td>
+            <td>Text</td>
+            <td><span style="color: #38bdf8; font-weight: 600;">Director / Senior Executive</span></td>
+          </tr>
+          <tr>
+            <td><strong>Company & Industry</strong></td>
+            <td><span class="code-pill">Company</span>, <span class="code-pill">Industry</span></td>
+            <td>Text / Picklist</td>
+            <td><span style="color: #38bdf8; font-weight: 600;">Infosys Ltd &bull; IT</span></td>
+          </tr>
+          <tr>
+            <td><strong>Purchase Timeline</strong></td>
+            <td><span class="code-pill">Rating</span> / <span class="code-pill">Lead_Status</span></td>
+            <td>Picklist</td>
+            <td><span class="badge badge-hot">HOT LEAD 🔥</span></td>
+          </tr>
+          <tr>
+            <td><strong>Budget Range</strong></td>
+            <td><span class="code-pill">Expected_Revenue</span></td>
+            <td>Currency</td>
+            <td><span style="color: #38bdf8; font-weight: 600;">₹50,00,000 - ₹1,00,00,000</span></td>
+          </tr>
+          <tr>
+            <td><strong>Channel Partner Name</strong></td>
+            <td><span class="code-pill">Channel_Partner_Name</span></td>
+            <td>Lookup</td>
+            <td><span style="color: #38bdf8; font-weight: 600;">Re/Max Prime Realty</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="grid-2" style="margin-top: 8px;">
+        <div style="background: rgba(30,41,59,0.5); border: 1px solid #334155; border-radius: 8px; padding: 8px 12px; font-size: 11.5px;">
+          <strong style="color: #38bdf8;">Webhook Ready:</strong> Submitting this form can instantly call Zoho CRM's Webhook to insert or update the lead.
+        </div>
+        <div style="background: rgba(30,41,59,0.5); border: 1px solid #334155; border-radius: 8px; padding: 8px 12px; font-size: 11.5px;">
+          <strong style="color: #10b981;">Two-Way Sync:</strong> When a sales agent updates status in Zoho CRM, it can automatically reflect in our dashboard.
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>UrbanGaon Technologies &bull; Zoho Fusionhawk Strategic Integration</span>
+      <span>Slide 10 &bull; End of Deck</span>
+    </div>
+  </div>
+
+</body>
+</html>

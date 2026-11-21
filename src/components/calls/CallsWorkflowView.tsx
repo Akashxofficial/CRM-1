@@ -401,7 +401,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
 
       {/* TAB 1: SINGLE CUSTOMER ENQUIRIES TAB */}
       {activeMainTab === "ENQUIRIES" && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-6 space-y-5 animate-in fade-in duration-150 w-full">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-3.5 sm:p-6 space-y-5 animate-in fade-in duration-150 w-full">
           {/* Header Controls */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
             <div>
@@ -523,7 +523,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
       {activeMainTab === "CALL_SESSION" && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden flex flex-col animate-in fade-in duration-200 w-full">
           {/* Top Action Header Bar (Spans 100% full width at top) */}
-          <div className="px-6 py-4 border-b border-slate-200/80 bg-white flex flex-wrap items-center justify-between gap-4 w-full">
+          <div className="px-3.5 sm:px-6 py-3 sm:py-4 border-b border-slate-200/80 bg-white flex flex-wrap items-center justify-between gap-3 sm:gap-4 w-full">
             <div className="flex items-center gap-3.5">
               <button
                 onClick={() => setActiveMainTab("ENQUIRIES")}
@@ -677,7 +677,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
           )}
 
           {/* Full-width Synchronized Detail Body (Spans 100% under the header) */}
-          <div className="p-6 space-y-6 w-full">
+          <div className="p-3.5 sm:p-6 space-y-6 w-full">
             {/* Overview / Timeline Tabs */}
             <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
               <button className="px-4 py-1.5 text-xs font-bold text-slate-900 bg-slate-100 rounded-full border border-slate-200 shadow-2xs">
@@ -689,7 +689,7 @@ export function CallsWorkflowView({ initialLeads, currentUserName }: Props) {
             </div>
 
             {/* STATE MACHINE TRANSITION BAR (Screenshot 1, 2, 3) */}
-            <div className="p-5 rounded-2xl border border-slate-200/90 bg-[#F8FAFC] flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+            <div className="p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 bg-[#F8FAFC] flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
               <div className="space-y-3">
                 <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
                   <span className="w-28 text-slate-400">Current State</span>

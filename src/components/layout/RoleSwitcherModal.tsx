@@ -87,10 +87,10 @@ export function RoleSwitcherModal({ currentRole, currentName, isOpen, onClose }:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[calc(100dvh-2rem)]">
         {/* Header */}
-        <div className="p-6 bg-gradient-to-r from-[#1A57BD] to-[#3B8CFF] text-white">
+        <div className="p-4 sm:p-6 bg-gradient-to-r from-[#1A57BD] to-[#3B8CFF] text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-amber-300" />

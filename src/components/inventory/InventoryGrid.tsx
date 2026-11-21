@@ -96,7 +96,7 @@ function UnitDrawer({
       />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-[380px] max-w-full z-50 flex flex-col bg-white shadow-2xl border-l border-slate-200 animate-slide-in-right">
+      <div className="fixed right-0 top-0 h-full w-full sm:w-[380px] max-w-full z-50 flex flex-col bg-white shadow-2xl border-l border-slate-200 animate-slide-in-right pb-safe">
 
         {/* Header colored strip */}
         <div className="p-5 text-white" style={{ backgroundColor: bg }}>
@@ -673,7 +673,7 @@ export function InventoryGrid({ projects, initialUnits, userRole, leads }: Props
   }, [holdUnit]);
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9] p-6 space-y-5">
+    <div className="min-h-screen bg-[#F1F5F9] p-3.5 sm:p-5 lg:p-6 space-y-5">
 
       {/* ── Header (matches screenshot) ── */}
       <div className="flex items-start justify-between gap-4">
@@ -734,7 +734,7 @@ export function InventoryGrid({ projects, initialUnits, userRole, leads }: Props
       </div>
 
       {/* ── Status Summary Cards ── */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
         {[
           { label: "Available", count: stats.AVAILABLE, status: "AVAILABLE", numColor: "#16a34a", bg: "#f0fdf4", border: "#dcfce7" },
           { label: "Hold",      count: stats.HELD,      status: "HELD",      numColor: "#d97706", bg: "#fffbeb", border: "#fef3c7" },
@@ -745,23 +745,19 @@ export function InventoryGrid({ projects, initialUnits, userRole, leads }: Props
           <button
             key={status}
             onClick={() => setSelectedStatus(selectedStatus === status ? "ALL" : status)}
-            className="rounded-xl p-4 text-left transition-all border"
+            className="rounded-xl p-3 sm:p-4 text-left transition-all border"
             style={{
               backgroundColor: bg,
               borderColor: selectedStatus === status ? numColor : border,
               boxShadow: selectedStatus === status ? `0 0 0 2px ${border}` : "none",
             }}
           >
-            {/* Number — pixel-perfect match to screenshot */}
+            {/* Number */}
             <span
+              className="text-3xl sm:text-4xl font-extrabold leading-none block tracking-tight"
               style={{
-                display: "block",
-                fontSize: "2.75rem",
-                fontWeight: 700,
-                lineHeight: 1,
                 color: numColor,
                 fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-                letterSpacing: "-0.02em",
               }}
             >
               {count}

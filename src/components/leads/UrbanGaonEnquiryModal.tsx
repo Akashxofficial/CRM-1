@@ -418,7 +418,7 @@ export function UrbanGaonEnquiryModal({
         className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-5xl lg:max-w-6xl max-h-[94vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150 font-sans"
       >
         {/* Modal Top Action Bar */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-[#F8FAFC]">
+        <div className="p-3.5 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#F8FAFC]">
           <div className="flex items-center gap-3">
             <img
               src="/urbangaon-icon.png"
@@ -437,7 +437,7 @@ export function UrbanGaonEnquiryModal({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-end sm:self-center">
             <button
               type="button"
               onClick={() => setPreviewEmailTab(previewEmailTab ? null : "customer")}
@@ -473,9 +473,9 @@ export function UrbanGaonEnquiryModal({
 
         {/* Email Preview Overlay */}
         {previewEmailTab ? (
-          <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 bg-[#F8FAFC]">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-              <div className="flex items-center gap-2">
+          <div className="p-4 sm:p-8 space-y-6 overflow-y-auto flex-1 bg-[#F8FAFC]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setPreviewEmailTab("customer")}
@@ -526,7 +526,7 @@ export function UrbanGaonEnquiryModal({
           </div>
         ) : (
           /* Scrollable Form Body */
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 text-slate-800 text-xs">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-8 space-y-6 overflow-y-auto flex-1 text-slate-800 text-xs pb-safe">
             {/* Header Banner: Centered UrbanGaon & Form Title + Large Right-aligned AXIO Luxury Logo */}
             <div className="pb-5 border-b border-slate-200 relative">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
