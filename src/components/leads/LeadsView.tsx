@@ -319,7 +319,7 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
           </div>
         </div>
       </div>
-      //
+
 
       {/* Quick Stage Filter Tabs */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 touch-pan-x scrollbar-none">
