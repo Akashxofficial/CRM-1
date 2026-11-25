@@ -8,8 +8,15 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  serverExternalPackages: ["@prisma/client", "prisma"],
+  outputFileTracingIncludes: {
+    "/**/*": [
+      "./node_modules/.prisma/client/**/*",
+      "./node_modules/@prisma/client/**/*",
+    ],
+  },
   experimental: {
-    optimizePackageImports: ["lucide-react", "date-fns", "recharts", "@prisma/client"],
+    optimizePackageImports: ["lucide-react", "date-fns", "recharts"],
   },
 };
 
