@@ -6,14 +6,10 @@ import {
   Users,
   Search,
   Plus,
-  Filter,
   Download,
-  LayoutGrid,
-  List,
   Phone,
   Building,
   User,
-  Clock,
   ArrowRight,
   Mail,
   TrendingUp,
@@ -53,7 +49,6 @@ const STAGES = [
 export function LeadsView({ initialLeads, projects, users, units, userRole }: Props) {
   const router = useRouter();
   const [leads, setLeads] = useState<any[]>(initialLeads);
-  const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
   const [selectedStageTab, setSelectedStageTab] = useState<string>("ALL");
   const [selectedProjectId, setSelectedProjectId] = useState("ALL");
   const [selectedSource, setSelectedSource] = useState("ALL");
@@ -267,30 +262,6 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* View Toggle */}
-          <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200">
-            <button
-              onClick={() => setViewMode("table")}
-              className={`p-1.5 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${viewMode === "table"
-                ? "bg-white text-slate-900 shadow-2xs"
-                : "text-slate-500 hover:text-slate-800"
-                }`}
-            >
-              <List className="w-3.5 h-3.5" />
-              <span>Table</span>
-            </button>
-            <button
-              onClick={() => setViewMode("kanban")}
-              className={`p-1.5 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${viewMode === "kanban"
-                ? "bg-white text-slate-900 shadow-2xs"
-                : "text-slate-500 hover:text-slate-800"
-                }`}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Kanban</span>
-            </button>
-          </div>
-
           <button
             onClick={handleManualSync}
             className="px-3 py-2 text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 rounded-xl border border-slate-200 flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
@@ -482,8 +453,7 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
       </div>
 
       {/* Tabular List View - Wide, Executive Full-Funnel Leads Table */}
-      {viewMode === "table" && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs min-w-[1100px]">
               <thead className="bg-[#F8FAFC] border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -652,94 +622,6 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
             </table>
           </div>
         </div>
-      )}
-
-      {/* Kanban Board View */}
-      {viewMode === "kanban" && (
-        <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-6 touch-pan-x snap-x scroll-pl-3 sm:scroll-pl-0 -mx-3.5 sm:mx-0 px-3.5 sm:px-0">
-          {STAGES.map((stage) => {
-            const stageLeads = filteredLeads.filter((l) => l.status === stage.key);
-
-            return (
-              <div
-                key={stage.key}
-                className="w-[80vw] sm:w-72 md:w-80 flex-shrink-0 snap-start bg-slate-100/70 rounded-2xl p-3 border border-slate-200/80 flex flex-col max-h-[75vh]"
-              >
-                {/* Stage Header */}
-                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-200">
-                  <div className="flex items-center gap-2">
-                    <span className={`w-2.5 h-2.5 rounded-full ${stage.color}`} />
-                    <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-800">
-                      {stage.label}
-                    </h2>
-                  </div>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white text-slate-600 border border-slate-200">
-                    {stageLeads.length}
-                  </span>
-                </div>
-
-                {/* Cards Container */}
-                <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
-                  {stageLeads.map((lead) => (
-                    <div
-                      key={lead.id}
-                      onClick={() => openLeadEnquiryForm(lead)}
-                      className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs hover:shadow-xs hover:border-[#3B8CFF]/50 transition cursor-pointer group"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <h3 className="text-xs font-bold text-slate-900 group-hover:text-[#3B8CFF] transition truncate">
-                            {lead.name}
-                          </h3>
-                          {lead.priority === "HOT" && (
-                            <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[8px] font-black uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-200 flex-shrink-0">
-                              <Flame className="w-2 h-2 fill-rose-500" /> HOT
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[10px] text-slate-400 flex items-center gap-1 flex-shrink-0">
-                          <Clock className="w-2.5 h-2.5" />
-                          {lead.source}
-                        </span>
-                      </div>
-
-                      <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-500">
-                        <Phone className="w-3 h-3 text-slate-400" />
-                        <span>{lead.phone}</span>
-                      </div>
-
-                      {lead.project && (
-                        <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-500">
-                          <Building className="w-3 h-3 text-slate-400" />
-                          <span className="truncate">{lead.project.name}</span>
-                        </div>
-                      )}
-
-                      <div className="mt-2 text-xs font-medium text-slate-600 flex items-center justify-between">
-                        <span>Budget:</span>
-                        <span className="font-semibold text-emerald-600">
-                          {formatCurrency(lead.budgetMax)}
-                        </span>
-                      </div>
-
-                      {lead.interestedUnit && (
-                        <div className="mt-2 text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded">
-                          Unit: {lead.interestedUnit.unitNumber} ({lead.interestedUnit.tower?.name})
-                        </div>
-                      )}
-
-                      <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
-                        <span>{lead.assignedTo?.name?.split(" ")[0] || "Unassigned"}</span>
-                        <span>{lead.activities?.length || 0} activities</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       {/* Lead Cockpit Drawer */}
       {activeLead && (
