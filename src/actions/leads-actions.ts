@@ -6,6 +6,7 @@ import { createAuditLog } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 import { sendLeadEnquiryEmails } from "@/lib/email-service";
 import { getCached, invalidateCache } from "@/lib/cache";
+import { syncExternalWebsiteInquiries } from "@/lib/website-lead-sync";
 
 export async function getLeads(filters?: {
   projectId?: string;
@@ -56,6 +57,9 @@ export async function getLeads(filters?: {
         console.warn("Skipping getLeads DB query — invalid userId in session:", user.id);
         throw new Error("Invalid session");
       }
+
+      // Auto-sync any new contact form submissions from shared MongoDB `inquiries` collection (source: "Website")
+      await syncExternalWebsiteInquiries();
 
       const leads = await prisma.lead.findMany({
         where,
@@ -185,6 +189,7 @@ export async function createLeadAction(data: {
   projectId?: string;
   assignedToId?: string;
   initialNote?: string;
+
 }) {
   const user = await getCurrentUser();
   let createdLeadId = "temp-" + Date.now();

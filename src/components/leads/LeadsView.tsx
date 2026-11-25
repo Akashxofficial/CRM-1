@@ -26,6 +26,7 @@ import {
   ExternalLink,
   Target,
   UserCheck,
+  RefreshCw,
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { UrbanGaonEnquiryModal } from "./UrbanGaonEnquiryModal";
@@ -62,10 +63,27 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
   const [activeLead, setActiveLead] = useState<any | null>(null);
   const [selectedFormLead, setSelectedFormLead] = useState<any | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     setLeads(initialLeads);
   }, [initialLeads]);
+
+  // Real-time background sync for incoming Website contact form leads (every 30s when idle)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible" && !isAddModalOpen && !activeLead) {
+        router.refresh();
+      }
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [router, isAddModalOpen, activeLead]);
+
+  const handleManualSync = () => {
+    setIsSyncing(true);
+    router.refresh();
+    setTimeout(() => setIsSyncing(false), 700);
+  };
 
   const openLeadEnquiryForm = (lead: any) => {
     setActiveLead(null);
@@ -272,6 +290,15 @@ export function LeadsView({ initialLeads, projects, users, units, userRole }: Pr
               <span>Kanban</span>
             </button>
           </div>
+
+          <button
+            onClick={handleManualSync}
+            className="px-3 py-2 text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 rounded-xl border border-slate-200 flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
+            title="Sync incoming Website leads"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-[#3B8CFF] ${isSyncing ? "animate-spin" : ""}`} />
+            <span>Sync</span>
+          </button>
 
           <button
             onClick={exportCSV}

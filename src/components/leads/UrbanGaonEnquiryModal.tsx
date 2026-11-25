@@ -152,11 +152,13 @@ const INDUSTRY_TYPES_LIST = [
   "Other",
 ];
 
+const EMPTY_LIST: any[] = [];
+
 export function UrbanGaonEnquiryModal({
   isOpen,
   onClose,
-  projects = [],
-  agents = [],
+  projects = EMPTY_LIST,
+  agents = EMPTY_LIST,
   onSuccess,
   onLeadSaved,
   onOpenPipeline,
@@ -611,7 +613,8 @@ export function UrbanGaonEnquiryModal({
     }
 
     setLockedFields(locked);
-  }, [isOpen, initialLead, projects, agents]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialLead?.id, initialLead?.updatedAt, initialLead?.activities?.length]);
 
   // Real-time Country & Dial Code Auto-Sync Function
   const syncCountryAndDialCode = (countryName: string) => {
